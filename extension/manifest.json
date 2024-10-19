@@ -1,8 +1,8 @@
 {
-  "name": "nos2x",
-  "description": "Nostr Signer Extension",
+  "name": "frost2x",
+  "description": "Frost Signer Extension",
   "version": "2.4.1",
-  "homepage_url": "https://github.com/fiatjaf/nos2x",
+  "homepage_url": "https://github.com/TABCONF-2024-FROST/frost2x",
   "manifest_version": 3,
   "icons": {
     "16": "icons/16x16.png",
@@ -15,7 +15,7 @@
     "service_worker": "background.build.js"
   },
   "action": {
-    "default_title": "nos2x",
+    "default_title": "frost2x",
     "default_popup": "popup.html"
   },
   "content_scripts": [

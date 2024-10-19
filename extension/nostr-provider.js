@@ -39,7 +39,7 @@ window.nostr = {
   _call(type, params) {
     let id = Math.random().toString().slice(-4)
     console.log(
-      '%c[nos2x:%c' +
+      '%c[frost2x:%c' +
         id +
         '%c]%c calling %c' +
         type +
@@ -58,7 +58,7 @@ window.nostr = {
       window.postMessage(
         {
           id,
-          ext: 'nos2x',
+          ext: 'frost2x',
           type,
           params
         },
@@ -73,13 +73,13 @@ window.addEventListener('message', message => {
     !message.data ||
     message.data.response === null ||
     message.data.response === undefined ||
-    message.data.ext !== 'nos2x' ||
+    message.data.ext !== 'frost2x' ||
     !window.nostr._requests[message.data.id]
   )
     return
 
   if (message.data.response.error) {
-    let error = new Error('nos2x: ' + message.data.response.error.message)
+    let error = new Error('frost2x: ' + message.data.response.error.message)
     error.stack = message.data.response.error.stack
     window.nostr._requests[message.data.id].reject(error)
   } else {
@@ -87,7 +87,7 @@ window.addEventListener('message', message => {
   }
 
   console.log(
-    '%c[nos2x:%c' +
+    '%c[frost2x:%c' +
       message.data.id +
       '%c]%c result: %c' +
       JSON.stringify(

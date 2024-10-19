@@ -45,7 +45,7 @@ function Popup() {
 
   return (
     <div style={{marginBottom: '5px'}}>
-      <h2>nos2x</h2>
+      <h2>frost2x</h2>
       {pubKey === null ? (
         <div>
           <button onClick={openOptionsButton}>start here</button>

@@ -146,7 +146,7 @@ function Options() {
 
   return (
     <>
-      <h1 style={{ fontSize: '25px', marginBlockEnd: '0px' }}>nos2x</h1>
+      <h1 style={{ fontSize: '25px', marginBlockEnd: '0px' }}>frost2x</h1>
       <p style={{ marginBlockStart: '0px' }}>nostr signer extension</p>
       <h2 style={{ marginBlockStart: '20px', marginBlockEnd: '5px' }}>options</h2>
       <div
