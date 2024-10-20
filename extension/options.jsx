@@ -2,14 +2,15 @@ import { bytesToHex, hexToBytes } from '@noble/hashes/utils'
 import { getPublicKey } from 'nostr-tools'
 import * as nip19 from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
-import { generateSecretKey } from 'nostr-tools/pure'
 import qrcodeParser from 'qrcode-parser'
 import React, { useCallback, useEffect, useState } from 'react'
 import { render } from 'react-dom'
 import QRCode from 'react-qr-code'
 import QrReader from 'react-qr-scanner'
 import browser from 'webextension-polyfill'
-import { removePermissions } from './common'
+import { removePermissions } from './common.js'
+
+import SignServerConfig from './components/server.js'
 
 function Options() {
   let [privKey, setPrivKey] = useState(null)
@@ -32,11 +33,11 @@ function Options() {
   let [scanning, setScanning] = useState(false)
   let [warningMessage, setWarningMessage] = useState('')
 
-  const showMessage = useCallback(msg => {
+  const showMessage = useCallback((msg) => {
     messages.push(msg)
     setMessages(messages)
     setTimeout(() => setMessages([]), 3000)
-  })
+  }, [])
 
   useEffect(() => {
     browser.storage.local
@@ -147,7 +148,7 @@ function Options() {
   return (
     <>
       <h1 style={{ fontSize: '25px', marginBlockEnd: '0px' }}>frost2x</h1>
-      <p style={{ marginBlockStart: '0px' }}>nostr signer extension</p>
+      <p style={{ marginBlockStart: '0px' }}>frost signer extension</p>
       <h2 style={{ marginBlockStart: '20px', marginBlockEnd: '5px' }}>options</h2>
       <div
         style={{
@@ -158,8 +159,9 @@ function Options() {
           width: 'fit-content'
         }}
       >
+        <SignServerConfig />
         <div>
-          <div>private key:&nbsp;</div>
+          <div>secret key share:&nbsp;</div>
           <div
             style={{
               marginLeft: '10px',
@@ -177,7 +179,7 @@ function Options() {
               />
               {privKeyInput === '' && (
                 <>
-                  <button onClick={generate}>generate</button>
+                  {/* <button onClick={generate}>generate</button> */}
                   <button onClick={() => setScanning(true)}>scan qrcode</button>
                   <button onClick={loadQrCodeFromFile}>load qrcode</button>
                 </>
@@ -537,11 +539,11 @@ function Options() {
     }
   }
 
-  async function generate() {
-    setScanning(false)
-    setPrivKeyInput(nip19.nsecEncode(generateSecretKey()))
-    addUnsavedChanges('private_key')
-  }
+  // async function generate() {
+  //   setScanning(false)
+  //   setPrivKeyInput(nip19.nsecEncode(generateSecretKey()))
+  //   addUnsavedChanges('private_key')
+  // }
 
   function encryptPrivateKeyAndDisplay(ev) {
     ev.preventDefault()
