@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",                           // Target ECMAScript 6 for compatibility
+    "lib": ["dom", "dom.iterable", "esnext"],  // Include the DOM and ESNext libraries
+    "allowJs": true,                           // Allow JavaScript files in the project
+    "skipLibCheck": true,                      // Skip checking library files
+    "esModuleInterop": true,                   // Enables default imports for CommonJS modules
+    "allowSyntheticDefaultImports": true,      // Allow default imports for modules without default exports
+    "strict": true,                            // Enable strict type-checking options
+    "forceConsistentCasingInFileNames": true,  // Ensure consistent casing in file names
+    "module": "NodeNext",                      // Use ESNext modules for the project
+    "moduleResolution": "NodeNext",            // Use Node-style module resolution
+    "resolveJsonModule": true,                 // Enable importing of JSON files
+    "isolatedModules": true,                   // Ensure each file is treated as a module
+    "jsx": "react-jsx",                        // Enable JSX support for React
+    "noEmit": true                             // Do not emit output files after compilation
+  },
+  "include": ["extension"],                    // Include the source directory
+  "exclude": ["node_modules"]                  // Exclude the node_modules directory
+}

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
-const esbuild = require('esbuild')
+import esbuild from 'esbuild'
+
+// const esbuild = require('esbuild')
 
 const prod = process.argv.indexOf('prod') !== -1
 
