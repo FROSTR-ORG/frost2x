@@ -4,7 +4,9 @@ import { ExtensionStore }      from '../types.js'
 import browser from 'webextension-polyfill'
 
 const DEFAULT_STORE = {
-  sign_server_host : ''
+  group_pkg   : null,
+  secret_pkg  : null,
+  server_host : null
 }
 
 export default function () {
@@ -27,6 +29,10 @@ export default function () {
       }
     })
   }, [])
+
+  useEffect(() => {
+    console.log('store:', store)
+  }, [ store ])
 
   return { store, reset, update }
 }

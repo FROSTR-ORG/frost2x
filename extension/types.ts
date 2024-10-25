@@ -1,5 +1,9 @@
+import type {} from '@cmdcode/bifrost'
+
 export interface ExtensionStore {
-  sign_server_host : string
+  group_pkg   : string | null
+  secret_pkg  : string | null
+  server_host : string | null
 }
 
 export interface StoreAPI {

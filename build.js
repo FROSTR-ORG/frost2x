@@ -2,8 +2,6 @@
 
 import esbuild from 'esbuild'
 
-// const esbuild = require('esbuild')
-
 const prod = process.argv.indexOf('prod') !== -1
 
 esbuild
@@ -22,6 +20,11 @@ esbuild
     define: {
       window: 'self',
       global: 'self'
+    },
+    loader: {
+      '.js': 'jsx', // Ensure jsx loader for js files
+      '.ts': 'ts',  // Use the TypeScript loader for .ts files
+      '.tsx': 'tsx' // Use the TypeScript loader for .tsx files
     }
   })
   .then(() => console.log('build success.'))

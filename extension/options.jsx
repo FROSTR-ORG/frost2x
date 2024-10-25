@@ -1,36 +1,22 @@
-import { bytesToHex, hexToBytes } from '@noble/hashes/utils'
-import { getPublicKey } from 'nostr-tools'
-import * as nip19 from 'nostr-tools/nip19'
-import { decrypt, encrypt } from 'nostr-tools/nip49'
-import qrcodeParser from 'qrcode-parser'
-import React, { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { render } from 'react-dom'
-import QRCode from 'react-qr-code'
-import QrReader from 'react-qr-scanner'
 import browser from 'webextension-polyfill'
 import { removePermissions } from './common.js'
 
-import SignServerConfig from './components/server.js'
+import GroupPackageConfig  from './components/group.js'
+import SecretPackageConfig from './components/secret.js'
+import SignerServerConfig  from './components/server.js'
 
 function Options() {
-  let [privKey, setPrivKey] = useState(null)
-  let [privKeyInput, setPrivKeyInput] = useState('')
-  let [askPassword, setAskPassword] = useState(null)
-  let [password, setPassword] = useState('')
-  let [errorMessage, setErrorMessage] = useState('')
-  let [successMessage, setSuccessMessage] = useState('')
   let [relays, setRelays] = useState([])
   let [newRelayURL, setNewRelayURL] = useState('')
   let [policies, setPermissions] = useState([])
   let [protocolHandler, setProtocolHandler] = useState('https://njump.me/{raw}')
-  let [hidingPrivateKey, hidePrivateKey] = useState(true)
   let [showNotifications, setNotifications] = useState(false)
   let [messages, setMessages] = useState([])
   let [handleNostrLinks, setHandleNostrLinks] = useState(false)
   let [showProtocolHandlerHelp, setShowProtocolHandlerHelp] = useState(false)
   let [unsavedChanges, setUnsavedChanges] = useState([])
-  let [qrcodeScanned, setQrCodeScanned] = useState(null)
-  let [scanning, setScanning] = useState(false)
   let [warningMessage, setWarningMessage] = useState('')
 
   const showMessage = useCallback((msg) => {
@@ -41,14 +27,8 @@ function Options() {
 
   useEffect(() => {
     browser.storage.local
-      .get(['private_key', 'relays', 'protocol_handler', 'notifications'])
+      .get(['relays', 'protocol_handler', 'notifications'])
       .then(results => {
-        if (results.private_key) {
-          let prvKey = results.private_key
-          let nsec = nip19.nsecEncode(hexToBytes(prvKey))
-          setPrivKeyInput(nsec)
-          setPrivKey(nsec)
-        }
         if (results.relays) {
           let relaysList = []
           for (let url in results.relays) {
@@ -71,54 +51,8 @@ function Options() {
   }, [])
 
   useEffect(() => {
-    if (qrcodeScanned) {
-      if (qrcodeScanned.startsWith('ncryptsec1')) {
-        setPrivKeyInput(qrcodeScanned)
-        setAskPassword('decrypt/save')
-      } else if (qrcodeScanned.startsWith('nsec1')) {
-        setPrivKeyInput(qrcodeScanned)
-        addUnsavedChanges('private_key')
-        setWarningMessage('Store you nsec into a qrcode without encrypt is HIGHLY NOT recommended. Use ncryptsec qrcode instead.')
-      } else if (/^[a-f0-9]+$/.test(qrcodeScanned)) {
-        setPrivKeyInput(nip19.nsecEncode(hexToBytes(qrcodeScanned)))
-        addUnsavedChanges('private_key')
-        setWarningMessage('Store you secret into a qrcode without encrypt is HIGHLY NOT recommended. Use ncryptsec qrcode instead.')
-      }
-    }
-  }, [qrcodeScanned])
-
-  useEffect(() => {
-    if (privKeyInput) {
-      setScanning(false)
-    }
-  }, [privKeyInput])
-
-  useEffect(() => {
     setTimeout(() => setWarningMessage(''), 5000)
   }, [warningMessage])
-
-  async function loadQrCodeFromFile(type = 'image/*') {
-    setScanning(false)
-    const input = document.createElement('input')
-    input.setAttribute('type', 'file')
-    input.setAttribute('accept', type)
-    input.click()
-
-    const file = await new Promise(resolve => {
-      input.addEventListener('change', () => {
-        const file = input.files && input.files[0] || null
-        resolve(file)
-        input.value = null
-      })
-    })
-
-    if (!file) {
-      return Promise.resolve(null)
-    }
-
-    const result = await qrcodeParser(file)
-    setQrCodeScanned(result.toLowerCase())
-  }
 
   useEffect(() => {
     loadPermissions()
@@ -159,170 +93,10 @@ function Options() {
           width: 'fit-content'
         }}
       >
-        <SignServerConfig />
-        <div>
-          <div>secret key share:&nbsp;</div>
-          <div
-            style={{
-              marginLeft: '10px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px'
-            }}
-          >
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <input
-                type={hidingPrivateKey ? 'password' : 'text'}
-                style={{ width: '600px' }}
-                value={privKeyInput}
-                onChange={handleKeyChange}
-              />
-              {privKeyInput === '' && (
-                <>
-                  {/* <button onClick={generate}>generate</button> */}
-                  <button onClick={() => setScanning(true)}>scan qrcode</button>
-                  <button onClick={loadQrCodeFromFile}>load qrcode</button>
-                </>
-              )}
-              {privKeyInput && hidingPrivateKey && (
-                <>
-                  {askPassword !== 'encrypt/display' && (
-                    <button onClick={() => hidePrivateKey(false)}>
-                      show key
-                    </button>
-                  )}
-                  <button onClick={() => setAskPassword('encrypt/display')}>
-                    show key encrypted
-                  </button>
-                </>
-              )}
+        <GroupPackageConfig  />
+        <SecretPackageConfig />
+        <SignerServerConfig  />
 
-              {privKeyInput && !hidingPrivateKey && (
-                <button onClick={hideAndResetKeyInput}>hide key</button>
-              )}
-            </div>
-            {privKeyInput &&
-              !privKeyInput.startsWith('ncryptsec1') &&
-              !isKeyValid() && (
-                <div style={{ color: 'red' }}>private key is invalid!</div>
-              )}
-            {!hidingPrivateKey &&
-              privKeyInput !== '' &&
-              (privKeyInput.startsWith('ncryptsec1') || isKeyValid()) && (
-                <div
-                  style={{
-                    height: 'auto',
-                    maxWidth: 256,
-                    width: '100%',
-                    marginTop: '5px'
-                  }}
-                >
-                  <QRCode
-                    size={256}
-                    style={{ height: 'auto', maxWidth: '100%', width: '100%' }}
-                    value={privKeyInput.toUpperCase()}
-                    viewBox={`0 0 256 256`}
-                  />
-                </div>
-              )}
-            {scanning && (
-              <QrReader
-                style={{
-                  height: 240,
-                  width: 320,
-                }}
-                onError={error => {
-                  setErrorMessage('invalid qrcode')
-                  console.error(error)
-                  setScanning(false)
-                }}
-                onScan={scanned => setQrCodeScanned(scanned && scanned.text || null)}
-              ></QrReader>
-            )}
-          </div>
-          {warningMessage && <div style={{ color: 'red', marginTop: '10px' }}>{warningMessage}</div>}
-        </div>
-        {askPassword && (
-          <div>
-            <div>password:&nbsp;</div>
-            <div
-              style={{
-                marginLeft: '10px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px'
-              }}
-            >
-              <form
-                style={{ display: 'flex', flexDirection: 'row', gap: '10px' }}
-              >
-                <input
-                  autoFocus
-                  type="password"
-                  value={password}
-                  onChange={ev => setPassword(ev.target.value)}
-                  style={{ width: '150px' }}
-                />
-                {askPassword === 'decrypt/save' ? (
-                  <button
-                    onClick={decryptPrivateKeyAndSave}
-                    disabled={!password}
-                  >
-                    decrypt key
-                  </button>
-                ) : askPassword === 'encrypt/display' ? (
-                  <button
-                    onClick={ev => {
-                      console.log('gah')
-                      encryptPrivateKeyAndDisplay(ev)
-                    }}
-                    disabled={!password}
-                  >
-                    encrypt and show key
-                  </button>
-                ) : (
-                  'jaksbdkjsad'
-                )}
-              </form>
-
-              {successMessage && (
-                <div style={{ color: 'green' }}>{successMessage}</div>
-              )}
-              {errorMessage && <div style={{ color: 'red' }}>{errorMessage}</div>}
-            </div>
-          </div>
-        )}
-        <div>
-          <div>nosta.me:&nbsp;</div>
-          <div
-            style={{
-              marginLeft: '10px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px'
-            }}
-          >
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => {
-                  let { data } = nip19.decode(privKey)
-                  let pub = getPublicKey(data)
-                  let npub = nip19.npubEncode(pub)
-                  window.open('https://nosta.me/' + npub)
-                }}
-                style={{ cursor: 'pointer' }}
-              >
-                browse your profile
-              </button>
-              <button
-                onClick={() => window.open('https://nosta.me/login/options')}
-                style={{ cursor: 'pointer' }}
-              >
-                edit your profile
-              </button>
-            </div>
-          </div>
-        </div>
         <div>
           <div>preferred relays:</div>
           <div
@@ -504,123 +278,6 @@ function Options() {
     </>
   )
 
-  async function hideAndResetKeyInput() {
-    setPrivKeyInput(privKey)
-    hidePrivateKey(true)
-  }
-
-  async function handleKeyChange(e) {
-    let key = e.target.value.toLowerCase().trim()
-    setPrivKeyInput(key)
-
-    try {
-      let bytes = hexToBytes(key)
-      if (bytes.length === 32) {
-        key = nip19.nsecEncode(bytes)
-        setPrivKeyInput(key)
-      }
-    } catch (err) {
-      /***/
-    }
-
-    if (key.startsWith('ncryptsec1')) {
-      // we won't save an encrypted key, will wait for the password
-      setAskPassword('decrypt/save')
-      return
-    }
-
-    try {
-      // we will only save a key that is a valid nsec
-      if (nip19.decode(key).type === 'nsec') {
-        addUnsavedChanges('private_key')
-      }
-    } catch (err) {
-      /***/
-    }
-  }
-
-  // async function generate() {
-  //   setScanning(false)
-  //   setPrivKeyInput(nip19.nsecEncode(generateSecretKey()))
-  //   addUnsavedChanges('private_key')
-  // }
-
-  function encryptPrivateKeyAndDisplay(ev) {
-    ev.preventDefault()
-
-    try {
-      let { data } = nip19.decode(privKeyInput)
-      let encrypted = encrypt(data, password, 16, 0x00)
-      setPrivKeyInput(encrypted)
-      hidePrivateKey(false)
-
-      setSuccessMessage('encryption successful!')
-      setTimeout(() => {
-        setAskPassword(null)
-        setSuccessMessage('')
-      }, 2000)
-      setErrorMessage('')
-    } catch (e) {
-      setErrorMessage('something is going wrong. please try again.')
-      setTimeout(() => {
-        setErrorMessage('')
-      }, 3000)
-      setSuccessMessage('')
-    }
-  }
-
-  function decryptPrivateKeyAndSave(ev) {
-    ev.preventDefault()
-
-    try {
-      let decrypted = decrypt(privKeyInput, password)
-      setPrivKeyInput(nip19.nsecEncode(decrypted))
-      browser.storage.local.set({
-        private_key: bytesToHex(decrypted)
-      })
-      setSuccessMessage('decryption successful!')
-
-      setTimeout(() => {
-        setAskPassword(null)
-        setSuccessMessage('')
-      }, 2000)
-      setErrorMessage('')
-    } catch (e) {
-      setErrorMessage('incorrect password. please try again.')
-      setTimeout(() => {
-        setErrorMessage('')
-      }, 3000)
-      setSuccessMessage('')
-    }
-  }
-
-  async function saveKey() {
-    if (!isKeyValid()) {
-      showMessage('PRIVATE KEY IS INVALID! did not save private key.')
-      return
-    }
-    let hexOrEmptyKey = privKeyInput
-    try {
-      let { type, data } = nip19.decode(privKeyInput)
-      if (type === 'nsec') hexOrEmptyKey = bytesToHex(data)
-    } catch (_) { }
-    await browser.storage.local.set({
-      private_key: hexOrEmptyKey
-    })
-    if (hexOrEmptyKey !== '') {
-      setPrivKeyInput(nip19.nsecEncode(hexToBytes(hexOrEmptyKey)))
-    }
-    showMessage('saved private key!')
-  }
-
-  function isKeyValid() {
-    if (privKeyInput === '') return true
-    try {
-      if (nip19.decode(privKeyInput).type === 'nsec') return true
-    } catch (_) { }
-    return false
-  }
-
   function changeRelayURL(i, ev) {
     setRelays([
       ...relays.slice(0, i),
@@ -733,9 +390,6 @@ function Options() {
   async function saveChanges() {
     for (let section of unsavedChanges) {
       switch (section) {
-        case 'private_key':
-          await saveKey()
-          break
         case 'relays':
           await saveRelays()
           break

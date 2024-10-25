@@ -1,10 +1,10 @@
 import browser from 'webextension-polyfill'
-import {validateEvent, finalizeEvent, getPublicKey} from 'nostr-tools/pure'
+import {validateEvent, getEventHash} from 'nostr-tools/pure'
 import * as nip19 from 'nostr-tools/nip19'
-import * as nip04 from 'nostr-tools/nip04'
-import * as nip44 from 'nostr-tools/nip44'
+// import * as nip04 from 'nostr-tools/nip04'
+// import * as nip44 from 'nostr-tools/nip44'
 import {Mutex} from 'async-mutex'
-import {LRUCache} from './utils'
+// import {LRUCache} from './utils'
 
 import {
   NO_PERMISSIONS_REQUIRED,
@@ -14,27 +14,34 @@ import {
   getPosition
 } from './common'
 
+import {
+  decode_group_pkg,
+  decode_secret_pkg,
+  get_session_ctx,
+  sign_with_pkg
+} from '@cmdcode/bifrost/lib'
+
 let openPrompt = null
 let promptMutex = new Mutex()
 let releasePromptMutex = () => {}
-let secretsCache = new LRUCache(100)
-let previousSk = null
+// let secretsCache = new LRUCache(100)
+// let previousSk = null
 
-function getSharedSecret(sk, peer) {
-  // Detect a key change and erase the cache if they changed their key
-  if (previousSk !== sk) {
-    secretsCache.clear()
-  }
+// function getSharedSecret(sk, peer) {
+//   // Detect a key change and erase the cache if they changed their key
+//   if (previousSk !== sk) {
+//     secretsCache.clear()
+//   }
 
-  let key = secretsCache.get(peer)
+//   let key = secretsCache.get(peer)
 
-  if (!key) {
-    key = nip44.v2.utils.getConversationKey(sk, peer)
-    secretsCache.set(peer, key)
-  }
+//   if (!key) {
+//     key = nip44.v2.utils.getConversationKey(sk, peer)
+//     secretsCache.set(peer, key)
+//   }
 
-  return key
-}
+//   return key
+// }
 
 //set the width and height of the prompt window
 const width = 340
@@ -166,60 +173,110 @@ async function handleContentScriptMessage({type, params, host}) {
         // errored, stop here
         releasePromptMutex()
         return {
-          error: {message: error.message, stack: error.stack}
+          error: { message: err.message, stack: err.stack }
         }
       }
     }
   }
 
   // if we're here this means it was accepted
-  let results = await browser.storage.local.get('private_key')
-  if (!results || !results.private_key) {
-    return {error: {message: 'no private key found'} }
+  let store = await fetch_store()
+
+  if (!store) {
+    return { error: { message: 'extension store is not initialized' } }
   }
 
-  let sk = results.private_key
+  if (!store.group_pkg || !store.secret_pkg) {
+    return { error: { message: 'signer is not initialized' } }
+  }
+
+  if (!store.server_host) {
+    return { error: { message: 'signing server hostname is not set' } }
+  }
+
+  let group_data, secret_data
+
+  try {
+    group_data  = decode_group_pkg(store.group_pkg)
+    secret_data = decode_secret_pkg(store.secret_pkg)
+  } catch (err) {
+    console.error(err)
+    return { error: { message: 'failed to decode package data' } }
+  }
+
+  console.log('received request:', type)
+
+  //console.log('group data:', group_data)
+  //console.log('secret data:', secret_data)
 
   try {
     switch (type) {
       case 'getPublicKey': {
-        return getPublicKey(sk)
+        return group_data.group_pk.slice(2)
       }
       case 'getRelays': {
         let results = await browser.storage.local.get('relays')
         return results.relays || {}
       }
       case 'signEvent': {
-        const event = finalizeEvent(params.event, sk)
+        const { commits, group_pk } = group_data
+        const msg  = getEventHash(params.event)
+        console.log('msg:', msg)
+        const ctx  = get_session_ctx(group_pk, commits, msg)
+        console.log('ctx:', ctx)
+        const psig = sign_with_pkg(ctx, secret_data)
 
-        return validateEvent(event)
-          ? event
-          : {error: {message: 'invalid event'}}
+        const url = `${store.server_host}/api/sign/note`
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ event: params.event, psig })
+        })
+
+        console.log(url, res.status, res.statusText)
+
+        if (!res.ok) return { error: { message: res.error } }
+
+        const json = await res.json()
+
+        console.log('json response:', json)
+
+        return validateEvent(json.event)
+          ? json.event
+          : { error: { message: 'invalid event' } }
       }
       case 'nip04.encrypt': {
-        let {peer, plaintext} = params
-        return nip04.encrypt(sk, peer, plaintext)
+        // let {peer, plaintext} = params
+
+        return { error: { message: 'not implemented' } }
       }
       case 'nip04.decrypt': {
-        let {peer, ciphertext} = params
-        return nip04.decrypt(sk, peer, ciphertext)
+        // let {peer, ciphertext} = params
+        return { error: { message: 'not implemented' } }
       }
       case 'nip44.encrypt': {
-        const {peer, plaintext} = params
-        const key = getSharedSecret(sk, peer)
+        // const {peer, plaintext} = params
+        // const key = getSharedSecret(sk, peer)
 
-        return nip44.v2.encrypt(plaintext, key)
+        return { error: { message: 'not implemented' } }
       }
       case 'nip44.decrypt': {
-        const {peer, ciphertext} = params
-        const key = getSharedSecret(sk, peer)
+        // const {peer, ciphertext} = params
+        // const key = getSharedSecret(sk, peer)
 
-        return nip44.v2.decrypt(ciphertext, key)
+        return { error: { message: 'not implemented' } }
       }
     }
   } catch (error) {
-    return {error: {message: error.message, stack: error.stack}}
+    return {error: { message: error.message, stack: error.stack }}
   }
+}
+
+async function fetch_store () {
+  const results = await browser.storage.local.get('store')
+  console.log('store:', results.store)
+  return results.store
 }
 
 async function handlePromptMessage({host, type, accept, conditions}, sender) {

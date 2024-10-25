@@ -28,6 +28,7 @@
     "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {
+    "@cmdcode/buff": "^2.2.5",
     "@types/express": "^5.0.0",
     "@types/node": "^22.7.7",
     "@types/react": "^18.3.11",

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { decode_secret_pkg }   from '@cmdcode/bifrost/lib'
+import { decode_group_pkg }    from '@cmdcode/bifrost/lib'
 
 import useStore from './store.js'
 
@@ -10,14 +10,14 @@ export default function () {
   const [ error, setError ] = useState<string | null>(null)
 
   const displayData = (pkg : string) => {
-    const data = decode_secret_pkg(pkg)
+    const data = decode_group_pkg(pkg)
     return JSON.stringify(data, null, 2)
   }
 
   const updateStore = () => {
     try {
-      decode_secret_pkg(input)
-      update({ secret_pkg : input })
+      decode_group_pkg(input)
+      update({ group_pkg : input })
       setError(null)
     } catch (err) {
       console.error(err)
@@ -26,21 +26,21 @@ export default function () {
   }
 
   useEffect(() => {
-    if (store.secret_pkg !== null) {
-      if (typeof store.secret_pkg === 'string') {
-        setInput(store.secret_pkg)
+    if (store.group_pkg !== null) {
+      if (typeof store.group_pkg === 'string') {
+        setInput(store.group_pkg)
       } else {
-        update({ secret_pkg : null })
+        update({ group_pkg : null })
       }
     }
-    if (typeof store.secret_pkg !== 'string') {
+    if (typeof store.group_pkg !== 'string') {
 
     }
-  }, [ store.secret_pkg ])
+  }, [ store.group_pkg ])
 
   return (
     <div>
-      <div>secret data:&nbsp;</div>
+      <div>group data:&nbsp;</div>
       <div
         style={{
           marginLeft: '10px',
