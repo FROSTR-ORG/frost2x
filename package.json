@@ -2,11 +2,7 @@
   "license": "WTFPL",
   "type": "module",
   "scripts": {
-    "build": "./build.js",
-    "load": "NODE_OPTIONS='--no-warnings' tsx --tsconfig ./test/tsconfig.json",
-    "scratch": "yarn load test/scratch.ts",
-    "test": "tsx --tsconfig ./test/tsconfig.json ./test/tape.ts | tap-spec",
-    "dev": "yarn load test/server/app.ts"
+    "build": "./build.js"
   },
   "dependencies": {
     "async-mutex": "^0.3.2",
