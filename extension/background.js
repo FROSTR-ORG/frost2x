@@ -15,10 +15,12 @@ import {
 } from './common'
 
 import {
+  combine_partial_sigs,
+  create_psig_pkg,
   decode_group_pkg,
   decode_secret_pkg,
   get_session_ctx,
-  sign_with_pkg
+  verify_psig_pkg
 } from '@cmdcode/bifrost/lib'
 
 let openPrompt = null
@@ -224,7 +226,7 @@ async function handleContentScriptMessage({type, params, host}) {
         console.log('msg:', msg)
         const ctx  = get_session_ctx(group_pk, commits, msg)
         console.log('ctx:', ctx)
-        const psig = sign_with_pkg(ctx, secret_data)
+        const psig = create_psig_pkg(ctx, secret_data)
 
         const url = `${store.server_host}/api/sign/note`
 
@@ -242,8 +244,17 @@ async function handleContentScriptMessage({type, params, host}) {
 
         console.log('json response:', json)
 
+        if (!verify_psig_pkg(ctx, json)) {
+          return { error: { message: 'remote signer psig invalid' } }
+        }
+
+        const sig   = combine_partial_sigs(ctx, [ psig, json ])
+        const event = { ...params.event, sig }
+
+        console.log('signed event:', event)
+
         return validateEvent(json.event)
-          ? json.event
+          ? event
           : { error: { message: 'invalid event' } }
       }
       case 'nip04.encrypt': {

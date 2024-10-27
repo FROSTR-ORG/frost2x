@@ -1,4 +1,4 @@
-# nos2x
+# frost2x
 
 ### notes and other stuff signed by an extension
 
