@@ -1,19 +1,23 @@
 import browser from 'webextension-polyfill'
-import {render} from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import React from 'react'
 
-import {PERMISSION_NAMES} from './common'
+import {PERMISSION_NAMES} from './common.js'
 
 function Prompt() {
   let qs = new URLSearchParams(location.search)
   let id = qs.get('id')
   let host = qs.get('host')
   let type = qs.get('type')
-  let params, event
+  let params: any = null
+  let event: any = null
   try {
-    params = JSON.parse(qs.get('params'))
-    if (Object.keys(params).length === 0) params = null
-    else if (params.event) event = params.event
+    const paramString = qs.get('params')
+    if (paramString) {
+      params = JSON.parse(paramString)
+      if (Object.keys(params).length === 0) params = null
+      else if (params.event) event = params.event
+    }
   } catch (err) {
     params = null
   }
@@ -25,7 +29,7 @@ function Prompt() {
           {host}
         </b>{' '}
         <p>
-          is requesting your permission to <b>{PERMISSION_NAMES[type]}:</b>
+          is requesting your permission to <b>{type && PERMISSION_NAMES[type]}:</b>
         </p>
       </div>
       {params && (
@@ -63,7 +67,7 @@ function Prompt() {
             authorize kind {event.kind} forever
           </button>
         )}
-        <button style={{marginTop: '5px'}} onClick={authorizeHandler(true)}>
+        <button style={{marginTop: '5px'}} onClick={authorizeHandler(true, undefined)}>
           authorize just this
         </button>
         {event?.kind !== undefined ? (
@@ -87,15 +91,15 @@ function Prompt() {
             reject forever
           </button>
         )}
-        <button style={{marginTop: '5px'}} onClick={authorizeHandler(false)}>
+        <button style={{marginTop: '5px'}} onClick={authorizeHandler(false, undefined)}>
           reject
         </button>
       </div>
     </>
   )
 
-  function authorizeHandler(accept, conditions) {
-    return function (ev) {
+  function authorizeHandler(accept: boolean, conditions?: Record<string, any>) {
+    return function (ev: React.MouseEvent<HTMLButtonElement>) {
       ev.preventDefault()
       browser.runtime.sendMessage({
         prompt: true,
@@ -109,4 +113,8 @@ function Prompt() {
   }
 }
 
-render(<Prompt />, document.getElementById('main'))
+const container = document.getElementById('main')
+if (container) {
+  const root = createRoot(container)
+  root.render(<Prompt />)
+}

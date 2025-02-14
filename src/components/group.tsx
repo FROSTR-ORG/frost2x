@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { decode_group_pkg }    from '@cmdcode/bifrost/lib'
+import { decode_group_pkg }    from '@frostr/bifrost/lib'
 
 import useStore from './store.js'
 
 export default function () {
 
   const { store, update }   = useStore()
-  const [ input, setInput ] = useState('')
+  const [ input, setInput ] = useState<string | null>(null)
   const [ error, setError ] = useState<string | null>(null)
 
   const displayData = (pkg : string) => {
@@ -15,9 +15,13 @@ export default function () {
   }
 
   const updateStore = () => {
+    if (input === null) {
+      setError('no input')
+      return
+    }
     try {
       decode_group_pkg(input)
-      update({ group_pkg : input })
+      update({ group : input })
       setError(null)
     } catch (err) {
       console.error(err)
@@ -26,17 +30,10 @@ export default function () {
   }
 
   useEffect(() => {
-    if (store.group_pkg !== null) {
-      if (typeof store.group_pkg === 'string') {
-        setInput(store.group_pkg)
-      } else {
-        update({ group_pkg : null })
-      }
+    if (store.group !== null && input === null) {
+      setInput(store.group)
     }
-    if (typeof store.group_pkg !== 'string') {
-
-    }
-  }, [ store.group_pkg ])
+  }, [ store.group ])
 
   return (
     <div>
@@ -58,7 +55,7 @@ export default function () {
           />
           <button onClick={() => updateStore()}>save</button>
         </div>
-        { input !== '' && error === null &&
+        { input !== null && error === null &&
           <pre>{displayData(input)}</pre> 
         }
         <p>{error}</p>

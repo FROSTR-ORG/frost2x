@@ -3,10 +3,11 @@ import { ExtensionStore }      from '../types.js'
 
 import browser from 'webextension-polyfill'
 
-const DEFAULT_STORE = {
-  group_pkg   : null,
-  secret_pkg  : null,
-  server_host : null
+const DEFAULT_STORE : ExtensionStore = {
+  init   : false as const,
+  group  : null,
+  server : null,
+  share  : null
 }
 
 export default function () {
@@ -17,20 +18,23 @@ export default function () {
   
   const update = (data : Partial<ExtensionStore>) => {
     const new_store = { ...store, ...data }
-    browser.storage.local.set({ store : new_store }).then(_ => {
+    browser.storage.sync.set({ store : new_store }).then(_ => {
       setStore(new_store)
+      console.log('update store:', new_store)
     })
   }
   
   useEffect(() => {
-    browser.storage.local.get(['store']).then(results => {
-      if (results.store) {
-        reset(results.store as ExtensionStore)
-      }
-    })
-  }, [])
-
-  useEffect(() => {
+    if (!store.init) {
+      browser.storage.sync.get('store').then(results => {
+        if (results.store) {
+          setStore({ ...store, ...results.store, init : true })
+          console.log('init store:', store)
+        } else {
+          reset({ ...store, init : true })
+        }
+      })
+    }
     console.log('store:', store)
   }, [ store ])
 

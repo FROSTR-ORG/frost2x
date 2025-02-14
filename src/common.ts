@@ -14,7 +14,32 @@ export const PERMISSION_NAMES = Object.fromEntries([
   ['nip44.decrypt', 'decrypt messages from peers']
 ])
 
-function matchConditions(conditions, event) {
+interface NostrEvent {
+  kind: number
+  content: string
+  tags: string[]
+  [key: string]: any
+}
+
+interface Conditions {
+  kinds?: Record<number, boolean>
+  [key: string]: any
+}
+
+interface Policy {
+  conditions: Conditions
+  created_at: number
+}
+
+interface PolicyMap {
+  [host: string]: {
+    [accept: string]: {
+      [type: string]: Policy
+    }
+  }
+}
+
+function matchConditions(conditions: Conditions, event: NostrEvent): boolean {
   if (conditions?.kinds) {
     if (event.kind in conditions.kinds) return true
     else return false
@@ -23,13 +48,21 @@ function matchConditions(conditions, event) {
   return true
 }
 
-export async function getPermissionStatus(host, type, event) {
-  let {policies} = await browser.storage.local.get('policies')
+export async function getPermissionStatus(
+  host: string,
+  type: string,
+  event: NostrEvent
+): Promise<boolean | undefined> {
+  const {policies} = await browser.storage.local.get('policies') as {
+    policies: PolicyMap
+  }
 
   let answers = [true, false]
   for (let i = 0; i < answers.length; i++) {
     let accept = answers[i]
-    let {conditions} = policies?.[host]?.[accept]?.[type] || {}
+    let {conditions} = (policies?.[host]?.[String(accept)]?.[type] || {}) as {
+      conditions?: Conditions
+    }
 
     if (conditions) {
       if (type === 'signEvent') {
@@ -49,56 +82,81 @@ export async function getPermissionStatus(host, type, event) {
   return undefined
 }
 
-export async function updatePermission(host, type, accept, conditions) {
-  let {policies = {}} = await browser.storage.local.get('policies')
+export async function updatePermission(
+  host: string,
+  type: string,
+  accept: boolean,
+  conditions: Conditions
+): Promise<void> {
+  const {policies = {}} = (await browser.storage.local.get(
+    'policies'
+  )) as {
+    policies: PolicyMap
+  }
 
   // if the new conditions is "match everything", override the previous
   if (Object.keys(conditions).length === 0) {
     conditions = {}
   } else {
     // if we already had a policy for this, merge the conditions
-    let existingConditions = policies[host]?.[accept]?.[type]?.conditions
+    let existingConditions = policies[host]?.[String(accept)]?.[type]?.conditions
     if (existingConditions) {
       if (existingConditions.kinds && conditions.kinds) {
         Object.keys(existingConditions.kinds).forEach(kind => {
-          conditions.kinds[kind] = true
+          if (conditions.kinds) conditions.kinds[Number(kind)] = true
         })
       }
     }
   }
 
   // if we have a reverse policy (accept / reject) that is exactly equal to this, remove it
-  let other = !accept
-  let reverse = policies?.[host]?.[other]?.[type]
+  const other = !accept
+  const reverse = policies?.[host]?.[String(other)]?.[type]
   if (
     reverse &&
     JSON.stringify(reverse.conditions) === JSON.stringify(conditions)
   ) {
-    delete policies[host][other][type]
+    delete policies[host][String(other)][type]
   }
 
   // insert our new policy
   policies[host] = policies[host] || {}
-  policies[host][accept] = policies[host][accept] || {}
-  policies[host][accept][type] = {
+  policies[host][String(accept)] = policies[host][String(accept)] || {}
+  policies[host][String(accept)][type] = {
     conditions, // filter that must match the event (in case of signEvent)
     created_at: Math.round(Date.now() / 1000)
   }
 
-  browser.storage.local.set({policies})
+  await browser.storage.local.set({policies})
 }
 
-export async function removePermissions(host, accept, type) {
-  let {policies = {}} = await browser.storage.local.get('policies')
+export async function removePermissions(
+  host   : string  = 'undefined',
+  accept : string  = 'undefined',
+  type   : string  = 'undefined'
+): Promise<void> {
+  const { policies = {} } = (await browser.storage.local.get('policies')) as { policies: PolicyMap }
   delete policies[host]?.[accept]?.[type]
-  browser.storage.local.set({policies})
+  await browser.storage.local.set({policies})
 }
 
-export async function showNotification(host, answer, type, params) {
-  let {notifications} = await browser.storage.local.get('notifications')
+interface NotificationParams {
+  event?: NostrEvent
+  [key: string]: any
+}
+
+export async function showNotification(
+  host: string,
+  answer: boolean,
+  type: string,
+  params: NotificationParams
+): Promise<void> {
+  const {notifications} = await browser.storage.local.get('notifications') as {
+    notifications?: boolean
+  }
   if (notifications) {
-    let action = answer ? 'allowed' : 'denied'
-    browser.notifications.create(undefined, {
+    const action = answer ? 'allowed' : 'denied'
+    await browser.notifications.create(undefined, {
       type: 'basic',
       title: `${type} ${action} for ${host}`,
       message: JSON.stringify(
@@ -117,12 +175,15 @@ export async function showNotification(host, answer, type, params) {
   }
 }
 
-export async function getPosition(width, height) {
+export async function getPosition(
+  width: number,
+  height: number
+): Promise<{top: number; left: number}> {
   let left = 0
   let top = 0
 
   try {
-    const lastFocused = await browser.windows.getLastFocused()
+    const lastFocused = await browser.windows.getLastFocused() as browser.Windows.Window
 
     if (
       lastFocused &&

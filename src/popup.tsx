@@ -1,19 +1,23 @@
 import browser from 'webextension-polyfill'
-import {render} from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import {getPublicKey} from 'nostr-tools/pure'
 import * as nip19 from 'nostr-tools/nip19'
 import React, {useState, useRef, useEffect} from 'react'
 import QRCode from 'react-qr-code'
 
 function Popup() {
-  let [pubKey, setPubKey] = useState('')
+  let [pubKey, setPubKey] = useState<string | null>('')
 
-  let keys = useRef([])
+  let keys = useRef<string[]>([])
 
   useEffect(() => {
-    browser.storage.local.get(['private_key', 'relays']).then(results => {
+    browser.storage.local.get(['private_key', 'relays']).then((results: {
+      private_key?: string,
+      relays?: Record<string, { write: boolean }>
+    }) => {
       if (results.private_key) {
-        let hexKey = getPublicKey(results.private_key)
+        const privateKeyBytes = new TextEncoder().encode(results.private_key)
+        let hexKey = getPublicKey(privateKeyBytes)
         let npubKey = nip19.npubEncode(hexKey)
 
         setPubKey(npubKey)
@@ -22,7 +26,7 @@ function Popup() {
         keys.current.push(hexKey)
 
         if (results.relays) {
-          let relaysList = []
+          let relaysList: string[] = []
           for (let url in results.relays) {
             if (results.relays[url].write) {
               relaysList.push(url)
@@ -93,12 +97,16 @@ function Popup() {
     }
   }
 
-  function toggleKeyType(e) {
+  function toggleKeyType(e: React.MouseEvent<HTMLAnchorElement>) {
     e.preventDefault()
     let nextKeyType =
-      keys.current[(keys.current.indexOf(pubKey) + 1) % keys.current.length]
+      keys.current[(keys.current.indexOf(pubKey || '') + 1) % keys.current.length]
     setPubKey(nextKeyType)
   }
 }
 
-render(<Popup />, document.getElementById('main'))
+const container = document.getElementById('main')
+if (container) {
+  const root = createRoot(container)
+  root.render(<Popup />)
+}

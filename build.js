@@ -8,12 +8,13 @@ esbuild
   .build({
     bundle: true,
     entryPoints: {
-      'popup.build': './extension/popup.jsx',
-      'styles.build': './extension/styles.css',
-      'prompt.build': './extension/prompt.jsx',
-      'options.build': './extension/options.jsx',
-      'background.build': './extension/background.js',
-      'content-script.build': './extension/content-script.js'
+      'popup.build': './src/popup.tsx',
+      'styles.build': './src/styles.css',
+      'prompt.build': './src/prompt.tsx',
+      'options.build': './src/options.tsx',
+      'background.build': './src/background.ts',
+      'content-script.build': './src/content-script.ts',
+      'nostr-provider': './src/nostr-provider.ts'
     },
     outdir: './extension',
     sourcemap: prod ? false : 'inline',
@@ -22,9 +23,10 @@ esbuild
       global: 'self'
     },
     loader: {
-      '.js': 'jsx', // Ensure jsx loader for js files
-      '.ts': 'ts',  // Use the TypeScript loader for .ts files
-      '.tsx': 'tsx' // Use the TypeScript loader for .tsx files
+      '.js'  : 'js',  // Ensure jsx loader for js files
+      '.jsx' : 'jsx', // Ensure jsx loader for js files
+      '.ts'  : 'ts',  // Use the TypeScript loader for .ts files
+      '.tsx' : 'tsx'  // Use the TypeScript loader for .tsx files
     }
   })
   .then(() => console.log('build success.'))
