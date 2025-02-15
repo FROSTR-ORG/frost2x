@@ -369,8 +369,8 @@ function match_tags (
 
 function verify_event (event : SignedEvent) {
   const { content, created_at, id, kind, pubkey, sig, tags } = event
-  const pimg = JSON.stringify([ 0, pubkey, created_at, kind, tags, content ])
-  const dig  = Buffer.from(sha256(pimg)).toString('hex')
-  if (dig !== id) return false
+  const preimg = JSON.stringify([ 0, pubkey, created_at, kind, tags, content ])
+  const digest = Buffer.from(sha256(preimg)).toString('hex')
+  if (digest !== id) return false
   return schnorr.verify(sig, id, pubkey)
 }

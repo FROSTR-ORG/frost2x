@@ -4,6 +4,7 @@
   "scripts": {
     "build": "./build.js",
     "loader": "tsx --tsconfig ./test/tsconfig.json",
+    "keygen": "npm run loader test/keygen.ts",
     "scratch": "npm run loader test/scratch.ts"
   },
   "dependencies": {

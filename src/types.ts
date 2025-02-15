@@ -18,19 +18,19 @@ export interface PromptResolver {
 }
 
 export interface Message {
-  openSignUp?: boolean
-  prompt?: boolean
-  type?: string
-  params?: any
-  host?: string
-  accept?: boolean
-  conditions?: any
+  openSignUp ?: boolean
+  prompt     ?: boolean
+  type       ?: string
+  params     ?: any
+  host       ?: string
+  accept     ?: boolean
+  conditions ?: any
 }
 
 export interface ContentScriptMessage {
-  type: string
-  params: any
-  host?: string
+  type   : string
+  params : any
+  host  ?: string
 }
 
 export type PermissionType = 'replaceURL' | 'getPublicKey' | 'getRelays' | 'signEvent' | 'nip04.encrypt' | 'nip04.decrypt'
@@ -40,35 +40,35 @@ export interface Store {
 }
 
 export interface ProfilePointer {
-  pubkey: string
-  relays?: string[]
+  pubkey  : string
+  relays? : string[]
 }
 
 export interface EventPointer {
-  id: string
-  relays?: string[]
+  id      : string
+  relays? : string[]
 }
 
 export interface Nip19Data {
-  type: string
-  data: string | ProfilePointer | EventPointer
+  type : string
+  data : string | ProfilePointer | EventPointer
 }
 
 export interface Relay {
-  url: string
-  policy: {
-    read: boolean
-    write: boolean
+  url    : string
+  policy : {
+    read  : boolean
+    write : boolean
   }
 }
 
 export interface Permission {
-  host: string
-  type: string
-  accept: string
+  host   : string
+  type   : string
+  accept : string
   conditions: {
-    kinds?: Record<string, boolean>
+    kinds? : Record<string, boolean>
     [key: string]: any
   }
-  created_at: number
+  created_at : number
 }

@@ -5,7 +5,6 @@ import * as nip44      from 'nostr-tools/nip44'
 import { BifrostNode } from '@frostr/bifrost'
 import { Mutex }       from 'async-mutex'
 import { init_node }   from './lib/node.js'
-import { LRUCache }    from './utils.js'
 
 import {
   getEventHash,
@@ -33,25 +32,6 @@ import { Buff } from '@cmdcode/buff'
 let promptMutex = new Mutex()
 let openPrompt: PromptResolver | null = null
 let releasePromptMutex: () => void    = () => {}
-
-// let secretsCache = new LRUCache(100)
-// let previousSk: string | null = null
-
-// function getSharedSecret(sk: string, peer: string): Uint8Array {
-//   // Detect a key change and erase the cache if they changed their key
-//   if (previousSk !== sk) {
-//     secretsCache.clear()
-//   }
-
-//   let key = secretsCache.get(peer)
-
-//   if (!key) {
-//     key = nip44.v2.utils.getConversationKey(sk, peer)
-//     secretsCache.set(peer, key)
-//   }
-
-//   return key
-// }
 
 //set the width and height of the prompt window
 const width  = 340
@@ -254,7 +234,7 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
   try {
     switch (type) {
       case 'getPublicKey': {
-        return node.pubkey
+        return node.group.group_pk.slice(2)
       }
       case 'getRelays': {
         let results = await browser.storage.local.get('relays')
@@ -266,15 +246,14 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
         } catch (error: any) {
           return { error: { message: error.message } }
         }
-
-        const event = params.event
-        const id    = event.id ?? getEventHash(event)
+        console.log('params:', params)
+        const tmpl  = params.event
+        const id    = tmpl.id ?? getEventHash(tmpl)
         const res   = await node.req.sign(id, [store.server])
         if (!res.ok) return { error: { message: res.err } }
-
-        console.log('received response:', res)
-
-        return { ...event, id, sig: res.data }
+        const event = { ...tmpl, id, sig: res.data }
+        console.log('event:', event)
+        return event
       }
       case 'nip04.encrypt': {
         let { peer, plaintext } = params

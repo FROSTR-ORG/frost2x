@@ -74,5 +74,9 @@ export async function init_node () : Promise<BifrostNode | null> {
     console.log('background node connected')
   })
 
+  node.client.on('message', (msg) => {
+    console.log('message id:', msg.env.id)
+  })
+
   return node
 }

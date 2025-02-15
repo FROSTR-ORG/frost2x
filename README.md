@@ -1,12 +1,14 @@
 # frost2x
 
-### notes and other stuff signed by an extension
+### notes and other stuff signed by an extension using FROST.
 
-## Nostr Signer Extension
+## Frostr Signer Extension
 
-Use this to sign [Nostr](https://github.com/nostr-protocol/nostr) events on web-apps without having to give them your keys.
+Use this to sign [Nostr](https://github.com/nostr-protocol/nostr) events on web-apps without having to store your private key in the browser or extension.
 
-It implements [NIP-07](https://github.com/nostr-protocol/nips/blob/master/07.md), i.e. provides a `window.nostr` object which has the following methods:
+It implements [Bifrost](https://github.com/frostr-org/bifrost) in the background, which communicates with the [Igloo](https://github.com/frostr-org/igloo) desktop app to sign messages.
+
+You can also use it to sign other stuff, not just Nostr events.
 
 ```
 async window.nostr.getPublicKey(): string // returns your public key as hex
@@ -18,24 +20,14 @@ async window.nostr.nip44.encrypt(pubkey, plaintext): string // takes pubkey, pla
 async window.nostr.nip44.decrypt(pubkey, ciphertext): string // takes pubkey, ciphertext, returns plaintext as specified in nip-44
 ```
 
-This extension is Chromium-only. For a maintained Firefox fork, see [nos2x-fox](https://diegogurpegui.com/nos2x-fox/).
-
-## Demo Video
-
-https://user-images.githubusercontent.com/1653275/149637382-65d50a85-fe30-4259-b7de-99c88b089b53.mp4
-
-## Install
-
-- [Chrome Extension](https://chrome.google.com/webstore/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp)
-
-## Develop
+## Development
 
 To run the plugin from this code:
 
 ```
-git clone https://github.com/fiatjaf/nos2x
-cd nos2x
-yarn
+git clone https://github.com/frostr-org/frost2x
+cd frost2x
+npm install
 ./build.js prod
 ```
 
@@ -46,8 +38,24 @@ then
 3. click on "Load unpackaged";
 4. select the `extension/` folder of this repository.
 
+To run a development relay and Bifrost node:
+
+```
+npm run scratch
+```
+
+This will start a local relay on port 8002 and a Bifrost node listening on port 8003. The test Bifrost node will use the `test/src/cred.json` file to coordinate with the extension.
+
+To generate a new set of credentials:
+
+```
+npm run keygen <optional_secret_key>
+```
+
+This will generate a credentials package with a set of shares. You can copy/paste the group credentials and one of the shares into the `test/src/cred.json` file, and another share into the frost2x extension (under the options menu).
+
+Feel free to modify the `test/src/keygen.ts` file to generate credentials for more members, or use a different threshold.
+
 ---
 
 LICENSE: public domain.
-
-Icon made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>.
