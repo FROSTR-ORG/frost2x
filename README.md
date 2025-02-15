@@ -28,6 +28,16 @@ In the options menu for the extension, you can configure the credentials for the
 
 For now, you also have to specify the public key of the peer you wish to communicate with for signing. Peer discovery will be improved in the future.
 
+To generate a set of credentials for a group, you can use the `keygen` script in the root of the repository:
+
+```
+npm run keygen <optional_secret_key>
+```
+
+This will generate a credentials package with a set of shares. You can copy/paste the group credentials and one of the shares into the `test/src/cred.json` file, and another share into the frost2x extension.
+
+Feel free to modify the `test/src/keygen.ts` file to generate credentials for more members, or use a different threshold.
+
 ## Development
 
 To build the plugin from source:
@@ -46,12 +56,3 @@ npm run scratch
 
 This will start a local relay on port 8002 and a Bifrost node. The test Bifrost node will use the `test/src/cred.json` file to coordinate with the extension.
 
-To generate a new set of credentials:
-
-```
-npm run keygen <optional_secret_key>
-```
-
-This will generate a credentials package with a set of shares. You can copy/paste the group credentials and one of the shares into the `test/src/cred.json` file, and another share into the frost2x extension (under the options menu).
-
-Feel free to modify the `test/src/keygen.ts` file to generate credentials for more members, or use a different threshold.
