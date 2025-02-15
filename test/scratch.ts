@@ -12,8 +12,8 @@ relay.onconnect(() => {
   console.log('relay connected')
 })
 
-node.client.on('message', (message) => {
-  console.log('message', message)
+node.client.on('message', (msg) => {
+  console.log('received message event:', msg)
 })
 
 await relay.start()

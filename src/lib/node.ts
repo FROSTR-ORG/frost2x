@@ -75,7 +75,7 @@ export async function init_node () : Promise<BifrostNode | null> {
   })
 
   node.client.on('message', (msg) => {
-    console.log('message id:', msg.env.id)
+    console.log('received message event:', msg.env.id)
   })
 
   return node
