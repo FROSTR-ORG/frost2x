@@ -34,9 +34,9 @@ To generate a set of credentials for a group, you can use the `keygen` script in
 npm run keygen <optional_secret_key>
 ```
 
-This will generate a credentials package with a set of shares. You can copy/paste the group credentials and one of the shares into the `test/src/cred.json` file, and another share into the frost2x extension.
+This will generate a credentials package with a set of shares. You can copy/paste the group credentials and one of the shares into the `test/cred.json` file, and another share into the frost2x extension.
 
-Feel free to modify the `test/src/keygen.ts` file to generate credentials for more members, or use a different threshold.
+Feel free to modify the `test/keygen.ts` file to generate credentials for more members, or use a different threshold.
 
 ## Development
 
