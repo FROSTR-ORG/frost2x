@@ -9,13 +9,24 @@ Notes and other stuff signed by an extension, using the powers of FROST.
 
 ## Overview
 
-This project is a fork of the popular nos2x extension. It uses the [Bifrost](https://github.com/frostr-org/bifrost) library in the background to encrypt and sign events.
+This project is a fork of the popular nos2x extension. It uses the [Bifrost](https://github.com/frostr-org/bifrost) library in the background to encrypt and sign events. The bifrost node will communicate with other nodes in the network to coordinate signing.
 
-This extension is intended to be used in conjunction with the [Igloo](https://github.com/frostr-org/igloo) desktop app for key generation and sharing.
-
-The development section below describes how to run a local relay and Bifrost node for development and testing.
+This extension is intended to be used in conjunction with the [Igloo](https://github.com/frostr-org/igloo) desktop app for key generation and sharing, however you can also run a local relay and Bifrost node for development and testing.
 
 The standard NIP-07 signing interface remains unchanged.
+
+## Installation
+
+This extension is not yet available in the Chrome Web Store, so you will need to install it manually.
+
+1. Download the `extension/` folder of this repository.
+2. Go to `chrome://extensions`.
+3. Enable "Developer mode" if it is not already enabled.
+4. Click on "Load unpacked" and select the `extension/` folder of this repository.
+
+In the options menu for the extension, you can configure the credentials for the signing group, and the share that you want to use.
+
+For now, you also have to specify the public key of the peer you wish to communicate with for signing. Peer discovery will be improved in the future.
 
 ## Development
 
@@ -25,13 +36,6 @@ To build the plugin from source:
 npm install
 ./build.js prod
 ```
-
-then
-
-1. go to `chrome://extensions`;
-2. ensure "developer mode" is enabled on the top right;
-3. click on "Load unpackaged";
-4. select the `extension/` folder of this repository.
 
 You can also run a local relay and Bifrost node for development and testing:
 
