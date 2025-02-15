@@ -1,14 +1,19 @@
 # frost2x
 
-### notes and other stuff signed by an extension using FROST.
+Notes and other stuff signed by an extension, using the powers of FROST.
 
-## Frostr Signer Extension
+## Features
+
+* Fork of the popular [nos2x](https://github.com/nos2x) extension.
+* Uses the [Bifrost](https://github.com/frostr-org/bifrost) library for coordianted signing.
+* Uses the [Igloo](https://github.com/frostr-org/igloo) desktop app for key generation and sharing.
+* Updated codebase to use typescript and run-time type checking.
 
 Use this to sign [Nostr](https://github.com/nostr-protocol/nostr) events on web-apps without having to store your private key in the browser or extension.
 
 It implements [Bifrost](https://github.com/frostr-org/bifrost) in the background, which communicates with the [Igloo](https://github.com/frostr-org/igloo) desktop app to sign messages.
 
-You can also use it to sign other stuff, not just Nostr events.
+The standard NIP-07 signing interface remains unchanged:
 
 ```
 async window.nostr.getPublicKey(): string // returns your public key as hex
@@ -22,11 +27,9 @@ async window.nostr.nip44.decrypt(pubkey, ciphertext): string // takes pubkey, ci
 
 ## Development
 
-To run the plugin from this code:
+To build the plugin from source:
 
 ```
-git clone https://github.com/frostr-org/frost2x
-cd frost2x
 npm install
 ./build.js prod
 ```
@@ -38,13 +41,14 @@ then
 3. click on "Load unpackaged";
 4. select the `extension/` folder of this repository.
 
-To run a development relay and Bifrost node:
+You can also run a local relay and Bifrost node for development and testing:
 
-```
+```bash
+# Run the test/scratch.ts script.
 npm run scratch
 ```
 
-This will start a local relay on port 8002 and a Bifrost node listening on port 8003. The test Bifrost node will use the `test/src/cred.json` file to coordinate with the extension.
+This will start a local relay on port 8002 and a Bifrost node. The test Bifrost node will use the `test/src/cred.json` file to coordinate with the extension.
 
 To generate a new set of credentials:
 
