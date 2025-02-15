@@ -1,4 +1,5 @@
 {
+  "name": "@frostr/frost2x",
   "license": "WTFPL",
   "type": "module",
   "scripts": {
