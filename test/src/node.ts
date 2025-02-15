@@ -5,7 +5,7 @@ import {
   decode_share_pkg
 } from '@frostr/bifrost/lib'
 
-import CRED from './cred.json' assert { type: 'json' }
+import CRED from '../cred.json' assert { type: 'json' }
 
 export function get_node () {
 
