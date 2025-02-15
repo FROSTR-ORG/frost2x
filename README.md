@@ -2,28 +2,20 @@
 
 Notes and other stuff signed by an extension, using the powers of FROST.
 
-## Features
-
-* Fork of the popular [nos2x](https://github.com/nos2x) extension.
-* Uses the [Bifrost](https://github.com/frostr-org/bifrost) library for coordianted signing.
-* Uses the [Igloo](https://github.com/frostr-org/igloo) desktop app for key generation and sharing.
+* Fork of the popular [nos2x](https://github.com/fiatjaf/nos2x) extension.
+* Uses the [Bifrost](https://github.com/frostr-org/bifrost) library for encryption and signing of events.
+* Allows FROST-based signing for any website that supports NIP-07.
 * Updated codebase to use typescript and run-time type checking.
 
-Use this to sign [Nostr](https://github.com/nostr-protocol/nostr) events on web-apps without having to store your private key in the browser or extension.
+## Overview
 
-It implements [Bifrost](https://github.com/frostr-org/bifrost) in the background, which communicates with the [Igloo](https://github.com/frostr-org/igloo) desktop app to sign messages.
+This project is a fork of the popular nos2x extension. It uses the [Bifrost](https://github.com/frostr-org/bifrost) library in the background to encrypt and sign events.
 
-The standard NIP-07 signing interface remains unchanged:
+This extension is intended to be used in conjunction with the [Igloo](https://github.com/frostr-org/igloo) desktop app for key generation and sharing.
 
-```
-async window.nostr.getPublicKey(): string // returns your public key as hex
-async window.nostr.signEvent(event): Event // returns the full event object signed
-async window.nostr.getRelays(): { [url: string]: RelayPolicy } // returns a map of relays
-async window.nostr.nip04.encrypt(pubkey, plaintext): string // returns ciphertext+iv as specified in nip04
-async window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertext+iv as specified in nip04
-async window.nostr.nip44.encrypt(pubkey, plaintext): string // takes pubkey, plaintext, returns ciphertext as specified in nip-44
-async window.nostr.nip44.decrypt(pubkey, ciphertext): string // takes pubkey, ciphertext, returns plaintext as specified in nip-44
-```
+The development section below describes how to run a local relay and Bifrost node for development and testing.
+
+The standard NIP-07 signing interface remains unchanged.
 
 ## Development
 
@@ -59,7 +51,3 @@ npm run keygen <optional_secret_key>
 This will generate a credentials package with a set of shares. You can copy/paste the group credentials and one of the shares into the `test/src/cred.json` file, and another share into the frost2x extension (under the options menu).
 
 Feel free to modify the `test/src/keygen.ts` file to generate credentials for more members, or use a different threshold.
-
----
-
-LICENSE: public domain.
