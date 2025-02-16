@@ -1,10 +1,14 @@
 import browser         from 'webextension-polyfill'
 import * as nip19      from 'nostr-tools/nip19'
-import * as nip04      from 'nostr-tools/nip04'
-import * as nip44      from 'nostr-tools/nip44'
+
+import { Buff }        from '@cmdcode/buff'
 import { BifrostNode } from '@frostr/bifrost'
 import { Mutex }       from 'async-mutex'
-import { init_node, keep_alive }   from './lib/node.js'
+
+import {
+  init_node,
+  keep_alive
+} from './lib/node.js'
 
 import {
   getEventHash,
@@ -27,8 +31,8 @@ import {
   showNotification,
   getPosition
 } from './common.js'
-import { Buff } from '@cmdcode/buff'
-import { decrypt_content, encrypt_content } from './lib/crypto.js'
+
+import * as crypto from './lib/crypto.js'
 
 let promptMutex = new Mutex()
 let openPrompt: PromptResolver | null = null
@@ -256,31 +260,32 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
         const res = await node.req.ecdh([ store.server ], peer)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
-        return encrypt_content(secret, plaintext)
+        return crypto.nip04_encrypt(secret, plaintext)
       }
       case 'nip04.decrypt': {
         let { peer, ciphertext } = params
         const res = await node.req.ecdh([ store.server ], peer)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
-        return decrypt_content(secret, ciphertext)
+        return crypto.nip04_decrypt(secret, ciphertext)
       }
       case 'nip44.encrypt': {
         const { peer, plaintext } = params
         const res = await node.req.ecdh([ store.server ], peer)
         if (!res.ok) return { error: { message: res.err } }
-        const secret = Buff.hex(res.data.slice(2))
-        return nip44.v2.encrypt(plaintext, secret)
+        const secret = res.data.slice(2)
+        return crypto.nip44_encrypt(plaintext, secret)
       }
       case 'nip44.decrypt': {
         const { peer, ciphertext } = params
         const res = await node.req.ecdh([ store.server ], peer)
         if (!res.ok) return { error: { message: res.err } }
-        const secret = Buff.hex(res.data.slice(2))
-        return nip44.v2.decrypt(ciphertext, secret)
+        const secret = res.data.slice(2)
+        return crypto.nip44_decrypt(ciphertext, secret)
       }
     }
   } catch (error: any) {
+    console.error('background error:', error)
     return { error: { message: error.message, stack: error.stack } }
   }
 }
