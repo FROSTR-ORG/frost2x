@@ -4,14 +4,20 @@ import { decode_share_pkg }    from '@frostr/bifrost/lib'
 import useStore from './store.js'
 
 export default function () {
-
   const { store, update }   = useStore()
   const [ input, setInput ] = useState<string>('')
   const [ error, setError ] = useState<string | null>(null)
+  const [ decoded, setDecoded ] = useState<string | null>(null)
 
-  const displayData = (pkg : string) => {
-    const data = decode_share_pkg(pkg)
-    return JSON.stringify(data, null, 2)
+  const tryDecodeData = (pkg: string) => {
+    if (pkg === '') return null
+    try {
+      const data = decode_share_pkg(pkg)
+      setError(null)
+      return JSON.stringify(data, null, 2)
+    } catch (err) {
+      return null
+    }
   }
 
   const updateStore = () => {
@@ -21,7 +27,7 @@ export default function () {
     }
     try {
       decode_share_pkg(input)
-      update({ share : input })
+      update({ share: input })
       setError(null)
     } catch (err) {
       console.error(err)
@@ -35,9 +41,13 @@ export default function () {
         setInput(store.share)
       }
     } else if (store.share === '') {
-      update({ share : null })
+      update({ share: null })
     }
-  }, [ store.share ])
+  }, [store.share])
+
+  useEffect(() => {
+    setDecoded(tryDecodeData(input))
+  }, [input])
 
   return (
     <div>
@@ -59,9 +69,7 @@ export default function () {
           />
           <button onClick={() => updateStore()}>save</button>
         </div>
-        { input !== '' && error === null &&
-          <pre>{displayData(input)}</pre> 
-        }
+        {decoded && <pre>{decoded}</pre>}
         <p>{error}</p>
       </div>
     </div>
