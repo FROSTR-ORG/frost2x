@@ -30,6 +30,15 @@ const store_schema = z.object({
   share  : z.string().nullable()
 })
 
+export async function keep_alive (
+  node : BifrostNode | null
+) : Promise<BifrostNode | null> {
+  if (node === null) {
+    return init_node()
+  }
+  return node
+}
+
 export async function init_node () : Promise<BifrostNode | null> {
 
   let perms : Record<string, { read: boolean, write: boolean }>,
@@ -44,6 +53,9 @@ export async function init_node () : Promise<BifrostNode | null> {
     console.error(err)
     return null
   }
+
+  console.log('relays:', perms)
+  console.log('store:',  store)
 
   const { group, server, share } = store
 
@@ -78,5 +90,5 @@ export async function init_node () : Promise<BifrostNode | null> {
     console.log('received message event:', msg.env.id)
   })
 
-  return node
+  return node.connect()
 }

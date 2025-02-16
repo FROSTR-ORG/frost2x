@@ -5,16 +5,16 @@ import useStore from './store.js'
 export default function () {
 
   const { store, update }   = useStore()
-  const [ input, setInput ] = useState(store.server)
+  const [ input, setInput ] = useState(store.server ?? '')
 
   useEffect(() => {
     if (input !== store.server) {
-      setInput(store.server)
+      setInput(store.server ?? '')
     }
   }, [ store.server ])
 
   const updateInput = (value : string) => {
-    const input = (value !== '') ? value : null
+    const input = (value !== '') ? value : ''
     setInput(input)
   }
 
@@ -33,7 +33,7 @@ export default function () {
           <input
             type="text"
             style={{ width: '600px' }}
-            value={input ?? ''}
+            value={input}
             onChange={(e) => updateInput(e.target.value)}
           />
           {

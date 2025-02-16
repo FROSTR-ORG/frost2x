@@ -6,7 +6,7 @@ import useStore from './store.js'
 export default function () {
 
   const { store, update }   = useStore()
-  const [ input, setInput ] = useState<string | null>(null)
+  const [ input, setInput ] = useState<string>('')
   const [ error, setError ] = useState<string | null>(null)
 
   const displayData = (pkg : string) => {
@@ -15,7 +15,7 @@ export default function () {
   }
 
   const updateStore = () => {
-    if (input === null) {
+    if (input === '') {
       setError('no input')
       return
     }
@@ -30,8 +30,12 @@ export default function () {
   }
 
   useEffect(() => {
-    if (store.group !== null && input === null) {
-      setInput(store.group)
+    if (store.group !== null) {
+      if (input === '') {
+        setInput(store.group)
+      }
+    } else if (store.group === '') {
+      update({ group : null })
     }
   }, [ store.group ])
 
@@ -50,12 +54,12 @@ export default function () {
           <input
             type="text"
             style={{ width: '600px' }}
-            value={input ?? ''}
+            value={input}
             onChange={(e) => setInput(e.target.value)}
           />
           <button onClick={() => updateStore()}>save</button>
         </div>
-        { input !== null && error === null &&
+        { input !== '' && error === null &&
           <pre>{displayData(input)}</pre> 
         }
         <p>{error}</p>

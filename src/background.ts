@@ -4,7 +4,7 @@ import * as nip04      from 'nostr-tools/nip04'
 import * as nip44      from 'nostr-tools/nip44'
 import { BifrostNode } from '@frostr/bifrost'
 import { Mutex }       from 'async-mutex'
-import { init_node }   from './lib/node.js'
+import { init_node, keep_alive }   from './lib/node.js'
 
 import {
   getEventHash,
@@ -28,6 +28,7 @@ import {
   getPosition
 } from './common.js'
 import { Buff } from '@cmdcode/buff'
+import { decrypt_content, encrypt_content } from './lib/crypto.js'
 
 let promptMutex = new Mutex()
 let openPrompt: PromptResolver | null = null
@@ -41,26 +42,13 @@ let node : BifrostNode | null = null
 
 browser.runtime.onInstalled.addListener(async (details: browser.Runtime.OnInstalledDetailsType) => {
   if (details.reason === 'install') browser.runtime.openOptionsPage()
-
-  if (node === null) {
-    init_node().then((res) => {
-      if (res !== null) {
-        node = res
-        node.connect()
-      }
-    })
-  }
+  node = await init_node()
 })
 
-browser.storage.onChanged.addListener((changes: { [key: string]: any }, area: string) => {
+browser.storage.onChanged.addListener(async (changes: { [key: string]: any }, area: string) => {
   if (area === 'sync') {
     if ('relays' in changes || 'store' in changes) {
-      init_node().then((res) => {
-        if (res !== null) {
-          node = res
-          node.connect()
-        }
-      })
+      node = await init_node()
     }
   }
 })
@@ -227,6 +215,8 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
     return { error: { message: 'no host server configured' } }
   }
 
+  node = await keep_alive(node)
+
   if (!node) {
     return { error: { message: 'bifrost node is not initialized' } }
   }
@@ -241,16 +231,22 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
         return results.relays || {}
       }
       case 'signEvent': {
+
+        console.log('params:', params)
+        const pubkey = node.group.group_pk.slice(2)
+        const tmpl   = { ...params.event, pubkey }
+
         try {
-          validateEvent(params.event)
+          validateEvent(tmpl)
+          console.log('event template:', tmpl)
         } catch (error: any) {
           return { error: { message: error.message } }
         }
-        console.log('params:', params)
-        const tmpl  = params.event
-        const id    = tmpl.id ?? getEventHash(tmpl)
-        const res   = await node.req.sign(id, [store.server])
+
+        const id     = tmpl.id ?? getEventHash(tmpl)
+        const res    = await node.req.sign(id, [ store.server ])
         if (!res.ok) return { error: { message: res.err } }
+
         const event = { ...tmpl, id, sig: res.data }
         console.log('event:', event)
         return event
@@ -259,27 +255,29 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
         let { peer, plaintext } = params
         const res = await node.req.ecdh([ store.server ], peer)
         if (!res.ok) return { error: { message: res.err } }
-        return nip04.encrypt(res.data, peer, plaintext)
+        const secret = res.data.slice(2)
+        return encrypt_content(secret, plaintext)
       }
       case 'nip04.decrypt': {
         let { peer, ciphertext } = params
         const res = await node.req.ecdh([ store.server ], peer)
         if (!res.ok) return { error: { message: res.err } }
-        return nip04.decrypt(res.data, peer, ciphertext)
+        const secret = res.data.slice(2)
+        return decrypt_content(secret, ciphertext)
       }
       case 'nip44.encrypt': {
         const { peer, plaintext } = params
         const res = await node.req.ecdh([ store.server ], peer)
         if (!res.ok) return { error: { message: res.err } }
-        const key = Buff.hex(res.data)
-        return nip44.v2.encrypt(plaintext, key)
+        const secret = Buff.hex(res.data.slice(2))
+        return nip44.v2.encrypt(plaintext, secret)
       }
       case 'nip44.decrypt': {
         const { peer, ciphertext } = params
         const res = await node.req.ecdh([ store.server ], peer)
         if (!res.ok) return { error: { message: res.err } }
-        const key = Buff.hex(res.data)
-        return nip44.v2.decrypt(ciphertext, key)
+        const secret = Buff.hex(res.data.slice(2))
+        return nip44.v2.decrypt(ciphertext, secret)
       }
     }
   } catch (error: any) {
