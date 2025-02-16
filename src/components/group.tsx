@@ -4,14 +4,20 @@ import { decode_group_pkg }    from '@frostr/bifrost/lib'
 import useStore from './store.js'
 
 export default function () {
-
   const { store, update }   = useStore()
   const [ input, setInput ] = useState<string>('')
   const [ error, setError ] = useState<string | null>(null)
+  const [ decoded, setDecoded ] = useState<string | null>(null)
 
-  const displayData = (pkg : string) => {
-    const data = decode_group_pkg(pkg)
-    return JSON.stringify(data, null, 2)
+  const tryDecodeData = (pkg: string) => {
+    if (pkg === '') return null
+    try {
+      const data = decode_group_pkg(pkg)
+      setError(null)
+      return JSON.stringify(data, null, 2)
+    } catch (err) {
+      return null
+    }
   }
 
   const updateStore = () => {
@@ -56,9 +62,7 @@ export default function () {
           />
           <button onClick={() => updateStore()}>save</button>
         </div>
-        { input !== '' && error === null &&
-          <pre>{displayData(input)}</pre> 
-        }
+        {decoded && <pre>{decoded}</pre>}
         <p>{error}</p>
       </div>
     </div>

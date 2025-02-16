@@ -4,15 +4,20 @@ import { decode_share_pkg }    from '@frostr/bifrost/lib'
 import useStore from './store.js'
 
 export default function () {
-
   const { store, update }   = useStore()
   const [ input, setInput ] = useState<string>('')
   const [ error, setError ] = useState<string | null>(null)
   const [ show, setShow ]   = useState<boolean>(false)
 
-  const displayData = (pkg : string) => {
-    const data = decode_share_pkg(pkg)
-    return JSON.stringify(data, null, 2)
+  const tryDecodeData = (pkg: string) => {
+    if (pkg === '') return null
+    try {
+      const data = decode_share_pkg(pkg)
+      setError(null)
+      return JSON.stringify(data, null, 2)
+    } catch (err) {
+      return null
+    }
   }
 
   const updateStore = () => {
