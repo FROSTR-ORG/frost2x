@@ -15,7 +15,8 @@ import {
 import type { ExtensionStore } from './types.js'
 
 function Popup() : ReactElement {
-  let [ pubKey, setPubKey ] = useState<string | null>('')
+  let [ pubKey, setPubKey ]         = useState<string | null>('')
+  let [ nodeStatus, setNodeStatus ] = useState<string>('stopped')
 
   let keys = useRef<string[]>([])
 
@@ -24,7 +25,6 @@ function Popup() : ReactElement {
       store?  : ExtensionStore,
       relays? : Record<string, { write: boolean }>
     }) => {
-      console.log(results)
       if (typeof results.store?.group === 'string') {
         const group = decode_group_pkg(results.store.group)
         let hexKey  = group.group_pk.slice(2)
@@ -55,6 +55,12 @@ function Popup() : ReactElement {
         setPubKey(null)
       }
     })
+
+    checkNodeStatus()
+    
+    const interval = setInterval(checkNodeStatus, 2500)
+    
+    return () => clearInterval(interval)
   }, [])
 
   return (
@@ -79,21 +85,18 @@ function Popup() : ReactElement {
             <code>{pubKey}</code>
           </pre>
 
-          {/* <div
-            style={{
-              height: 'auto',
-              // margin: '0 auto',
-              maxWidth: 256,
-              width: '100%'
-            }}
-          >
-            <QRCode
-              size={256}
-              style={{height: 'auto', maxWidth: '100%', width: '100%'}}
-              value={pubKey.startsWith('n') ? pubKey.toUpperCase() : pubKey}
-              viewBox={`0 0 256 256`}
-            />
-          </div> */}
+          <div style={{ marginBottom: '10px' }}>
+            node status: <span style={{
+              color: nodeStatus === 'running' ? 'green' : 
+                     nodeStatus === 'stopped' ? 'red' : 'gray'
+            }}>
+              {nodeStatus}
+            </span>
+          </div>
+
+          <button onClick={handleNodeReset}>
+            reset
+          </button>
         </>
       )}
     </div>
@@ -112,6 +115,24 @@ function Popup() : ReactElement {
     let nextKeyType =
       keys.current[(keys.current.indexOf(pubKey || '') + 1) % keys.current.length]
     setPubKey(nextKeyType)
+  }
+
+  async function checkNodeStatus() {
+    try {
+      const res = await browser.runtime.sendMessage({ type: 'get_node_status' }) as { status: string }
+      setNodeStatus(res.status)
+    } catch (error) {
+      console.error('Error checking node status:', error)
+      setNodeStatus('unknown')
+    }
+  }
+
+  async function handleNodeReset() {
+    try {
+      browser.runtime.sendMessage({ type: 'node_reset' });
+    } catch (error) {
+      console.error('error resetting node:', error);
+    }
   }
 }
 

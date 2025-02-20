@@ -208,6 +208,15 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
     }
   }
 
+  if (type === 'node_reset') {
+    node = await init_node()
+    return { success: true }
+  }
+
+  if (type === 'get_node_status') {
+    return { status: node ? 'running' : 'stopped' }
+  }
+
   const { store } = await browser.storage.sync.get('store') as { store: ExtensionStore }
 
   if (!store.peers) {
@@ -260,28 +269,28 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
       }
       case 'nip04.encrypt': {
         let { peer, plaintext } = params
-        const res = await node.req.ecdh(peers, peer)
+        const res = await node.req.ecdh(peer, peers)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip04_encrypt(secret, plaintext)
       }
       case 'nip04.decrypt': {
         let { peer, ciphertext } = params
-        const res = await node.req.ecdh(peers, peer)
+        const res = await node.req.ecdh(peer, peers)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip04_decrypt(secret, ciphertext)
       }
       case 'nip44.encrypt': {
         const { peer, plaintext } = params
-        const res = await node.req.ecdh(peers, peer)
+        const res = await node.req.ecdh(peer, peers)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip44_encrypt(plaintext, secret)
       }
       case 'nip44.decrypt': {
         const { peer, ciphertext } = params
-        const res = await node.req.ecdh(peers, peer)
+        const res = await node.req.ecdh(peer, peers)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip44_decrypt(ciphertext, secret)
