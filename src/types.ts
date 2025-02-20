@@ -1,9 +1,15 @@
+export type PeerEntry = [ string, PeerConfig ]
+
+export interface PeerConfig {
+  send : boolean
+  recv : boolean
+}
 
 export interface ExtensionStore {
   init   : boolean
-  group  : string | null
-  server : string | null
-  share  : string | null
+  group  : string      | null
+  peers  : PeerEntry[] | null
+  share  : string      | null
 }
 
 export interface StoreAPI {

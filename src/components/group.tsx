@@ -16,16 +16,16 @@ export default function () {
 
   const updateStore = () => {
     if (input === '') {
-      setError('no input')
-      return
-    }
-    try {
-      decode_group_pkg(input)
-      update({ group : input })
-      setError(null)
-    } catch (err) {
-      console.error(err)
-      setError('failed to decode package data')
+      update({ group : null })
+    } else {
+      try {
+        decode_group_pkg(input)
+        update({ group : input })
+        setError(null)
+      } catch (err) {
+        console.error(err)
+        setError('failed to decode package data')
+      }
     }
   }
 

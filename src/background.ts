@@ -1,7 +1,6 @@
 import browser         from 'webextension-polyfill'
 import * as nip19      from 'nostr-tools/nip19'
 
-import { Buff }        from '@cmdcode/buff'
 import { BifrostNode } from '@frostr/bifrost'
 import { Mutex }       from 'async-mutex'
 
@@ -21,7 +20,8 @@ import {
   EventPointer,
   Nip19Data,
   ContentScriptMessage,
-  Message
+  Message,
+  ExtensionStore
 } from './types.js'
 
 import {
@@ -208,15 +208,18 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
     }
   }
 
-  // if we're here this means it was accepted
-  interface Store {
-    server: string
+  const { store } = await browser.storage.sync.get('store') as { store: ExtensionStore }
+
+  if (!store.peers) {
+    return { error: { message: 'no peers configured' } }
   }
 
-  const { store } = await browser.storage.sync.get('store') as { store: Store }
+  const peers = store.peers
+    .filter(([ _, value ]) => value.send)
+    .map(([key]) => key)
 
-  if (store.server === undefined) {
-    return { error: { message: 'no host server configured' } }
+  if (peers.length === 0) {
+    return { error: { message: 'no peers selected for signing' } }
   }
 
   node = await keep_alive(node)
@@ -248,7 +251,7 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
         }
 
         const id     = tmpl.id ?? getEventHash(tmpl)
-        const res    = await node.req.sign(id, [ store.server ])
+        const res    = await node.req.sign(id, peers)
         if (!res.ok) return { error: { message: res.err } }
 
         const event = { ...tmpl, id, sig: res.data }
@@ -257,28 +260,28 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
       }
       case 'nip04.encrypt': {
         let { peer, plaintext } = params
-        const res = await node.req.ecdh([ store.server ], peer)
+        const res = await node.req.ecdh(peers, peer)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip04_encrypt(secret, plaintext)
       }
       case 'nip04.decrypt': {
         let { peer, ciphertext } = params
-        const res = await node.req.ecdh([ store.server ], peer)
+        const res = await node.req.ecdh(peers, peer)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip04_decrypt(secret, ciphertext)
       }
       case 'nip44.encrypt': {
         const { peer, plaintext } = params
-        const res = await node.req.ecdh([ store.server ], peer)
+        const res = await node.req.ecdh(peers, peer)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip44_encrypt(plaintext, secret)
       }
       case 'nip44.decrypt': {
         const { peer, ciphertext } = params
-        const res = await node.req.ecdh([ store.server ], peer)
+        const res = await node.req.ecdh(peers, peer)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip44_decrypt(ciphertext, secret)

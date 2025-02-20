@@ -15,6 +15,14 @@ import type { ExtensionStore } from '../types.js'
 
 import browser from 'webextension-polyfill'
 
+const peers_schema = z.tuple([
+  z.string(), 
+  z.object({
+    send : z.boolean(),
+    recv : z.boolean()
+  })
+])
+
 const perms_schema = z.record(
   z.string(), 
   z.object({
@@ -26,7 +34,7 @@ const perms_schema = z.record(
 const store_schema = z.object({
   init   : z.boolean(),
   group  : z.string().nullable(),
-  server : z.string().nullable(),
+  peers  : peers_schema.array().nullable(),
   share  : z.string().nullable()
 })
 
@@ -57,9 +65,9 @@ export async function init_node () : Promise<BifrostNode | null> {
   console.log('relays:', perms)
   console.log('store:',  store)
 
-  const { group, server, share } = store
+  const { group, peers, share } = store
 
-  if (group === null || server === null || share === null) {
+  if (group === null || peers === null || share === null) {
     console.error('extension store is missing required fields')
     return null
   }
@@ -75,6 +83,10 @@ export async function init_node () : Promise<BifrostNode | null> {
     console.error(err)
     return null
   }
+
+  const authorized = peers
+    .filter(([ _, perms ]) => perms.recv)
+    .map(([ key ]) => key)
 
   const relays = Object.entries(perms)
     .filter(([ _, perms ]) => perms.write)

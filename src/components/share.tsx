@@ -16,16 +16,16 @@ export default function () {
 
   const updateStore = () => {
     if (input === '') {
-      setError('no input')
-      return
-    }
-    try {
-      decode_share_pkg(input)
-      update({ share : input })
-      setError(null)
-    } catch (err) {
-      console.error(err)
-      setError('failed to decode package data')
+      update({ share : null })
+    } else {
+      try {
+        decode_share_pkg(input)
+        update({ share : input })
+        setError(null)
+      } catch (err) {
+        console.error(err)
+        setError('failed to decode package data')
+      }
     }
   }
 

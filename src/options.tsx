@@ -14,7 +14,7 @@ import {
 
 import GroupPackageConfig  from './components/group.js'
 import SecretPackageConfig from './components/share.js'
-import SignerServerConfig  from './components/server.js'
+import SignerServerConfig  from './components/peers.js'
 
 function Options(): ReactElement {
   let [relays, setRelays] = useState<Relay[]>([])
