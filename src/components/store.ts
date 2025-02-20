@@ -1,55 +1,56 @@
-import { useEffect, useState, useCallback } from 'react'
-import { ExtensionStore }      from '../types.js'
+import { useEffect, useState, useRef } from 'react'
+import { ExtensionStore }              from '../types.js'
 
 import browser from 'webextension-polyfill'
 
+const DEBUG = false
+
 const DEFAULT_STORE : ExtensionStore = {
-  init   : false as const,
   group  : null,
   peers  : null,
   share  : null
 }
 
 export default function () {
+  const [ store, setStore ]  = useState<ExtensionStore>(DEFAULT_STORE)
+  const [ is_init, setInit ] = useState(false)
 
-  const [ store, setStore ] = useState<ExtensionStore>(DEFAULT_STORE)
+  useEffect(() => {
+    if (!is_init) {
+      browser.storage.sync.get('store').then(results => {
+        const new_store = { ...store, ...(results.store ?? {}) }
+        setStore(new_store)
+        setInit(true)
+        if (DEBUG) console.log('init store:', new_store)
+      })
+    }
+  }, [ store, is_init ])
 
-  // Debounced update to prevent rapid successive writes
-  const update = useCallback((data: Partial<ExtensionStore>) => {
-    setStore(prevStore => {
-      const new_store = { ...prevStore, ...data }
-      
-      // Debounce the storage update
-      setTimeout(() => {
-        browser.storage.sync.set({ store: new_store }).then(() => {
-          console.log('new store:', new_store)
-        })
-      }, 100)
-
-      return new_store
+  const update = (data: Partial<ExtensionStore>) => {
+    const new_store = { ...store, ...data }
+    
+    if (DEBUG) console.log('updating store:', new_store)
+    
+    browser.storage.sync.set({ store: new_store }).then(() => {
+      // setStore(new_store)
+      if (DEBUG) console.log('updated store:', new_store)
     })
-  }, [])
+  }
 
-  const reset = useCallback((data: ExtensionStore) => update(data), [update])
+  const set = (data: ExtensionStore) => update(data)
   
   useEffect(() => {
-    browser.storage.sync.get('store').then(results => {
-
-      const new_store = {
-        ...DEFAULT_STORE, 
-        ...results.store ?? {},
-        init: true 
+    const listener = (changes: any) => {
+      const new_store = changes.store?.newValue
+      if (new_store !== undefined) {
+        setStore(new_store)
+        if (DEBUG) console.log('store changed:', new_store)
       }
-      
-      // Only set if not already initialized
-      if (results.store === undefined) {
-        browser.storage.sync.set({ store: new_store })
-      }
-      
-      setStore(new_store)
-      console.log('init store:', new_store)
-    })
-  }, [])
+    }
+    
+    browser.storage.sync.onChanged.addListener(listener)
+    return () => browser.storage.sync.onChanged.removeListener(listener)
+  }, [ store ])
 
-  return { store, reset, update }
+  return { store, set, update }
 }

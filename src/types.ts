@@ -6,7 +6,6 @@ export interface PeerConfig {
 }
 
 export interface ExtensionStore {
-  init   : boolean
   group  : string      | null
   peers  : PeerEntry[] | null
   share  : string      | null

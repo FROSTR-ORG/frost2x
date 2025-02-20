@@ -15,35 +15,31 @@ export default function () {
   }
 
   const updateStore = () => {
-    if (input === '') {
-      update({ group : null })
-    } else {
-      try {
+    try {
+      if (input === '') {
+        update({ group : null })
+      } else {
         decode_group_pkg(input)
         update({ group : input })
         setError(null)
-      } catch (err) {
-        console.error(err)
-        setError('failed to decode package data')
       }
+      setError(null)
+    } catch (err) {
+      console.error(err)
+      setError('failed to decode package data')
     }
   }
 
   useEffect(() => {
-    if (store.group !== null) {
-      if (input === '') {
-        setInput(store.group)
-      }
-    } else if (store.group === '') {
-      update({ group : null })
-    }
+    setInput(store.group ?? '')
   }, [ store.group ])
 
   return (
     <div>
-      <div>group data:&nbsp;</div>
+      <div>group package:</div>
       <div
         style={{
+          marginTop: '10px',
           marginLeft: '10px',
           display: 'flex',
           flexDirection: 'column',
@@ -55,6 +51,7 @@ export default function () {
             type="text"
             style={{ width: '600px' }}
             value={input}
+            placeholder='bfgroup1...'
             onChange={(e) => setInput(e.target.value)}
           />
           <button onClick={() => updateStore()}>save</button>

@@ -5,54 +5,53 @@ import useStore from './store.js'
 import { PeerEntry } from '../types.js'
 
 export default function () {
-  const { store, update }   = useStore()
-  const [ peers, setPeers ] = useState<PeerEntry[] | null>(store.peers)
+  const { store, update } = useStore()
 
   useEffect(() => {
-    if (peers === null && store.group !== null && store.share !== null) {
-      if (store.peers !== null) {
-        setPeers(store.peers)
-      } else {
+    if (store.peers === null) {
+      if (store.group !== null && store.share !== null) {
         const peers = init_peers(store.group, store.share)
         update({ peers })
-        setPeers(peers)
+      }
+    } else {
+      if (store.group === null || store.share === null) {
+        update({ peers: null })
       }
     }
-  }, [ store ])
-
-  useEffect(() => {
-    if (store.group === null || store.share === null) {
-      if (store.peers !== null) update({ peers: null })
-      if (peers !== null)       setPeers(null)
-    }
-  }, [ store ])
+  }, [store.peers, store.group, store.share, update])
 
   const togglePeerValue = (peerKey: string, field: 'send' | 'recv') => {
-    if (!peers) return
+    if (store.peers === null) return
 
-    const newPeers : PeerEntry[] = peers.map(([key, value]) => {
+    const newPeers : PeerEntry[] = store.peers.map(([key, value]) => {
       if (key === peerKey) {
         return [key, { ...value, [field]: !value[field] }]
       }
       return [key, value]
     })
 
-    setPeers(newPeers)
     update({ peers: newPeers })
   }
 
   return (
     <div>
-      <div>Peer Nodes</div>
+      <div>peer nodes:</div>
+      {store.peers === null && (
+        <div>
+          <div>group and share data required</div>
+        </div>
+      )}
       <div
         style={{
+          marginTop: '10px',
           marginLeft: '10px',
+          marginBottom: '10px',
           display: 'flex',
           flexDirection: 'column',
           gap: '10px'
         }}
       >
-        {peers && peers.map(([key, { send, recv }]) => (
+        {store.peers && store.peers.map(([key, { send, recv }]) => (
           <div key={key} style={{ 
             display: 'flex', 
             gap: '20px', 
@@ -85,7 +84,7 @@ export default function () {
                   top: '1px'
                 }}
               />
-              Send
+              send
             </label>
             <label style={{ 
               display: 'flex', 
@@ -104,7 +103,7 @@ export default function () {
                   top: '1px'
                 }}
               />
-              Receive
+              receive
             </label>
           </div>
         ))}
@@ -113,7 +112,7 @@ export default function () {
   )
 }
 
-function init_peers(
+function init_peers (
   groupstr : string,
   sharestr : string
 ) : PeerEntry[] {

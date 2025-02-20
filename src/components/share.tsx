@@ -8,6 +8,7 @@ export default function () {
   const { store, update }   = useStore()
   const [ input, setInput ] = useState<string>('')
   const [ error, setError ] = useState<string | null>(null)
+  const [ show, setShow ]   = useState<boolean>(false)
 
   const displayData = (pkg : string) => {
     const data = decode_share_pkg(pkg)
@@ -15,35 +16,31 @@ export default function () {
   }
 
   const updateStore = () => {
-    if (input === '') {
-      update({ share : null })
-    } else {
-      try {
+    try {
+      if (input === '') {
+        update({ share : null })
+      } else {
         decode_share_pkg(input)
         update({ share : input })
         setError(null)
-      } catch (err) {
-        console.error(err)
-        setError('failed to decode package data')
       }
+      setError(null)
+    } catch (err) {
+      console.error(err)
+      setError('failed to decode package data')
     }
   }
 
   useEffect(() => {
-    if (store.share !== null) {
-      if (input === '') {
-        setInput(store.share)
-      }
-    } else if (store.share === '') {
-      update({ share : null })
-    }
+    setInput(store.share ?? '')
   }, [ store.share ])
 
   return (
     <div>
-      <div>secret data:&nbsp;</div>
+      <div>share package:</div>
       <div
         style={{
+          marginTop: '10px',
           marginLeft: '10px',
           display: 'flex',
           flexDirection: 'column',
@@ -52,14 +49,18 @@ export default function () {
       >
         <div style={{ display: 'flex', gap: '10px' }}>
           <input
-            type="text"
+            type={show ? "text" : "password"}
             style={{ width: '600px' }}
             value={input}
+            placeholder='bfshare1...'
             onChange={(e) => setInput(e.target.value)}
           />
+          <button onClick={() => setShow(!show)}>
+            {show ? 'hide' : 'show'}
+          </button>
           <button onClick={() => updateStore()}>save</button>
         </div>
-        { input !== '' && error === null &&
+        { input !== '' && error === null && show &&
           <pre>{displayData(input)}</pre> 
         }
         <p>{error}</p>
