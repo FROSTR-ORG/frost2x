@@ -1,23 +1,33 @@
 import browser from 'webextension-polyfill'
-import { createRoot } from 'react-dom/client'
-import {getPublicKey} from 'nostr-tools/pure'
-import * as nip19 from 'nostr-tools/nip19'
-import React, {useState, useRef, useEffect} from 'react'
-import QRCode from 'react-qr-code'
+import QRCode  from 'react-qr-code'
 
-function Popup() {
-  let [pubKey, setPubKey] = useState<string | null>('')
+import * as nip19           from 'nostr-tools/nip19'
+import { createRoot }       from 'react-dom/client'
+import { decode_group_pkg } from '@frostr/bifrost/lib'
+
+import {
+  useState,
+  useRef,
+  useEffect,
+  ReactElement
+} from 'react'
+
+import type { ExtensionStore } from './types.js'
+
+function Popup() : ReactElement {
+  let [ pubKey, setPubKey ] = useState<string | null>('')
 
   let keys = useRef<string[]>([])
 
   useEffect(() => {
-    browser.storage.local.get(['private_key', 'relays']).then((results: {
-      private_key?: string,
-      relays?: Record<string, { write: boolean }>
+    browser.storage.sync.get(['store', 'relays']).then((results: {
+      store?  : ExtensionStore,
+      relays? : Record<string, { write: boolean }>
     }) => {
-      if (results.private_key) {
-        const privateKeyBytes = new TextEncoder().encode(results.private_key)
-        let hexKey = getPublicKey(privateKeyBytes)
+      console.log(results)
+      if (typeof results.store?.group === 'string') {
+        const group = decode_group_pkg(results.store.group)
+        let hexKey  = group.group_pk.slice(2)
         let npubKey = nip19.npubEncode(hexKey)
 
         setPubKey(npubKey)
@@ -48,9 +58,9 @@ function Popup() {
   }, [])
 
   return (
-    <div style={{marginBottom: '5px'}}>
+    <div style={{ marginBottom: '5px' }}>
       <h2>frost2x</h2>
-      {pubKey === null ? (
+      { pubKey === null ? (
         <div>
           <button onClick={openOptionsButton}>start here</button>
         </div>
@@ -69,7 +79,7 @@ function Popup() {
             <code>{pubKey}</code>
           </pre>
 
-          <div
+          {/* <div
             style={{
               height: 'auto',
               // margin: '0 auto',
@@ -83,7 +93,7 @@ function Popup() {
               value={pubKey.startsWith('n') ? pubKey.toUpperCase() : pubKey}
               viewBox={`0 0 256 256`}
             />
-          </div>
+          </div> */}
         </>
       )}
     </div>
@@ -106,6 +116,7 @@ function Popup() {
 }
 
 const container = document.getElementById('main')
+
 if (container) {
   const root = createRoot(container)
   root.render(<Popup />)
