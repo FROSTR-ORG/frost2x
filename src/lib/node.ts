@@ -62,9 +62,6 @@ export async function init_node () : Promise<BifrostNode | null> {
     return null
   }
 
-  console.log('relays:', perms)
-  console.log('store:',  store)
-
   const { group, peers, share } = store
 
   if (group === null || peers === null || share === null) {
@@ -84,15 +81,15 @@ export async function init_node () : Promise<BifrostNode | null> {
     return null
   }
 
-  const authorized = peers
-    .filter(([ _, perms ]) => perms.recv)
+  const blacklist = peers
+    .filter(([ _, perms ]) => !perms.recv)
     .map(([ key ]) => key)
 
   const relays = Object.entries(perms)
     .filter(([ _, perms ]) => perms.write)
     .map(([ url ]) => url)
 
-  const node = new BifrostNode(group_pkg, share_pkg, relays)
+  const node = new BifrostNode(group_pkg, share_pkg, relays, { blacklist })
 
   node.client.on('ready', () => {
     console.log('background node connected')

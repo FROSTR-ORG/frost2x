@@ -121,6 +121,6 @@ function init_peers (
   const pubkey = get_pubkey(share.seckey, 'ecdsa')
   const peers  = group.commits.filter(commit => commit.pubkey !== pubkey)
   return peers.map((peer, idx) => 
-    [ peer.pubkey.slice(2), { send: idx === 0, recv: false }] as PeerEntry
+    [ peer.pubkey.slice(2), { send: idx === 0, recv: true }] as PeerEntry
   )
 }
