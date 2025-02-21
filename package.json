@@ -6,7 +6,7 @@
     "build": "./build.js",
     "loader": "tsx --tsconfig ./test/tsconfig.json",
     "keygen": "npm run loader test/keygen.ts",
-    "scratch": "npm run loader test/scratch.ts"
+    "start": "npm run loader test/start.ts"
   },
   "dependencies": {
     "@cmdcode/buff": "^2.2.5",
