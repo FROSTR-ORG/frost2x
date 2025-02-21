@@ -2,6 +2,6 @@ node_modules
 *.build.js
 *.build.css
 *.zip
-*cred.json
+cred.json
 NOTES.md
 TODO.md
