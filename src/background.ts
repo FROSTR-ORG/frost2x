@@ -100,6 +100,14 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
   if (type in NO_PERMISSIONS_REQUIRED && NO_PERMISSIONS_REQUIRED[type as keyof typeof NO_PERMISSIONS_REQUIRED]) {
     // authorized, and we won't do anything with private key here, so do a separate handler
     switch (type) {
+
+      case 'node_reset':
+        node = await init_node()
+        return
+
+      case 'get_node_status':
+        return { status: node !== null ? 'running' : 'stopped' }
+      
       case 'replaceURL': {
         let { protocol_handler: ph } = await browser.storage.local.get([
           'protocol_handler'
@@ -206,15 +214,6 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
         }
       }
     }
-  }
-
-  if (type === 'node_reset') {
-    node = await init_node()
-    return { success: true }
-  }
-
-  if (type === 'get_node_status') {
-    return { status: node ? 'running' : 'stopped' }
   }
 
   const { store } = await browser.storage.sync.get('store') as { store: ExtensionStore }
