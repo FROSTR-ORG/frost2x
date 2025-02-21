@@ -1,7 +1,9 @@
 import browser from 'webextension-polyfill'
 
 export const NO_PERMISSIONS_REQUIRED = {
-  replaceURL: true
+  replaceURL: true,
+  node_reset: true,
+  get_node_status: true
 }
 
 export const PERMISSION_NAMES = Object.fromEntries([
