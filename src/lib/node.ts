@@ -7,6 +7,7 @@ import {
 } from '@frostr/bifrost/lib'
 
 import type {
+  BifrostNodeConfig,
   GroupPackage,
   SharePackage
 } from '@frostr/bifrost'
@@ -17,10 +18,8 @@ import browser from 'webextension-polyfill'
 
 const peers_schema = z.tuple([
   z.string(), 
-  z.object({
-    send : z.boolean(),
-    recv : z.boolean()
-  })
+  z.boolean(),
+  z.boolean()
 ])
 
 const perms_schema = z.record(
@@ -81,15 +80,15 @@ export async function init_node () : Promise<BifrostNode | null> {
     return null
   }
 
-  const blacklist = peers
-    .filter(([ _, perms ]) => !perms.recv)
-    .map(([ key ]) => key)
+  const opt : Partial<BifrostNodeConfig> = {
+    policies : store.peers ?? []
+  }
 
   const relays = Object.entries(perms)
     .filter(([ _, perms ]) => perms.write)
     .map(([ url ]) => url)
 
-  const node = new BifrostNode(group_pkg, share_pkg, relays, { blacklist })
+  const node = new BifrostNode(group_pkg, share_pkg, relays, opt)
 
   node.client.on('ready', () => {
     console.log('background node connected')

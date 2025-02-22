@@ -1,14 +1,9 @@
-export type PeerEntry = [ string, PeerConfig ]
-
-export interface PeerConfig {
-  send : boolean
-  recv : boolean
-}
+import { PeerPolicy } from '@frostr/bifrost'
 
 export interface ExtensionStore {
-  group  : string      | null
-  peers  : PeerEntry[] | null
-  share  : string      | null
+  group  : string       | null
+  peers  : PeerPolicy[] | null
+  share  : string       | null
 }
 
 export interface StoreAPI {

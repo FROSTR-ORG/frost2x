@@ -222,14 +222,6 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
     return { error: { message: 'no peers configured' } }
   }
 
-  const peers = store.peers
-    .filter(([ _, value ]) => value.send)
-    .map(([key]) => key)
-
-  if (peers.length === 0) {
-    return { error: { message: 'no peers selected for signing' } }
-  }
-
   node = await keep_alive(node)
 
   if (!node) {
@@ -246,50 +238,46 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
         return results.relays || {}
       }
       case 'signEvent': {
-
-        console.log('params:', params)
         const pubkey = node.group.group_pk.slice(2)
         const tmpl   = { ...params.event, pubkey }
 
         try {
           validateEvent(tmpl)
-          console.log('event template:', tmpl)
         } catch (error: any) {
           return { error: { message: error.message } }
         }
 
         const id     = tmpl.id ?? getEventHash(tmpl)
-        const res    = await node.req.sign(id, peers)
+        const res    = await node.req.sign(id)
+
         if (!res.ok) return { error: { message: res.err } }
 
-        const event = { ...tmpl, id, sig: res.data }
-        console.log('event:', event)
-        return event
+        return { ...tmpl, id, sig: res.data }
       }
       case 'nip04.encrypt': {
         let { peer, plaintext } = params
-        const res = await node.req.ecdh(peer, peers)
+        const res = await node.req.ecdh(peer)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip04_encrypt(secret, plaintext)
       }
       case 'nip04.decrypt': {
         let { peer, ciphertext } = params
-        const res = await node.req.ecdh(peer, peers)
+        const res = await node.req.ecdh(peer)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip04_decrypt(secret, ciphertext)
       }
       case 'nip44.encrypt': {
         const { peer, plaintext } = params
-        const res = await node.req.ecdh(peer, peers)
+        const res = await node.req.ecdh(peer)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip44_encrypt(plaintext, secret)
       }
       case 'nip44.decrypt': {
         const { peer, ciphertext } = params
-        const res = await node.req.ecdh(peer, peers)
+        const res = await node.req.ecdh(peer)
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip44_decrypt(ciphertext, secret)

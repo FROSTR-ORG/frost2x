@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react'
-import { decode_group_pkg, decode_share_pkg, get_pubkey }    from '@frostr/bifrost/lib'
+import { useEffect }  from 'react'
+import { PeerPolicy } from '@frostr/bifrost'
+
+import {
+  decode_group_pkg,
+  decode_share_pkg,
+  get_pubkey
+} from '@frostr/bifrost/lib'
 
 import useStore from './store.js'
-import { PeerEntry } from '../types.js'
 
 export default function () {
   const { store, update } = useStore()
@@ -23,11 +28,14 @@ export default function () {
   const togglePeerValue = (peerKey: string, field: 'send' | 'recv') => {
     if (store.peers === null) return
 
-    const newPeers : PeerEntry[] = store.peers.map(([key, value]) => {
-      if (key === peerKey) {
-        return [key, { ...value, [field]: !value[field] }]
+    const newPeers : PeerPolicy[] = store.peers.map(([ key, send, recv ]) => {
+      if (key === peerKey && field === 'send') {
+        return [ key, !send, recv ]
+      } else if (key === peerKey && field === 'recv') {
+        return [ key, send, !recv ]
+      } else {
+        return [ key, send, recv ]
       }
-      return [key, value]
     })
 
     update({ peers: newPeers })
@@ -51,7 +59,7 @@ export default function () {
           gap: '10px'
         }}
       >
-        {store.peers && store.peers.map(([key, { send, recv }]) => (
+        {store.peers && store.peers.map(([ key, send, recv ]) => (
           <div key={key} style={{ 
             display: 'flex', 
             gap: '20px', 
@@ -115,12 +123,12 @@ export default function () {
 function init_peers (
   groupstr : string,
   sharestr : string
-) : PeerEntry[] {
+) : PeerPolicy []{
   const group  = decode_group_pkg(groupstr)
   const share  = decode_share_pkg(sharestr)
   const pubkey = get_pubkey(share.seckey, 'ecdsa')
   const peers  = group.commits.filter(commit => commit.pubkey !== pubkey)
   return peers.map((peer, idx) => 
-    [ peer.pubkey.slice(2), { send: idx === 0, recv: true }] as PeerEntry
+    [ peer.pubkey.slice(2), idx === 0, true ] as PeerPolicy
   )
 }
