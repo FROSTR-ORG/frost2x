@@ -9,9 +9,9 @@ Notes and other stuff signed by an extension, using the powers of FROST.
 
 ## Overview
 
-This project is a fork of the popular nos2x extension. It uses the [Bifrost](https://github.com/frostr-org/bifrost) library in the background to encrypt and sign events. The bifrost node will communicate with other nodes in the network to coordinate signing.
+This project is a fork of the popular nos2x extension. It uses a [Bifrost](https://github.com/frostr-org/bifrost) node in the background to encrypt and sign events. This node will communicate with other bifrost nodes in the network, to coordinate signing plus aggregation of signatures.
 
-This extension is intended to be used in conjunction with the [Igloo](https://github.com/frostr-org/igloo) desktop app for key generation and sharing, however you can also run a local signing node and relay for testing (see [development](#development)).
+This extension is intended to be used in conjunction with the [Igloo](https://github.com/frostr-org/igloo) desktop app for key generation and sharing, however you can also run a local signing node and relay for testing (see [running a test node](#running-the-test-node--relay)).
 
 The standard NIP-07 signing interface remains unchanged.
 
@@ -27,7 +27,7 @@ In the options menu for the extension, you can input the credentials for your si
 
 ## Generating Shares
 
-To generate a set of shares for your nsec, you can use the `keygen` script in the root of the repository:
+To generate a set of shares for your nsec, you can use the `keygen` script:
 
 ```
 npm run keygen <optional_secret_key_or_nsec>
@@ -37,17 +37,19 @@ This will generate a group credentials package with a set of shares, and print i
 
 Copy/paste the group credential, plus one of the shares into the `frost2x` extension, via the options menu.
 
-## Running the Test Node / Relay
+> The script is located at `test/scripts/keygen.ts`, feel free to modify it.
 
-This repository comes with a second signing node for testing, as well as a basic nostr relay.
+## Running a Test Node / Relay
 
-To configure the test signing node:
+This repo comes with a second bifrost node for demonstration and testing, plus a basic nostr relay for ephemeral messaging.
+
+To configure the test node:
 
 * Create a `config.json` file in the `test` folder (path should be `test/config.json`).
 * Copy/paste the group credential, plus one of the shares into the file (follow the example of `config.example.json`).
 * Define a list of relays you wish to connect to (or keep the local test relay as default).
 
-Once you have a credential file configured, you can run the node and/or relay using the following:
+Once you have a config file set, you can run the node and/or relay:
 
 ```bash
 ## Run the signing node:
@@ -58,7 +60,7 @@ npm run start relay
 num run start dev
 ```
 
-Running in `dev` mode will spin up both a signing node and relay. By default, the relay will be listening on port `8002`.
+By default, the relay will be listening on port `8002`. You can change this by modifying the start script in `test/scripts/start.ts`.
 
 ## Development
 
@@ -68,9 +70,9 @@ To build the plugin from source, simply run the `build` script:
 npm run build
 ```
 
-This will build from `src`, and place the completed files into the `extension` folder. Make sure to "refresh" the frost2x extension after each build. You can do this from the extension page in your browser.
+This will build from the `src` folder, then place the completed files into the `extension` folder. Make sure to "refresh" the frost2x extension after each build. You can do this from the extension page in your browser.
 
-## Bugs / Issues / Suggestions
+## Issues / Suggestions
 
 We are looking for feedback! If you find a bug or have a suggestion:
 

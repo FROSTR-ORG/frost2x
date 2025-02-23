@@ -4,12 +4,14 @@ import { NostrRelay } from '@/test/relay.js'
 // Import our credentials from the credential file.
 import CONFIG from '../config.json' assert { type: 'json' }
 
+const RELAY_PORT = 8002
+
 // Capture the param input by the user.
-const param  = process.argv[2] ?? 'dev'
+const param = process.argv[2] ?? 'dev'
 
 if (param.startsWith('relay') || param.startsWith('dev')) {
   // Initialize a new relay.
-  const relay  = new NostrRelay(8002)
+  const relay  = new NostrRelay(RELAY_PORT)
   // Print a message when connected.
   relay.onconnect(() => console.log('relay connected'))
   // Start the relay.
