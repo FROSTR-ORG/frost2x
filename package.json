@@ -1,6 +1,6 @@
 {
   "name": "@frostr/frost2x",
-  "license": "WTFPL",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "build": "./build.js",

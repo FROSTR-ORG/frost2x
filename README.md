@@ -37,8 +37,6 @@ This will generate a group credentials package with a set of shares, and print i
 
 Copy/paste the group credential, plus one of the shares into the `frost2x` extension, via the options menu.
 
-> Alternatively, you can use the [Igloo](https://github.com/frostr-org/igloo) desktop app to generate shares.
-
 ## Running the Test Node / Relay
 
 This repository comes with a second signing node for testing, as well as a basic nostr relay.
@@ -48,8 +46,6 @@ To configure the test signing node:
 * Create a `config.json` file in the `test` folder (path should be `test/config.json`).
 * Copy/paste the group credential, plus one of the shares into the file (follow the example of `config.example.json`).
 * Define a list of relays you wish to connect to (or keep the local test relay as default).
-
-> Feel free to modify the `test/script/keygen.ts` file to generate credentials for more members, or use a different threshold.
 
 Once you have a credential file configured, you can run the node and/or relay using the following:
 
@@ -64,12 +60,27 @@ num run start dev
 
 Running in `dev` mode will spin up both a signing node and relay. By default, the relay will be listening on port `8002`.
 
-> Feel free to modify the `test/script/start.ts` file to add further configurations to the node and relay.
-
 ## Development
 
-To build the plugin from source run the `build` script:
+To build the plugin from source, simply run the `build` script:
 
 ```
 npm run build
 ```
+
+This will build from `src`, and place the completed files into the `extension` folder. Make sure to "refresh" the frost2x extension after each build. You can do this from the extension page in your browser.
+
+## Bugs / Issues / Suggestions
+
+We are looking for feedback! If you find a bug or have a suggestion:
+
+1. First, check if the issue already exists in our [issue tracker](https://github.com/frostr-org/frost2x/issues)
+
+2. If not, create a new issue with:
+   - A clear, descriptive title
+   - Detailed steps to reproduce the problem
+   - What you expected to happen vs what actually happened
+   - Any relevant error messages or screenshots
+   - Your browser version and operating system
+
+This project is under heavy development, we'll try to get back to your issue asap.
