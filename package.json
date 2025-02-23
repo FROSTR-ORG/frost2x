@@ -5,12 +5,12 @@
   "scripts": {
     "build": "./build.js",
     "loader": "tsx --tsconfig ./test/tsconfig.json",
-    "keygen": "npm run loader test/keygen.ts",
-    "start": "npm run loader test/start.ts"
+    "keygen": "npm run loader test/scripts/keygen.ts",
+    "start": "npm run loader test/scripts/start.ts"
   },
   "dependencies": {
     "@cmdcode/buff": "^2.2.5",
-    "@frostr/bifrost": "^0.2.2",
+    "@frostr/bifrost": "^0.2.3",
     "@noble/ciphers": "^1.2.1",
     "async-mutex": "^0.5.0",
     "esbuild": "^0.25.0",

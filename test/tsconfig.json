@@ -2,8 +2,8 @@
   "compilerOptions": {
     "baseUrl": "..",
     "paths": {
-      "@/*"                  : [ "src/*"             ],
-      "@/test/*"             : [ "test/src/*"        ]
+      "@/*"      : [ "src/*"      ],
+      "@/test/*" : [ "test/src/*" ]
     },
     "module": "NodeNext",
     "target": "ESNext",
@@ -28,5 +28,5 @@
     "noUnusedParameters": true
   },
   "exclude": [ "node_modules" ],
-  "include": [ "**/*.ts" ]
+  "include": [ "**/*.ts", "../scripts/keygen.ts" ]
 }

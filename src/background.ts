@@ -247,8 +247,8 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
           return { error: { message: error.message } }
         }
 
-        const id     = tmpl.id ?? getEventHash(tmpl)
-        const res    = await node.req.sign(id)
+        const id  = tmpl.id ?? getEventHash(tmpl)
+        const res = await node.req.sign(id)
 
         if (!res.ok) return { error: { message: res.err } }
 

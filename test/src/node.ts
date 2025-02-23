@@ -5,13 +5,24 @@ import {
   decode_share_pkg
 } from '@frostr/bifrost/lib'
 
-import CRED from '../cred.json' assert { type: 'json' }
+interface NodeConfig {
+  group  : string
+  relays : string[]
+  share  : string
+}
 
-export function get_node () {
+export function get_node (config : NodeConfig) {
+  const group = decode_group_pkg(config.group)
+  const share = decode_share_pkg(config.share)
+  const node  = new BifrostNode(group, share, config.relays, { debug: true })
 
-  const relays = [ 'ws://localhost:8002' ]
-  const group  = decode_group_pkg(CRED.group)
-  const share  = decode_share_pkg(CRED.share)
+  node.client.on('ready', () => {
+    console.log('node connected')
+  })
+  
+  node.on('*', (...args) => {
+    console.log(args)
+  })
 
-  return new BifrostNode(group, share, relays)
+  return node
 }
