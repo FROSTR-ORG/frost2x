@@ -31,10 +31,9 @@ const perms_schema = z.record(
 )
 
 const store_schema = z.object({
-  init   : z.boolean(),
-  group  : z.string().nullable(),
-  peers  : peers_schema.array().nullable(),
-  share  : z.string().nullable()
+  group : z.string().nullable(),
+  peers : peers_schema.array().nullable(),
+  share : z.string().nullable()
 })
 
 export async function keep_alive (

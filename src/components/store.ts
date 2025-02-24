@@ -1,9 +1,9 @@
-import { useEffect, useState, useRef } from 'react'
-import { ExtensionStore }              from '../types.js'
+import { useEffect, useState } from 'react'
+import { ExtensionStore }      from '../types.js'
 
 import browser from 'webextension-polyfill'
 
-const DEBUG = false
+const DEBUG = true
 
 const DEFAULT_STORE : ExtensionStore = {
   group  : null,
@@ -19,12 +19,12 @@ export default function () {
     if (!is_init) {
       browser.storage.sync.get('store').then(results => {
         const new_store = { ...store, ...(results.store ?? {}) }
-        setStore(new_store)
         setInit(true)
+        setStore(new_store)
         if (DEBUG) console.log('init store:', new_store)
       })
     }
-  }, [ store, is_init ])
+  }, [ is_init ])
 
   const update = (data: Partial<ExtensionStore>) => {
     const new_store = { ...store, ...data }
@@ -37,7 +37,8 @@ export default function () {
     })
   }
 
-  const set = (data: ExtensionStore) => update(data)
+  const set   = (data: ExtensionStore) => update(data)
+  const reset = () => set(DEFAULT_STORE)
   
   useEffect(() => {
     const listener = (changes: any) => {
@@ -52,5 +53,5 @@ export default function () {
     return () => browser.storage.sync.onChanged.removeListener(listener)
   }, [ store ])
 
-  return { store, set, update }
+  return { store, set, update, reset }
 }

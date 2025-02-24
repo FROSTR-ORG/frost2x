@@ -16,6 +16,8 @@ import GroupPackageConfig  from './components/group.js'
 import SecretPackageConfig from './components/share.js'
 import SignerServerConfig  from './components/peers.js'
 
+import useStore from './components/store.js'
+
 function Options(): ReactElement {
   let [relays, setRelays] = useState<Relay[]>([])
   let [newRelayURL, setNewRelayURL] = useState('')
@@ -27,6 +29,8 @@ function Options(): ReactElement {
   let [showProtocolHandlerHelp, setShowProtocolHandlerHelp] = useState(false)
   let [unsavedChanges, setUnsavedChanges] = useState<string[]>([])
   let [warningMessage, setWarningMessage] = useState('')
+  
+  const { reset } = useStore()
 
   const showMessage = useCallback((msg: string) => {
     const newMessages = [...messages, msg]
@@ -283,6 +287,7 @@ function Options(): ReactElement {
           </div>
         )}
       </div>
+      <button onClick={() => reset()}>reset store</button>
     </>
   )
 
