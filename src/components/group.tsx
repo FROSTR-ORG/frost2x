@@ -10,8 +10,12 @@ export default function () {
   const [ error, setError ] = useState<string | null>(null)
 
   const displayData = (pkg : string) => {
-    const data = decode_group_pkg(pkg)
-    return JSON.stringify(data, null, 2)
+    try {
+      const data = decode_group_pkg(pkg)
+      return JSON.stringify(data, null, 2)
+    } catch (err) {
+      return null
+    }
   }
 
   const updateStore = () => {
@@ -56,7 +60,7 @@ export default function () {
           />
           <button onClick={() => updateStore()}>save</button>
         </div>
-        { input !== '' && error === null &&
+        { input !== '' && error === null && displayData(input) &&
           <pre>{displayData(input)}</pre> 
         }
         <p>{error}</p>
