@@ -17,7 +17,7 @@ The standard NIP-07 signing interface remains unchanged.
 
 ## Installation
 
-This extension is not yet available in the Chrome Web Store, so you will need to install it manually.
+This extension is not yet available in the Chrome Web Store, so you will need to install it manually. Before you load the unpacked Chrome extension, you will need to follow the steps for running the [Test Node / Relay](#running-a-test-node--relay) first.
 
 1. Go to `chrome://extensions`.
 2. Enable "Developer mode" if it is not already enabled.
@@ -57,7 +57,7 @@ npm run start node
 ## Run the test relay:
 npm run start relay
 ## Run both the node and the relay:
-num run start dev
+npm run start dev
 ```
 
 By default, the relay will be listening on port `8002`. You can change this by modifying the start script in `test/scripts/start.ts`.
