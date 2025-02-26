@@ -43,12 +43,9 @@ export default function () {
 
   return (
     <div>
-      <div>peer nodes:</div>
-      {store.peers === null && (
-        <div>
-          <div>group and share data required</div>
-        </div>
-      )}
+      <div>Peer Settings</div>
+      <p>Manage how you communicate with other peers in your group. "Send" means you will consider those nodes when sending signature requests, while "Receive" means you will respond to signature requests from those nodes.</p>
+      {store.peers === null && (<div>Please enter a group and share credential first.</div>)}
       <div
         style={{
           marginTop: '10px',

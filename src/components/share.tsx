@@ -37,7 +37,8 @@ export default function () {
 
   return (
     <div>
-      <div>share package:</div>
+      <div>Share Credential</div>
+      <p>Paste your share credential string (starts with bfshare):</p>
       <div
         style={{
           marginTop: '10px',
