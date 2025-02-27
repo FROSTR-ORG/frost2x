@@ -1,9 +1,7 @@
 import browser from 'webextension-polyfill'
 import React   from 'react'
 
-import { createRoot }        from 'react-dom/client'
-import { removePermissions } from './common.js'
-import { Relay, Permission } from './types.js'
+import { createRoot } from 'react-dom/client'
 
 import {
   ReactElement,
@@ -15,13 +13,12 @@ import {
 import GroupPackageConfig  from './components/group.js'
 import SecretPackageConfig from './components/share.js'
 import SignerServerConfig  from './components/peers.js'
+import RelayConfig         from './components/relays.js'
+import PermissionConfig    from './components/permissions.js'
 
 import useStore from './components/store.js'
 
 function Options(): ReactElement {
-  let [relays, setRelays] = useState<Relay[]>([])
-  let [newRelayURL, setNewRelayURL] = useState('')
-  let [policies, setPermissions] = useState<Permission[]>([])
   let [protocolHandler, setProtocolHandler] = useState('https://njump.me/{raw}')
   let [showNotifications, setNotifications] = useState(false)
   let [messages, setMessages] = useState<string[]>([])
@@ -40,16 +37,8 @@ function Options(): ReactElement {
 
   useEffect(() => {
     browser.storage.sync
-      .get(['relays', 'protocol_handler', 'notifications'])
+      .get(['protocol_handler', 'notifications'])
       .then(results => {
-        if (results.relays) {
-          let relaysList: Relay[] = []
-          let resultsRelays = results.relays as Record<string, { read: boolean; write: boolean }>
-          for (let url in resultsRelays) {
-            relaysList.push({ url, policy: resultsRelays[url] })
-          }
-          setRelays(relaysList)
-        }
         if (results.protocol_handler) {
           setProtocolHandler(results.protocol_handler as string)
           setHandleNostrLinks(true)
@@ -65,30 +54,65 @@ function Options(): ReactElement {
     setTimeout(() => setWarningMessage(''), 5000)
   }, [warningMessage])
 
-  useEffect(() => {
-    loadPermissions()
-  }, [])
+  function addUnsavedChanges(section: string) {
+    if (!unsavedChanges.find(s => s === section)) {
+      const newChanges = [...unsavedChanges, section]
+      setUnsavedChanges(newChanges)
+    }
+  }
 
-  async function loadPermissions(): Promise<void> {
-    let { policies = {} } = await browser.storage.local.get('policies')
-    let list: Permission[] = []
+  function changeShowProtocolHandlerHelp() {
+    setShowProtocolHandlerHelp(true)
+  }
 
-    Object.entries(policies as Record<string, any>).forEach(([host, accepts]) => {
-      Object.entries(accepts as Record<string, any>).forEach(([accept, types]) => {
-        Object.entries(types as Record<string, any>).forEach(([type, data]) => {
-          const { conditions, created_at } = data as { conditions: any, created_at: number }
-          list.push({
-            host,
-            type,
-            accept,
-            conditions,
-            created_at
-          })
-        })
-      })
+  function changeHandleNostrLinks() {
+    if (handleNostrLinks) {
+      setProtocolHandler('')
+      addUnsavedChanges('protocol_handler')
+    } else setShowProtocolHandlerHelp(true)
+    setHandleNostrLinks(!handleNostrLinks)
+  }
+
+  function handleChangeProtocolHandler(e: React.ChangeEvent<HTMLInputElement>) {
+    setProtocolHandler(e.target.value)
+    addUnsavedChanges('protocol_handler')
+  }
+
+  function handleNotifications() {
+    setNotifications(!showNotifications)
+    addUnsavedChanges('notifications')
+    if (!showNotifications) requestBrowserNotificationPermissions()
+  }
+
+  async function requestBrowserNotificationPermissions(): Promise<void> {
+    let granted = await browser.permissions.request({
+      permissions: ['notifications']
     })
+    if (!granted) setNotifications(false)
+  }
 
-    setPermissions(list)
+  async function saveNotifications(): Promise<void> {
+    await browser.storage.local.set({ notifications: showNotifications })
+    showMessage('saved notifications!')
+  }
+
+  async function saveNostrProtocolHandlerSettings(): Promise<void> {
+    await browser.storage.local.set({ protocol_handler: protocolHandler })
+    showMessage('saved protocol handler!')
+  }
+
+  async function saveChanges(): Promise<void> {
+    for (let section of unsavedChanges) {
+      switch (section) {
+        case 'protocol_handler':
+          await saveNostrProtocolHandlerSettings()
+          break
+        case 'notifications':
+          await saveNotifications()
+          break
+      }
+    }
+    setUnsavedChanges([])
   }
 
   return (
@@ -108,64 +132,11 @@ function Options(): ReactElement {
         <GroupPackageConfig  />
         <SecretPackageConfig />
         <SignerServerConfig  />
+        <RelayConfig showMessage={showMessage} addUnsavedChanges={addUnsavedChanges} />
 
         <div>
-          <div>preferred relays:</div>
-          <div
-            style={{
-              marginLeft: '10px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1px'
-            }}
-          >
-            {relays.map(({ url, policy }, i) => (
-              <div
-                key={i}
-                style={{ display: 'flex', alignItems: 'center', gap: '15px' }}
-              >
-                <input
-                  style={{ width: '400px' }}
-                  value={url}
-                  onChange={changeRelayURL.bind(null, i)}
-                />
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center' }}>
-                    read
-                    <input
-                      type="checkbox"
-                      checked={policy.read}
-                      onChange={toggleRelayPolicy.bind(null, i, 'read')}
-                    />
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center' }}>
-                    write
-                    <input
-                      type="checkbox"
-                      checked={policy.write}
-                      onChange={toggleRelayPolicy.bind(null, i, 'write')}
-                    />
-                  </label>
-                </div>
-                <button onClick={removeRelay.bind(null, i)}>remove</button>
-              </div>
-            ))}
-            <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
-              <input
-                style={{ width: '400px' }}
-                value={newRelayURL}
-                onChange={e => setNewRelayURL(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') addNewRelay()
-                }}
-              />
-              <button disabled={!newRelayURL} onClick={addNewRelay}>
-                add relay
-              </button>
-            </div>
-          </div>
-        </div>
-        <div>
+          <div>Nostr Protocol Handler</div>
+          <p>Configure how nostr: links are handled:</p>
           <label style={{ display: 'flex', alignItems: 'center' }}>
             <div>
               handle{' '}
@@ -213,6 +184,7 @@ function Options(): ReactElement {
             )}
           </div>
         </div>
+
         <label style={{ display: 'flex', alignItems: 'center' }}>
           show notifications when permissions are used:
           <input
@@ -234,188 +206,12 @@ function Options(): ReactElement {
           ))}
         </div>
       </div>
-      <div>
-        <h2>permissions</h2>
-        {!!policies.length && (
-          <table>
-            <thead>
-              <tr>
-                <th>domain</th>
-                <th>permission</th>
-                <th>answer</th>
-                <th>conditions</th>
-                <th>since</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {policies.map(({ host, type, accept, conditions, created_at }) => (
-                <tr key={host + type + accept + JSON.stringify(conditions)}>
-                  <td>{host}</td>
-                  <td>{type}</td>
-                  <td>{accept === 'true' ? 'allow' : 'deny'}</td>
-                  <td>
-                    {conditions.kinds
-                      ? `kinds: ${Object.keys(conditions.kinds).join(', ')}`
-                      : 'always'}
-                  </td>
-                  <td>
-                    {new Date(created_at * 1000)
-                      .toISOString()
-                      .split('.')[0]
-                      .split('T')
-                      .join(' ')}
-                  </td>
-                  <td>
-                    <button
-                      onClick={handleRevoke}
-                      data-host={host}
-                      data-accept={accept}
-                      data-type={type}
-                    >
-                      revoke
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        {!policies.length && (
-          <div style={{ marginTop: '5px' }}>
-            no permissions have been granted yet
-          </div>
-        )}
-      </div>
+      
+      <PermissionConfig showMessage={showMessage} />
+      
       <button onClick={() => reset()}>reset store</button>
     </>
   )
-
-  function changeRelayURL(i: number, ev: React.ChangeEvent<HTMLInputElement>) {
-    setRelays([
-      ...relays.slice(0, i),
-      { url: ev.target.value, policy: relays[i].policy },
-      ...relays.slice(i + 1)
-    ])
-    addUnsavedChanges('relays')
-  }
-
-  function toggleRelayPolicy(i: number, cat: 'read' | 'write') {
-    setRelays([
-      ...relays.slice(0, i),
-      {
-        url: relays[i].url,
-        policy: { ...relays[i].policy, [cat]: !relays[i].policy[cat] }
-      },
-      ...relays.slice(i + 1)
-    ])
-    addUnsavedChanges('relays')
-  }
-
-  function removeRelay(i: number) {
-    setRelays([...relays.slice(0, i), ...relays.slice(i + 1)])
-    addUnsavedChanges('relays')
-  }
-
-  function addNewRelay() {
-    if (newRelayURL.trim() === '') return
-    const newRelays = [...relays, {
-      url: newRelayURL,
-      policy: { read: true, write: true }
-    }]
-    setRelays(newRelays)
-    addUnsavedChanges('relays')
-    setNewRelayURL('')
-  }
-
-  async function handleRevoke(e: React.MouseEvent<HTMLButtonElement>): Promise<void> {
-    const target = e.target as HTMLButtonElement
-    let { host, accept, type } = target.dataset
-    if (
-      window.confirm(
-        `revoke all ${accept === 'true' ? 'accept' : 'deny'} ${type} policies from ${host}?`
-      )
-    ) {
-      await removePermissions(host, accept, type)
-      showMessage('removed policies')
-      loadPermissions()
-    }
-  }
-
-  function handleNotifications() {
-    setNotifications(!showNotifications)
-    addUnsavedChanges('notifications')
-    if (!showNotifications) requestBrowserNotificationPermissions()
-  }
-
-  async function requestBrowserNotificationPermissions(): Promise<void> {
-    let granted = await browser.permissions.request({
-      permissions: ['notifications']
-    })
-    if (!granted) setNotifications(false)
-  }
-
-  async function saveNotifications(): Promise<void> {
-    await browser.storage.local.set({ notifications: showNotifications })
-    showMessage('saved notifications!')
-  }
-
-  async function saveRelays(): Promise<void> {
-    await browser.storage.sync.set({
-      relays: Object.fromEntries(
-        relays
-          .filter(({ url }) => url.trim() !== '')
-          .map(({ url, policy }) => [url.trim(), policy])
-      )
-    })
-    showMessage('saved relays!')
-  }
-
-  function changeShowProtocolHandlerHelp() {
-    setShowProtocolHandlerHelp(true)
-  }
-
-  function changeHandleNostrLinks() {
-    if (handleNostrLinks) {
-      setProtocolHandler('')
-      addUnsavedChanges('protocol_handler')
-    } else setShowProtocolHandlerHelp(true)
-    setHandleNostrLinks(!handleNostrLinks)
-  }
-
-  function handleChangeProtocolHandler(e: React.ChangeEvent<HTMLInputElement>) {
-    setProtocolHandler(e.target.value)
-    addUnsavedChanges('protocol_handler')
-  }
-
-  async function saveNostrProtocolHandlerSettings(): Promise<void> {
-    await browser.storage.local.set({ protocol_handler: protocolHandler })
-    showMessage('saved protocol handler!')
-  }
-
-  function addUnsavedChanges(section: string) {
-    if (!unsavedChanges.find(s => s === section)) {
-      const newChanges = [...unsavedChanges, section]
-      setUnsavedChanges(newChanges)
-    }
-  }
-
-  async function saveChanges(): Promise<void> {
-    for (let section of unsavedChanges) {
-      switch (section) {
-        case 'relays':
-          await saveRelays()
-          break
-        case 'protocol_handler':
-          await saveNostrProtocolHandlerSettings()
-          break
-        case 'notifications':
-          await saveNotifications()
-          break
-      }
-    }
-    setUnsavedChanges([])
-  }
 }
 
 const container = document.getElementById('main')
