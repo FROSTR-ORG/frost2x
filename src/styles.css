@@ -1,50 +1,85 @@
-/* Global styles */
+/* Dark theme global styles with solid background - darker */
 body {
-  color: #000000;
-  background-color: rgba(255, 255, 255, 0.974);
+  color: #e6e6e6;
+  background: #132242; /* Darker blue background */
   font-size: 0.9em;
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   line-height: 1.4;
+  min-height: 100vh;
 }
 
-/* Page header */
+/* Remove the radial overlay */
+body::after {
+  display: none;
+}
+
+/* Enhanced page header with logo */
 .page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 30px;
+  text-align: center;
+  padding: 1rem 0 2rem;
 }
 
 .page-header h1 {
-  font-size: 25px;
+  font-size: 28px;
   margin-bottom: 0;
   margin-block-end: 0;
+  letter-spacing: 0.5px;
+  color: #ffffff;
 }
 
 .page-header p {
   margin-top: 0;
   margin-block-start: 0;
-  color: #555;
+  color: #aaaaaa;
+  font-size: 16px;
+  font-weight: 300;
+}
+
+.frost-logo {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 0 5px rgba(74, 144, 226, 0.3));
+}
+
+.frost-logo:hover {
+  filter: drop-shadow(0 0 8px rgba(74, 144, 226, 0.6));
+  transform: scale(1.05);
+}
+
+.frost-logo path {
+  transition: fill 0.3s ease;
 }
 
 /* Component containers */
 .container {
-  margin-bottom: 0;
+  margin-bottom: 1.5rem;
   width: 100%;
   max-width: 700px;
   padding: 12px 0;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Section headers with duller white */
 .section-header {
   font-size: 1.4em;
   font-weight: bold;
   margin-bottom: 8px;
+  color: #d8d8d8; /* Duller white color */
 }
 
 .description {
   margin-bottom: 15px;
-  color: #555;
+  color: #aaaaaa;
   max-width: 650px;
 }
 
@@ -62,20 +97,21 @@ input[type="number"],
 input:not([type="checkbox"]):not([type="radio"]) {
   height: 36px;
   padding: 0 10px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(100, 140, 210, 0.3);
   border-radius: 4px;
   font-size: 14px;
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
-  background-color: #fff;
+  background-color: rgba(20, 30, 50, 0.6);
+  color: #e6e6e6;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 input:focus {
   outline: none;
   border-color: #4a90e2;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
 }
 
 button,
@@ -84,10 +120,10 @@ input[type="button"],
 input[type="submit"] {
   height: 36px;
   padding: 0 12px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(100, 140, 210, 0.4);
   border-radius: 4px;
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: rgba(30, 40, 65, 0.8);
+  color: #e6e6e6;
   font-size: 14px;
   font-weight: normal;
   text-align: center;
@@ -105,8 +141,8 @@ button:hover,
 .button:hover,
 input[type="button"]:hover,
 input[type="submit"]:hover {
-  background-color: #e0e0e0;
-  border-color: #b3b3b3;
+  background-color: #3a3a3a;
+  border-color: #555;
 }
 
 button:focus,
@@ -114,15 +150,15 @@ button:focus,
 input[type="button"]:focus,
 input[type="submit"]:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
 }
 
 button:active,
 .button:active,
 input[type="button"]:active,
 input[type="submit"]:active {
-  background-color: #d4d4d4;
-  border-color: #a0a0a0;
+  background-color: #333;
+  border-color: #666;
 }
 
 button:disabled,
@@ -131,7 +167,7 @@ input[type="button"]:disabled,
 input[type="submit"]:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background-color: #f5f5f5;
+  background-color: #222;
 }
 
 /* Input sizes */
@@ -223,27 +259,29 @@ table {
   width: 100%;
   margin: 15px 0;
   font-size: 14px;
+  background-color: rgba(20, 30, 50, 0.5);
 }
 
 table th,
 table td {
-  border: 1px solid #ddd;
+  border: 1px solid #333;
   padding: 12px 15px;
   text-align: left;
 }
 
 table th {
-  background-color: #f2f2f2;
+  background-color: rgba(30, 45, 70, 0.7);
   font-weight: bold;
   position: relative;
+  color: #e0e0e0;
 }
 
 table tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background-color: rgba(25, 35, 55, 0.5);
 }
 
 table tr:hover {
-  background-color: #f1f1f1;
+  background-color: rgba(35, 50, 75, 0.6);
 }
 
 /* For tables with inputs */
@@ -272,7 +310,7 @@ table .action-cell {
 /* Component spacing */
 .component-section {
   margin-bottom: 30px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #333;
   padding-bottom: 20px;
 }
 
@@ -288,7 +326,7 @@ table .action-cell {
 }
 
 .error-text {
-  color: red;
+  color: #e74c3c;
   margin-top: 5px;
 }
 
@@ -296,13 +334,15 @@ table .action-cell {
 pre.code-display {
   font-family: monospace;
   white-space: pre;
-  background-color: #f5f5f5;
+  background-color: rgba(15, 25, 45, 0.7);
   padding: 10px;
   border-radius: 5px;
   margin-top: 10px;
   font-size: 13px;
   overflow-x: auto;
   max-width: 650px;
+  color: #e6e6e6;
+  border: 1px solid rgba(100, 140, 210, 0.3);
 }
 
 /* Modal */
@@ -324,7 +364,7 @@ pre.code-display {
 /* Reset button */
 .reset-button {
   margin-top: 20px;
-  background-color: #f44336;
+  background-color: #c0392b;
   color: white;
   border: none;
   padding: 8px 16px;
@@ -333,7 +373,7 @@ pre.code-display {
 }
 
 .reset-button:hover {
-  background-color: #d32f2f;
+  background-color: #a93226;
 }
 
 /* Peer component styles */
@@ -509,7 +549,7 @@ pre.code-display {
 /* Field description text */
 .field-description {
   margin: 5px 0 10px;
-  color: #666;
+  color: #999;
   font-size: 0.9em;
 }
 
@@ -528,8 +568,8 @@ pre.code-display {
 .info-modal {
   margin-top: 15px;
   padding: 15px;
-  background-color: #f8f8f8;
-  border: 1px solid #ddd;
+  background-color: rgba(20, 30, 50, 0.7);
+  border: 1px solid rgba(100, 140, 210, 0.3);
   border-radius: 4px;
 }
 
@@ -537,7 +577,7 @@ pre.code-display {
   margin-top: 0;
   margin-bottom: 10px;
   font-size: 1em;
-  color: #333;
+  color: #e0e0e0;
 }
 
 .info-modal .code-display {
@@ -561,7 +601,7 @@ pre.code-display {
   font-size: 0.95em;
   font-weight: bold;
   margin: 8px 0 5px;
-  color: #444;
+  color: #ccc;
 }
 
 .setting-section {
@@ -596,7 +636,7 @@ pre.code-display {
   padding: 10px 20px;
   margin-bottom: 10px;
   border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   font-size: 0.95em;
   animation: toast-in-out 3s ease;
   pointer-events: none;
@@ -619,4 +659,93 @@ pre.code-display {
     transform: translateY(-20px);
     opacity: 0;
   }
+}
+
+/* Minimalist Tab navigation styles */
+.tabs-container {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.tabs-navigation {
+  display: flex;
+  border-bottom: 1px solid #444;
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  padding: 0.85rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+  color: #999;
+  margin-right: 10px;
+  transition: all 0.25s ease-in-out;
+}
+
+.tab-button svg {
+  margin-right: 0.5rem;
+  transition: transform 0.2s ease;
+  opacity: 0.7;
+  stroke: #999;
+}
+
+.tab-button:hover {
+  color: #ccc;
+}
+
+.tab-button:hover svg {
+  transform: scale(1.1);
+  opacity: 1;
+  stroke: #ccc;
+}
+
+.tab-button.active {
+  color: #4a90e2;
+  border-bottom: 2px solid #4a90e2;
+}
+
+.tab-button.active svg {
+  opacity: 1;
+  stroke: #4a90e2;
+}
+
+.tab-content {
+  width: 100%;
+  position: relative;
+  background: transparent;
+  padding: 1.5rem 0;
+  border: none;
+}
+
+/* Add animation for tab content */
+.tab-panel {
+  animation: fadeIn 0.3s ease-in-out;
+  padding: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fix for tab button focus state */
+.tab-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.tab-button::-moz-focus-inner {
+  border: 0;
 }

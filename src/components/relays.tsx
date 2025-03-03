@@ -1,85 +1,112 @@
-import { useState, useEffect } from 'react'
-
-import type { RelayPolicy } from '../types.js'
+import { useEffect, useState } from 'react'
 
 import useStore from './store.js'
 
+// Add back the type import
+import type { RelayPolicy } from '../types.js'
+
+function validateUrl(url: string): boolean {
+  try {
+    new URL(url)
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
 export default function Relays() {
   const { store, update } = useStore()
-  const [ relays, setRelays ] = useState<Array<RelayPolicy>>([])
-  const [ newRelayURL, setNewRelayURL ] = useState('')
-
+  
+  // Update to use the correct type
+  const [ localState, setLocalState ] = useState<RelayPolicy[]>([])
+  const [ hasChanges, setHasChanges ] = useState(false)
+  const [ relayUrl, setRelayUrl ]     = useState('')
+  const [ error, setError ]           = useState('')
+  
+  // Initialize local relays from store
   useEffect(() => {
-    if (store.relays) {
-      setRelays([...store.relays])
-    }
+    setLocalState(store.relays)
   }, [store.relays])
-
-  const toggleReadRelay = (index: number) => {
-    const updatedRelays = [...relays]
-    updatedRelays[index] = {
-      ...updatedRelays[index],
-      read: !updatedRelays[index].read,
+  
+  // Update relay enabled status locally
+  const update_relay = (idx: number, key: 'read' | 'write') => {
+    setLocalState(prev => {
+      const updated = [...prev]
+      updated[idx][key] = !updated[idx][key]
+      return updated
+    })
+    setHasChanges(true)
+  }
+  
+  // Add a new relay to local state
+  const add_relay = () => {  
+    if (!relayUrl.trim()) {
+      return
     }
-    setRelays(updatedRelays)
-  }
 
-  const toggleWriteRelay = (index: number) => {
-    const updatedRelays = [...relays]
-    updatedRelays[index] = {
-      ...updatedRelays[index],
-      write: !updatedRelays[index].write,
-    }
-    setRelays(updatedRelays)
-  }
-
-  const deleteRelay = (index: number) => {
-    const updatedRelays = [...relays]
-    updatedRelays.splice(index, 1)
-    setRelays(updatedRelays)
-  }
-
-  const saveRelays = () => {
-    update({ relays })
-  }
-
-  const addNewRelay = () => {
-    if (!newRelayURL) return
-    
-    let url = newRelayURL.trim()
-
-    if (!(url.startsWith('ws://') || url.startsWith('wss://'))) {
-      url = 'wss://' + url
+    if (!(relayUrl.startsWith('wss://') || relayUrl.startsWith('ws://'))) {
+      setError('Relay URL must start with wss:// or ws://')
+      return
     }
     
-    setRelays([...relays, { url, read: true, write: true }])
-    setNewRelayURL('')
+    if (!validateUrl(relayUrl)) {
+      setError('Invalid URL format')
+      return
+    }
+    
+    // Check if relay already exists
+    if (localState.some(relay => relay.url === relayUrl)) {
+      setError('Relay already exists')
+      return
+    }
+    
+    setLocalState(prev => [...prev, { url: relayUrl, read: true, write: true }])
+    setRelayUrl('')
+    setHasChanges(true)
   }
-
+  
+  // Remove a relay from local state
+  const remove_relay = (idx: number) => {
+    setLocalState(prev => prev.filter((_, i) => i !== idx))
+    setHasChanges(true)
+  }
+  
+  // Save changes to the store
+  const save = () => {
+    update({ relays: localState })
+    setHasChanges(false)
+  }
+  
+  // Discard changes by resetting local state from store
+  const cancel = () => {
+    setLocalState(store.relays)
+    setHasChanges(false)
+  }
+  
   return (
     <div className="container">
-      <h2 className="section-header">Relay Connections</h2>
-      <p className="description">Manage how you connect to the nostr network. "Read" means you will listen for incoming events from the relay, while "Write" means you will publish outgoing events to the relay.</p>
+      <h2 className="section-header">Relay Configuration</h2>
+      <p className="description">Configure which relays to connect to for key management.</p>
       
       <table>
         <thead>
           <tr>
-            <th className="url-column">URL</th>
+            <th className="url-column">Relay URL</th>
             <th className="checkbox-cell">Read</th>
             <th className="checkbox-cell">Write</th>
-            <th>Actions</th>
+            <th className="action-cell">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {relays.map((relay, index) => (
-            <tr key={index} className="relay-row">
+          {localState.map((relay, idx) => (
+            <tr key={idx}>
               <td>{relay.url}</td>
               <td className="checkbox-cell">
                 <input
                   type="checkbox"
                   className="relay-checkbox"
                   checked={relay.read}
-                  onChange={() => toggleReadRelay(index)}
+                  onChange={() => update_relay(idx, 'read')}
                 />
               </td>
               <td className="checkbox-cell">
@@ -87,15 +114,12 @@ export default function Relays() {
                   type="checkbox"
                   className="relay-checkbox"
                   checked={relay.write}
-                  onChange={() => toggleWriteRelay(index)}
+                  onChange={() => update_relay(idx, 'write')}
                 />
               </td>
-              <td>
-                <button
-                  className="button"
-                  onClick={() => deleteRelay(index)}
-                >
-                  delete
+              <td className="action-cell">
+                <button onClick={() => remove_relay(idx)} className="button-danger">
+                  Remove
                 </button>
               </td>
             </tr>
@@ -103,33 +127,38 @@ export default function Relays() {
         </tbody>
       </table>
       
-      <div className="relay-controls">
-        <div className="input-row">
-          <input
-            value={newRelayURL}
-            placeholder="Enter relay URL"
-            onChange={e => setNewRelayURL(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') addNewRelay()
-            }}
-          />
-          <button 
-            disabled={!newRelayURL} 
-            onClick={addNewRelay}
-            className="button add-relay-button"
-          >
-            Add Relay
-          </button>
-        </div>
+      <div className="input-group relay-controls">
+        <input
+          type="text"
+          value={relayUrl}
+          onChange={(e) => setRelayUrl(e.target.value)}
+          placeholder="wss://relay.example.com"
+          className="relay-input"
+        />
+        <button onClick={add_relay} className="button add-relay-button">
+          Add Relay
+        </button>
+      </div>
+      
+      {error && <p className="error-text">{error}</p>}
+      
+      <div className="action-buttons">
+        <button 
+          onClick={save}
+          disabled={!hasChanges}
+          className="button button-primary save-button"
+        >
+          Save
+        </button>
         
-        <div className="action-buttons">
+        {hasChanges && (
           <button 
-            onClick={saveRelays}
-            className="button button-primary save-button"
+            onClick={cancel}
+            className="button"
           >
-            Save Relays
+            Cancel
           </button>
-        </div>
+        )}
       </div>
     </div>
   )

@@ -15,6 +15,7 @@ export default function Settings({ showMessage }: { showMessage: (msg: string) =
 
   useEffect(() => {
     setSettings(store.settings)
+    console.log('settings loaded:', settings)
   }, [ store.settings ])
 
   const update_settings = (settings: Partial<ExtensionSettings>) => {
@@ -25,7 +26,8 @@ export default function Settings({ showMessage }: { showMessage: (msg: string) =
   }
 
   // Event handlers for main settings
-  function save_settings () {
+  const save_settings = () => {
+    console.log('saving settings:', settings)
     try {
       update ({
         settings : {
@@ -42,11 +44,11 @@ export default function Settings({ showMessage }: { showMessage: (msg: string) =
   
   return (
     <div className="container">
-      <h2 className="section-header">Settings</h2>
+      <h2 className="section-header">Extension Settings</h2>
       <p className="description">Configure various settings for the signing extension.</p>
 
       <GeneralSettings settings={settings} update={update_settings} />
-      <LinkSettings    settings={settings} update={update_settings} />
+      {/* <LinkSettings settings={settings} update={update_settings} /> */}
 
       <button
         className="button button-primary save-button"

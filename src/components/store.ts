@@ -36,9 +36,9 @@ export default function () {
     const new_store = { ...store, ...data }
     
     if (DEBUG) console.log('updating store:', new_store)
-    
+
     browser.storage.sync.set({ store: new_store }).then(() => {
-      // setStore(new_store)
+      setStore(new_store)
       if (DEBUG) console.log('updated store:', new_store)
     })
   }
@@ -46,18 +46,18 @@ export default function () {
   const set   = (data: ExtensionStore) => update(data)
   const reset = () => set(DEFAULT_STORE)
   
-  useEffect(() => {
-    const listener = (changes: any) => {
-      const new_store = changes.store?.newValue
-      if (new_store !== undefined) {
-        setStore(new_store)
-        if (DEBUG) console.log('store changed:', new_store)
-      }
-    }
+  // useEffect(() => {
+  //   const listener = (changes: any) => {
+  //     const new_store = changes.store?.newValue
+  //     if (new_store !== undefined) {
+  //       setStore(new_store)
+  //       if (DEBUG) console.log('store changed:', new_store)
+  //     }
+  //   }
     
-    browser.storage.sync.onChanged.addListener(listener)
-    return () => browser.storage.sync.onChanged.removeListener(listener)
-  }, [ store ])
+  //   browser.storage.sync.onChanged.addListener(listener)
+  //   return () => browser.storage.sync.onChanged.removeListener(listener)
+  // }, [ store ])
 
   return { store, set, update, reset }
 }

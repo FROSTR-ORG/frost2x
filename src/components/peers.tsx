@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import useStore from './store.js'
 
@@ -12,78 +12,109 @@ import type { PeerPolicy } from '@frostr/bifrost'
 
 export default function () {
   const { store, update } = useStore()
-
+  
+  // Add local state to track changes
+  const [localPeers, setLocalPeers] = useState<PeerPolicy[]>([])
+  const [hasChanges, setHasChanges] = useState(false)
+  
+  // Initialize local state from store
   useEffect(() => {
-    if (store.peers === null) {
-      if (store.group !== null && store.share !== null) {
-        const peers = init_peers(store.group, store.share)
-        update({ peers })
-      }
-    } else {
-      if (store.group === null || store.share === null) {
-        update({ peers: null })
-      }
-    }
-  }, [store.peers, store.group, store.share, update])
-
-  const togglePeerValue = (peerKey: string, field: 'send' | 'recv') => {
-    if (store.peers === null) return
-
-    const newPeers : PeerPolicy[] = store.peers.map(([ key, send, recv ]) => {
-      if (key === peerKey && field === 'send') {
-        return [ key, !send, recv ]
-      } else if (key === peerKey && field === 'recv') {
-        return [ key, send, !recv ]
-      } else {
-        return [ key, send, recv ]
-      }
+    setLocalPeers(store.peers ?? [])
+  }, [store.peers])
+  
+  // Update peer connectivity status locally
+  const update_peer = (idx: number, key: number, value: boolean) => {
+    setLocalPeers(prev => {
+      const updated = [...prev]
+      updated[idx][key] = value
+      return updated
     })
-
-    update({ peers: newPeers })
+    setHasChanges(true)
   }
-
+  
+  // Save changes to the store
+  const save = () => {
+    update({ peers: localPeers })
+    setHasChanges(false)
+  }
+  
+  // Discard changes by resetting local state from store
+  const cancel = () => {
+    setLocalPeers(store.peers ?? [])
+    setHasChanges(false)
+  }
+  
+  if (!store.peers && (!store.group || !store.share)) {
+    return (
+      <div className="container">
+        <h2 className="section-header">Peer Connections</h2>
+        <p className="description">Configure connection settings for peers in your signing group.</p>
+        <p className="description">Load a group package and a share package to configure peer connections.</p>
+      </div>
+    )
+  }
+  
   return (
     <div className="container">
       <h2 className="section-header">Peer Connections</h2>
-      <p className="description">Manage how you connect with other peers in your group. "Request" means you will use those peers to request signatures, while "Respond" means you will respond to their requests.</p>
-
-      {store.peers && store.peers.length > 0 ? (
-        <table>
-          <thead>
-            <tr>
-              <th className="peer-index">Index</th>
-              <th>Pubkey</th>
-              <th className="checkbox-cell">Request</th>
-              <th className="checkbox-cell">Respond</th>
-            </tr>
-          </thead>
-          <tbody>
-            {store.peers.map(([ key, send, recv ], idx) => (
-              <tr key={key} className="peer-row">
-                <td className="peer-index">{idx + 1}</td>
-                <td className="peer-pubkey">{key}</td>
-                <td className="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    checked={send}
-                    onChange={() => togglePeerValue(key, 'send')}
-                    className="peer-checkbox"
-                  />
-                </td>
-                <td className="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    checked={recv}
-                    onChange={() => togglePeerValue(key, 'recv')}
-                    className="peer-checkbox"
-                  />
-                </td>
+      <p className="description">Configure connection settings for peers in your signing group.</p>
+      
+      {localPeers.length > 0 ? (
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>Pubkey</th>
+                <th className="checkbox-cell">Request</th>
+                <th className="checkbox-cell">Respond</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {localPeers.map((peer, idx) => (
+                <tr key={idx}>
+                  <td className="pubkey-cell">{peer[0]}</td>
+                  <td className="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      className="peer-checkbox"
+                      checked={peer[1]}
+                      onChange={() => update_peer(idx, 1, !peer[1])}
+                    />
+                  </td>
+                  <td className="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      className="peer-checkbox"
+                      checked={peer[2]}
+                      onChange={() => update_peer(idx, 2, !peer[2])}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          <div className="action-buttons">
+            <button 
+              onClick={save}
+              disabled={!hasChanges}
+              className="button button-primary save-button"
+            >
+              Save
+            </button>
+            
+            {hasChanges && (
+              <button 
+                onClick={cancel}
+                className="button"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </div>
       ) : (
-        <div className="description">No peers available</div>
+        <p className="description">No peers found in the group package.</p>
       )}
     </div>
   )
