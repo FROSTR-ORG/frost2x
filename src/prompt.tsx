@@ -2,7 +2,7 @@ import browser from 'webextension-polyfill'
 import { createRoot } from 'react-dom/client'
 import React from 'react'
 
-import {PERMISSION_NAMES} from './common.js'
+import * as CONST from './const.js'
 
 function Prompt() {
   let qs = new URLSearchParams(location.search)
@@ -29,7 +29,7 @@ function Prompt() {
           {host}
         </b>{' '}
         <p>
-          is requesting your permission to <b>{type && PERMISSION_NAMES[type]}:</b>
+          is requesting your permission to <b>{type && CONST.PERMISSION_NAMES[type]}:</b>
         </p>
       </div>
       {params && (

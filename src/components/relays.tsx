@@ -1,134 +1,133 @@
-import { useCallback, useEffect, useState } from 'react'
-import browser from 'webextension-polyfill'
-import { Relay } from '../types.js'
+import { useState, useEffect } from 'react'
 
-export default function RelayConfig({ 
-  showMessage, 
-  addUnsavedChanges 
-}: { 
-  showMessage: (msg: string) => void; 
-  addUnsavedChanges: (section: string) => void;
-}) {
-  let [relays, setRelays] = useState<Relay[]>([])
-  let [newRelayURL, setNewRelayURL] = useState('')
+import type { RelayPolicy } from '../types.js'
+
+import useStore from './store.js'
+
+export default function Relays() {
+  const { store, update } = useStore()
+  const [ relays, setRelays ] = useState<Array<RelayPolicy>>([])
+  const [ newRelayURL, setNewRelayURL ] = useState('')
 
   useEffect(() => {
-    browser.storage.sync
-      .get(['relays'])
-      .then(results => {
-        if (results.relays) {
-          let relaysList: Relay[] = []
-          let resultsRelays = results.relays as Record<string, { read: boolean; write: boolean }>
-          for (let url in resultsRelays) {
-            relaysList.push({ url, policy: resultsRelays[url] })
-          }
-          setRelays(relaysList)
-        }
-      })
-  }, [])
+    if (store.relays) {
+      setRelays([...store.relays])
+    }
+  }, [store.relays])
 
-  function changeRelayURL(i: number, ev: React.ChangeEvent<HTMLInputElement>) {
-    setRelays([
-      ...relays.slice(0, i),
-      { url: ev.target.value, policy: relays[i].policy },
-      ...relays.slice(i + 1)
-    ])
-    addUnsavedChanges('relays')
+  const toggleReadRelay = (index: number) => {
+    const updatedRelays = [...relays]
+    updatedRelays[index] = {
+      ...updatedRelays[index],
+      read: !updatedRelays[index].read,
+    }
+    setRelays(updatedRelays)
   }
 
-  function toggleRelayPolicy(i: number, cat: 'read' | 'write') {
-    setRelays([
-      ...relays.slice(0, i),
-      {
-        url: relays[i].url,
-        policy: { ...relays[i].policy, [cat]: !relays[i].policy[cat] }
-      },
-      ...relays.slice(i + 1)
-    ])
-    addUnsavedChanges('relays')
+  const toggleWriteRelay = (index: number) => {
+    const updatedRelays = [...relays]
+    updatedRelays[index] = {
+      ...updatedRelays[index],
+      write: !updatedRelays[index].write,
+    }
+    setRelays(updatedRelays)
   }
 
-  function removeRelay(i: number) {
-    setRelays([...relays.slice(0, i), ...relays.slice(i + 1)])
-    addUnsavedChanges('relays')
+  const deleteRelay = (index: number) => {
+    const updatedRelays = [...relays]
+    updatedRelays.splice(index, 1)
+    setRelays(updatedRelays)
   }
 
-  function addNewRelay() {
-    if (newRelayURL.trim() === '') return
-    const newRelays = [...relays, {
-      url: newRelayURL,
-      policy: { read: true, write: true }
-    }]
-    setRelays(newRelays)
-    addUnsavedChanges('relays')
+  const saveRelays = () => {
+    update({ relays })
+  }
+
+  const addNewRelay = () => {
+    if (!newRelayURL) return
+    
+    let url = newRelayURL.trim()
+
+    if (!(url.startsWith('ws://') || url.startsWith('wss://'))) {
+      url = 'wss://' + url
+    }
+    
+    setRelays([...relays, { url, read: true, write: true }])
     setNewRelayURL('')
   }
 
-  async function saveRelays(): Promise<void> {
-    await browser.storage.sync.set({
-      relays: Object.fromEntries(
-        relays
-          .filter(({ url }) => url.trim() !== '')
-          .map(({ url, policy }) => [url.trim(), policy])
-      )
-    })
-    showMessage('saved relays!')
-  }
-
   return (
-    <div>
-      <div>Relay Configuration</div>
-      <p>Configure preferred relays for your extension:</p>
-      <div
-        style={{
-          marginLeft: '10px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1px'
-        }}
-      >
-        {relays.map(({ url, policy }, i) => (
-          <div
-            key={i}
-            style={{ display: 'flex', alignItems: 'center', gap: '15px' }}
-          >
-            <input
-              style={{ width: '400px' }}
-              value={url}
-              onChange={changeRelayURL.bind(null, i)}
-            />
-            <div style={{ display: 'flex', gap: '5px' }}>
-              <label style={{ display: 'flex', alignItems: 'center' }}>
-                read
+    <div className="container">
+      <h2 className="section-header">Relay Connections</h2>
+      <p className="description">Manage how you connect to the nostr network. "Read" means you will listen for incoming events from the relay, while "Write" means you will publish outgoing events to the relay.</p>
+      
+      <table>
+        <thead>
+          <tr>
+            <th className="url-column">URL</th>
+            <th className="checkbox-cell">Read</th>
+            <th className="checkbox-cell">Write</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {relays.map((relay, index) => (
+            <tr key={index} className="relay-row">
+              <td>{relay.url}</td>
+              <td className="checkbox-cell">
                 <input
                   type="checkbox"
-                  checked={policy.read}
-                  onChange={toggleRelayPolicy.bind(null, i, 'read')}
+                  className="relay-checkbox"
+                  checked={relay.read}
+                  onChange={() => toggleReadRelay(index)}
                 />
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center' }}>
-                write
+              </td>
+              <td className="checkbox-cell">
                 <input
                   type="checkbox"
-                  checked={policy.write}
-                  onChange={toggleRelayPolicy.bind(null, i, 'write')}
+                  className="relay-checkbox"
+                  checked={relay.write}
+                  onChange={() => toggleWriteRelay(index)}
                 />
-              </label>
-            </div>
-            <button onClick={removeRelay.bind(null, i)}>remove</button>
-          </div>
-        ))}
-        <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+              </td>
+              <td>
+                <button
+                  className="button"
+                  onClick={() => deleteRelay(index)}
+                >
+                  delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      
+      <div className="relay-controls">
+        <div className="input-row">
           <input
-            style={{ width: '400px' }}
             value={newRelayURL}
+            placeholder="Enter relay URL"
             onChange={e => setNewRelayURL(e.target.value)}
             onKeyDown={e => {
               if (e.key === 'Enter') addNewRelay()
             }}
           />
-          <button disabled={!newRelayURL} onClick={addNewRelay}>
-            add relay
+          <button 
+            disabled={!newRelayURL} 
+            onClick={addNewRelay}
+            className="button add-relay-button"
+          >
+            Add Relay
+          </button>
+        </div>
+        
+        <div className="action-buttons">
+          <button 
+            onClick={saveRelays}
+            className="button button-primary save-button"
+          >
+            Save Relays
           </button>
         </div>
       </div>

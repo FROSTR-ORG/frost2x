@@ -1,47 +1,14 @@
 import browser from 'webextension-polyfill'
 
-export const NO_PERMISSIONS_REQUIRED = {
-  replaceURL: true,
-  node_reset: true,
-  get_node_status: true
+import type { Conditions, NostrEvent, PolicyMap } from '../types.js'
+
+import * as CONST from '../const.js'
+
+export function is_permission_required (type: string): boolean {
+  return !(type in CONST.PERMISSION_BYPASS && CONST.PERMISSION_BYPASS[type as keyof typeof CONST.PERMISSION_BYPASS])
 }
 
-export const PERMISSION_NAMES = Object.fromEntries([
-  ['getPublicKey', 'read your public key'],
-  ['getRelays', 'read your list of preferred relays'],
-  ['signEvent', 'sign events using your private key'],
-  ['nip04.encrypt', 'encrypt messages to peers'],
-  ['nip04.decrypt', 'decrypt messages from peers'],
-  ['nip44.encrypt', 'encrypt messages to peers'],
-  ['nip44.decrypt', 'decrypt messages from peers']
-])
-
-interface NostrEvent {
-  kind: number
-  content: string
-  tags: string[]
-  [key: string]: any
-}
-
-interface Conditions {
-  kinds?: Record<number, boolean>
-  [key: string]: any
-}
-
-interface Policy {
-  conditions: Conditions
-  created_at: number
-}
-
-interface PolicyMap {
-  [host: string]: {
-    [accept: string]: {
-      [type: string]: Policy
-    }
-  }
-}
-
-function matchConditions(conditions: Conditions, event: NostrEvent): boolean {
+function matchConditions (conditions: Conditions, event: NostrEvent): boolean {
   if (conditions?.kinds) {
     if (event.kind in conditions.kinds) return true
     else return false
@@ -50,7 +17,7 @@ function matchConditions(conditions: Conditions, event: NostrEvent): boolean {
   return true
 }
 
-export async function getPermissionStatus(
+export async function getPermissionStatus (
   host: string,
   type: string,
   event: NostrEvent
@@ -84,7 +51,7 @@ export async function getPermissionStatus(
   return undefined
 }
 
-export async function updatePermission(
+export async function updatePermission (
   host: string,
   type: string,
   accept: boolean,
@@ -140,72 +107,4 @@ export async function removePermissions(
   const { policies = {} } = (await browser.storage.local.get('policies')) as { policies: PolicyMap }
   delete policies[host]?.[accept]?.[type]
   await browser.storage.local.set({policies})
-}
-
-interface NotificationParams {
-  event?: NostrEvent
-  [key: string]: any
-}
-
-export async function showNotification(
-  host: string,
-  answer: boolean,
-  type: string,
-  params: NotificationParams
-): Promise<void> {
-  const {notifications} = await browser.storage.local.get('notifications') as {
-    notifications?: boolean
-  }
-  if (notifications) {
-    const action = answer ? 'allowed' : 'denied'
-    await browser.notifications.create(undefined, {
-      type: 'basic',
-      title: `${type} ${action} for ${host}`,
-      message: JSON.stringify(
-        params?.event
-          ? {
-              kind: params.event.kind,
-              content: params.event.content,
-              tags: params.event.tags
-            }
-          : params,
-        null,
-        2
-      ),
-      iconUrl: 'icons/48x48.png'
-    })
-  }
-}
-
-export async function getPosition(
-  width: number,
-  height: number
-): Promise<{top: number; left: number}> {
-  let left = 0
-  let top = 0
-
-  try {
-    const lastFocused = await browser.windows.getLastFocused() as browser.Windows.Window
-
-    if (
-      lastFocused &&
-      lastFocused.top !== undefined &&
-      lastFocused.left !== undefined &&
-      lastFocused.width !== undefined &&
-      lastFocused.height !== undefined
-    ) {
-      // Position window in the center of the lastFocused window
-      top = Math.round(lastFocused.top + (lastFocused.height - height) / 2)
-      left = Math.round(lastFocused.left + (lastFocused.width - width) / 2)
-    } else {
-      console.error('Last focused window properties are undefined.')
-    }
-  } catch (error) {
-    console.error('Error getting window position:', error)
-  }
-
-  return {
-    top,
-    left
-  }
 }

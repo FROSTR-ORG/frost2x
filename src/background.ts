@@ -5,9 +5,20 @@ import { BifrostNode } from '@frostr/bifrost'
 import { Mutex }       from 'async-mutex'
 
 import {
+  showNotification,
+  getPosition
+} from './lib/common.js'
+
+import {
   init_node,
   keep_alive
 } from './lib/node.js'
+
+import {
+  getPermissionStatus,
+  updatePermission,
+  is_permission_required
+} from './lib/permissions.js'
 
 import {
   getEventHash,
@@ -24,25 +35,13 @@ import {
   ExtensionStore
 } from './types.js'
 
-import {
-  NO_PERMISSIONS_REQUIRED,
-  getPermissionStatus,
-  updatePermission,
-  showNotification,
-  getPosition
-} from './common.js'
-
+import * as CONST  from './const.js'
 import * as crypto from './lib/crypto.js'
 
-let promptMutex = new Mutex()
-let openPrompt: PromptResolver | null = null
+let promptMutex                       = new Mutex()
 let releasePromptMutex: () => void    = () => {}
-
-//set the width and height of the prompt window
-const width  = 340
-const height = 360
-
-let node : BifrostNode | null = null
+let openPrompt: PromptResolver | null = null
+let node : BifrostNode | null         = null
 
 browser.runtime.onInstalled.addListener(async (details: browser.Runtime.OnInstalledDetailsType) => {
   if (details.reason === 'install') browser.runtime.openOptionsPage()
@@ -51,16 +50,15 @@ browser.runtime.onInstalled.addListener(async (details: browser.Runtime.OnInstal
 
 browser.storage.onChanged.addListener(async (changes: { [key: string]: any }, area: string) => {
   if (area === 'sync') {
-    if ('relays' in changes || 'store' in changes) {
+    if ('store' in changes) {
       node = await init_node()
     }
   }
 })
 
 browser.runtime.onMessage.addListener((
-  message      : unknown,
-  sender       : browser.Runtime.MessageSender,
-  sendResponse : (response?: any) => void
+  message : unknown,
+  sender  : browser.Runtime.MessageSender
 ) => {
   const msg = message as Message
   if (msg.openSignUp) {
@@ -79,9 +77,8 @@ browser.runtime.onMessage.addListener((
 })
 
 browser.runtime.onMessageExternal.addListener(async (
-  message: unknown,
-  sender: browser.Runtime.MessageSender,
-  sendResponse: (response?: any) => void
+  message : unknown,
+  sender  : browser.Runtime.MessageSender
 ) => {
   const { type, params } = message as { type: string; params: any }
   let extensionId = new URL(sender.url!).host
@@ -96,123 +93,126 @@ browser.windows.onRemoved.addListener((_: number) => {
   }
 })
 
-async function handleContentScriptMessage({ type, params, host }: ContentScriptMessage) {
-  if (type in NO_PERMISSIONS_REQUIRED && NO_PERMISSIONS_REQUIRED[type as keyof typeof NO_PERMISSIONS_REQUIRED]) {
-    // authorized, and we won't do anything with private key here, so do a separate handler
-    switch (type) {
-
-      case 'node_reset':
-        node = await init_node()
-        return
-
-      case 'get_node_status':
-        return { status: node !== null ? 'running' : 'stopped' }
-      
-      case 'replaceURL': {
-        let { protocol_handler: ph } = await browser.storage.local.get([
-          'protocol_handler'
-        ]) as { protocol_handler: string }
-        if (!ph) return false
-
-        let { url } = params
-        let raw = url.split('nostr:')[1]
-        let decoded = nip19.decode(raw) as Nip19Data
-        let nip19Type = decoded.type
-        let data = decoded.data
-
-        const typeMap = {
-          npub     : { p_or_e: 'p', u_or_n: 'u' },
-          note     : { p_or_e: 'e', u_or_n: 'n' },
-          nprofile : { p_or_e: 'p', u_or_n: 'u' },
-          nevent   : { p_or_e: 'e', u_or_n: 'n' },
-          naddr    : { p_or_e: 'p', u_or_n: 'u' },
-          nsec     : { p_or_e: 'p', u_or_n: 'u' }
-        } as const
-
-        const replacements = {
-          raw,
-          hrp: nip19Type,
-          hex: (() => {
-            if (nip19Type === 'npub' || nip19Type === 'note') return data as string
-            if (nip19Type === 'nprofile') return (data as ProfilePointer).pubkey
-            if (nip19Type === 'nevent') return (data as EventPointer).id
-            return null
-          })(),
-          p_or_e: typeMap[nip19Type as keyof typeof typeMap]?.p_or_e ?? null,
-          u_or_n: typeMap[nip19Type as keyof typeof typeMap]?.u_or_n ?? null,
-          relay0: nip19Type === 'nprofile' ? (data as ProfilePointer).relays?.[0] ?? null : null,
-          relay1: nip19Type === 'nprofile' ? (data as ProfilePointer).relays?.[1] ?? null : null,
-          relay2: nip19Type === 'nprofile' ? (data as ProfilePointer).relays?.[2] ?? null : null
-        }
-
-        let result = ph
-        Object.entries(replacements).forEach(([pattern, value]) => {
-          if (typeof result === 'string') {
-            result = result.replace(new RegExp(`{ *${pattern} *}`, 'g'), value || '')
-          }
-        })
-
-        return result
-      }
-    }
-
-    return
+async function handleContentScriptMessage(msg : ContentScriptMessage) {
+  if (is_permission_required(msg.type)) {
+    return handlePermissionedRequest(msg)
   } else {
-    // acquire mutex here before reading policies
-    releasePromptMutex = await promptMutex.acquire()
+    return handleSafeRequest(msg)
+  }
+}
 
-    let allowed = await getPermissionStatus(
-      host!,
-      type,
-      type === 'signEvent' ? params.event : undefined
-    )
+async function handleSafeRequest({ type, params } : ContentScriptMessage) {
 
-    if (allowed === true) {
-      // authorized, proceed
-      releasePromptMutex()
-      showNotification(host!, allowed, type, params)
-    } else if (allowed === false) {
-      // denied, just refuse immediately
-      releasePromptMutex()
-      showNotification(host!, allowed, type, params)
-      return {
-        error: { message: 'denied' }
+  switch (type) {
+
+    case 'node_reset':
+      node = await init_node()
+      return
+
+    case 'get_node_status':
+      return { status: node !== null ? 'running' : 'stopped' }
+    
+    case 'replace_url': {
+      let { protocol_handler } = await browser.storage.local.get([
+        'protocol_handler'
+      ]) as { protocol_handler: string }
+
+      if (!protocol_handler) return false
+
+      let { url }   = params
+      let raw       = url.split('nostr:')[1]
+      let decoded   = nip19.decode(raw) as Nip19Data
+      let nip19Type = decoded.type
+      let data      = decoded.data
+
+      const typeMap = {
+        npub     : { p_or_e: 'p', u_or_n: 'u' },
+        note     : { p_or_e: 'e', u_or_n: 'n' },
+        nprofile : { p_or_e: 'p', u_or_n: 'u' },
+        nevent   : { p_or_e: 'e', u_or_n: 'n' },
+        naddr    : { p_or_e: 'p', u_or_n: 'u' },
+        nsec     : { p_or_e: 'p', u_or_n: 'u' }
+      } as const
+
+      const replacements = {
+        raw,
+        hrp: nip19Type,
+        hex: (() => {
+          if (nip19Type === 'npub' || nip19Type === 'note') return data as string
+          if (nip19Type === 'nprofile') return (data as ProfilePointer).pubkey
+          if (nip19Type === 'nevent') return (data as EventPointer).id
+          return null
+        })(),
+        p_or_e: typeMap[nip19Type as keyof typeof typeMap]?.p_or_e ?? null,
+        u_or_n: typeMap[nip19Type as keyof typeof typeMap]?.u_or_n ?? null,
+        relay0: nip19Type === 'nprofile' ? (data as ProfilePointer).relays?.[0] ?? null : null,
+        relay1: nip19Type === 'nprofile' ? (data as ProfilePointer).relays?.[1] ?? null : null,
+        relay2: nip19Type === 'nprofile' ? (data as ProfilePointer).relays?.[2] ?? null : null
       }
-    } else {
-      // ask for authorization
-      try {
-        let id = Math.random().toString().slice(4)
-        let qs = new URLSearchParams({
-          host: host!,
-          id,
-          params: JSON.stringify(params),
-          type
-        })
-        // center prompt
-        const { top, left } = await getPosition(width, height)
-        // prompt will be resolved with true or false
-        let accept = await new Promise<boolean>((resolve, reject) => {
-          openPrompt = { resolve, reject }
 
-          browser.windows.create({
-            url: `${browser.runtime.getURL('prompt.html')}?${qs.toString()}`,
-            type: 'popup',
-            width: width,
-            height: height,
-            top: top,
-            left: left
-          })
-        })
-
-        // denied, stop here
-        if (!accept) return { error: { message: 'denied' } }
-      } catch (err: any) {
-        // errored, stop here
-        releasePromptMutex()
-        return {
-          error: { message: err.message, stack: err.stack }
+      let result = protocol_handler
+      Object.entries(replacements).forEach(([pattern, value]) => {
+        if (typeof result === 'string') {
+          result = result.replace(new RegExp(`{ *${pattern} *}`, 'g'), value || '')
         }
-      }
+      })
+
+      return result
+    }
+  }
+}
+
+async function handlePermissionedRequest({ type, params, host } : ContentScriptMessage) {
+  // acquire mutex here before reading policies
+  releasePromptMutex = await promptMutex.acquire()
+
+  let allowed = await getPermissionStatus(
+    host!,
+    type,
+    type === 'signEvent' ? params.event : undefined
+  )
+
+  if (allowed === true) {
+    // authorized, proceed
+    releasePromptMutex()
+    showNotification(host!, allowed, type, params)
+  } else if (allowed === false) {
+    // denied, just refuse immediately
+    releasePromptMutex()
+    showNotification(host!, allowed, type, params)
+    return {  error: { message: 'denied' } }
+  } else {
+    // ask for authorization
+    try {
+      let id = Math.random().toString().slice(4)
+      let qs = new URLSearchParams({
+        host: host!,
+        id,
+        params: JSON.stringify(params),
+        type
+      })
+      // center prompt
+      const { top, left } = await getPosition(CONST.PROMPT_WIDTH, CONST.PROMPT_HEIGHT)
+      // prompt will be resolved with true or false
+      let accept = await new Promise<boolean>((resolve, reject) => {
+        openPrompt = { resolve, reject }
+
+        browser.windows.create({
+          url    : `${browser.runtime.getURL('prompt.html')}?${qs.toString()}`,
+          type   : 'popup',
+          width  : CONST.PROMPT_WIDTH,
+          height : CONST.PROMPT_HEIGHT,
+          top    : top,
+          left   : left
+        })
+      })
+
+      // denied, stop here
+      if (!accept) return { error: { message: 'denied' } }
+    } catch (err: any) {
+      // errored, stop here
+      releasePromptMutex()
+      return { error: { message: err.message, stack: err.stack } }
     }
   }
 
@@ -289,7 +289,7 @@ async function handleContentScriptMessage({ type, params, host }: ContentScriptM
   }
 }
 
-async function handlePromptMessage(
+async function handlePromptMessage (
   { host, type, accept, conditions }: Message,
   sender: browser.Runtime.MessageSender | null
 ) {
@@ -314,14 +314,14 @@ async function handlePromptMessage(
 }
 
 async function openSignUpWindow(): Promise<void> {
-  const { top, left } = await getPosition(width, height)
+  const { top, left } = await getPosition(CONST.PROMPT_WIDTH, CONST.PROMPT_HEIGHT)
 
   browser.windows.create({
-    url: `${browser.runtime.getURL('signup.html')}`,
-    type: 'popup',
-    width: width,
-    height: height,
-    top: top,
-    left: left
+    url    : `${browser.runtime.getURL('signup.html')}`,
+    type   : 'popup',
+    width  : CONST.PROMPT_WIDTH,
+    height : CONST.PROMPT_HEIGHT,
+    top    : top,
+    left   : left
   })
 }

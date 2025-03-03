@@ -1,5 +1,6 @@
-import { useEffect }  from 'react'
-import { PeerPolicy } from '@frostr/bifrost'
+import { useEffect } from 'react'
+
+import useStore from './store.js'
 
 import {
   decode_group_pkg,
@@ -7,7 +8,7 @@ import {
   get_pubkey
 } from '@frostr/bifrost/lib'
 
-import useStore from './store.js'
+import type { PeerPolicy } from '@frostr/bifrost'
 
 export default function () {
   const { store, update } = useStore()
@@ -42,77 +43,48 @@ export default function () {
   }
 
   return (
-    <div>
-      <div>Peer Settings</div>
-      <p>Manage how you communicate with other peers in your group. "Send" means you will consider those nodes when sending signature requests, while "Receive" means you will respond to signature requests from those nodes.</p>
-      {store.peers === null && (<div>Please enter a group and share credential first.</div>)}
-      <div
-        style={{
-          marginTop: '10px',
-          marginLeft: '10px',
-          marginBottom: '10px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px'
-        }}
-      >
-        {store.peers && store.peers.map(([ key, send, recv ]) => (
-          <div key={key} style={{ 
-            display: 'flex', 
-            gap: '20px', 
-            alignItems: 'baseline',
-            padding: '4px 12px',
-            backgroundColor: '#f5f5f5',
-            borderRadius: '4px'
-          }}>
-            <div style={{ 
-              width: '80px', 
-              fontFamily: 'monospace',
-              fontSize: '13px'
-            }}>
-              {key.slice(0, 8)}
-            </div>
-            <label style={{ 
-              display: 'flex', 
-              gap: '5px', 
-              alignItems: 'center',
-              color: '#555',
-              fontSize: '13px'
-            }}>
-              <input
-                type="checkbox"
-                checked={send}
-                onChange={() => togglePeerValue(key, 'send')}
-                style={{ 
-                  margin: 0,
-                  position: 'relative',
-                  top: '1px'
-                }}
-              />
-              send
-            </label>
-            <label style={{ 
-              display: 'flex', 
-              gap: '5px', 
-              alignItems: 'center',
-              color: '#555',
-              fontSize: '13px'
-            }}>
-              <input
-                type="checkbox"
-                checked={recv}
-                onChange={() => togglePeerValue(key, 'recv')}
-                style={{ 
-                  margin: 0,
-                  position: 'relative',
-                  top: '1px'
-                }}
-              />
-              receive
-            </label>
-          </div>
-        ))}
-      </div>
+    <div className="container">
+      <h2 className="section-header">Peer Connections</h2>
+      <p className="description">Manage how you connect with other peers in your group. "Request" means you will use those peers to request signatures, while "Respond" means you will respond to their requests.</p>
+
+      {store.peers && store.peers.length > 0 ? (
+        <table>
+          <thead>
+            <tr>
+              <th className="peer-index">Index</th>
+              <th>Pubkey</th>
+              <th className="checkbox-cell">Request</th>
+              <th className="checkbox-cell">Respond</th>
+            </tr>
+          </thead>
+          <tbody>
+            {store.peers.map(([ key, send, recv ], idx) => (
+              <tr key={key} className="peer-row">
+                <td className="peer-index">{idx + 1}</td>
+                <td className="peer-pubkey">{key}</td>
+                <td className="checkbox-cell">
+                  <input
+                    type="checkbox"
+                    checked={send}
+                    onChange={() => togglePeerValue(key, 'send')}
+                    className="peer-checkbox"
+                  />
+                </td>
+                <td className="checkbox-cell">
+                  <input
+                    type="checkbox"
+                    checked={recv}
+                    onChange={() => togglePeerValue(key, 'recv')}
+                    className="peer-checkbox"
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <div className="description">No peers available</div>
+      )}
     </div>
   )
 }
@@ -128,4 +100,4 @@ function init_peers (
   return peers.map((peer, idx) => 
     [ peer.pubkey.slice(2), idx === 0, true ] as PeerPolicy
   )
-}
+} 

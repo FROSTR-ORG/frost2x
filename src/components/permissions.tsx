@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { removePermissions }   from '../lib/permissions.js'
+
+import type { PublishPermissions } from '../types.js'
+
 import browser from 'webextension-polyfill'
-import { Permission } from '../types.js'
-import { removePermissions } from '../common.js'
 
 export default function PermissionConfig({ 
   showMessage 
 }: { 
   showMessage: (msg: string) => void; 
 }) {
-  let [policies, setPermissions] = useState<Permission[]>([])
+  let [policies, setPermissions] = useState<PublishPermissions[]>([])
 
   useEffect(() => {
     loadPermissions()
@@ -16,7 +18,7 @@ export default function PermissionConfig({
 
   async function loadPermissions(): Promise<void> {
     let { policies = {} } = await browser.storage.local.get('policies')
-    let list: Permission[] = []
+    let list: PublishPermissions[] = []
 
     Object.entries(policies as Record<string, any>).forEach(([host, accepts]) => {
       Object.entries(accepts as Record<string, any>).forEach(([accept, types]) => {
@@ -51,8 +53,9 @@ export default function PermissionConfig({
   }
 
   return (
-    <div>
-      <h2>Permissions</h2>
+    <div className="container">
+      <h2 className="section-header">Signing Permissions</h2>
+      <p className="description">Manage the signing permissions granted to other websites.</p>
       {!!policies.length && (
         <table>
           <thead>
@@ -85,6 +88,7 @@ export default function PermissionConfig({
                 </td>
                 <td>
                   <button
+                    className="button"
                     onClick={handleRevoke}
                     data-host={host}
                     data-accept={accept}
@@ -99,10 +103,10 @@ export default function PermissionConfig({
         </table>
       )}
       {!policies.length && (
-        <div style={{ marginTop: '5px' }}>
+        <div className="description">
           no permissions have been granted yet
         </div>
       )}
     </div>
   )
-} 
+}

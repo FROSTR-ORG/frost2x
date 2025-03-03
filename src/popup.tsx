@@ -21,9 +21,8 @@ function Popup() : ReactElement {
   let keys = useRef<string[]>([])
 
   useEffect(() => {
-    browser.storage.sync.get(['store', 'relays']).then((results: {
-      store?  : ExtensionStore,
-      relays? : Record<string, { write: boolean }>
+    browser.storage.sync.get(['store']).then((results: {
+      store? : ExtensionStore
     }) => {
       if (typeof results.store?.group === 'string') {
         const group = decode_group_pkg(results.store.group)
@@ -35,10 +34,10 @@ function Popup() : ReactElement {
         keys.current.push(npubKey)
         keys.current.push(hexKey)
 
-        if (results.relays) {
+        if (results.store?.relays) {
           let relaysList: string[] = []
-          for (let url in results.relays) {
-            if (results.relays[url].write) {
+          for (let url in results.store.relays) {
+            if (results.store.relays[url].write) {
               relaysList.push(url)
               if (relaysList.length >= 3) break
             }

@@ -137,9 +137,11 @@ document.addEventListener('mousedown', replaceNostrSchemeLink)
 async function replaceNostrSchemeLink(e: MouseEvent) {
   const target = e.target as HTMLAnchorElement;
   if (target.tagName !== 'A' || !target.href.startsWith('nostr:')) return
+  
   if (replacing === false) return
 
-  let response = await window.nostr._call('replaceURL', {url: target.href})
+  let response = await window.nostr._call('replace_url', {url: target.href})
+
   if (response === false) {
     replacing = false
     return

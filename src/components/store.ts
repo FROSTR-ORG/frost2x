@@ -8,7 +8,13 @@ const DEBUG = true
 const DEFAULT_STORE : ExtensionStore = {
   group  : null,
   peers  : null,
-  share  : null
+  relays : [],
+  share  : null,
+  settings : {
+    'general/show_notifications' : false,
+    'links/is_active'            : false,
+    'links/resolver_url'         : 'https://njump.me/{raw}'
+  }
 }
 
 export default function () {

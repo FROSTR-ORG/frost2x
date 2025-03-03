@@ -1,9 +1,11 @@
 import { PeerPolicy } from '@frostr/bifrost'
 
 export interface ExtensionStore {
-  group  : string       | null
-  peers  : PeerPolicy[] | null
-  share  : string       | null
+  group    : string       | null
+  peers    : PeerPolicy[] | null
+  relays   : RelayPolicy[]
+  settings : ExtensionSettings
+  share    : string       | null
 }
 
 export interface StoreAPI {
@@ -25,6 +27,36 @@ export interface Message {
   host       ?: string
   accept     ?: boolean
   conditions ?: any
+}
+
+export interface Conditions {
+  kinds?        : Record<number, boolean>
+  [key: string] : any
+}
+
+export interface NotificationParams {
+  event?        : NostrEvent
+  [key: string] : any
+}
+
+export interface NostrEvent {
+  kind: number
+  content: string
+  tags: string[]
+  [key: string]: any
+}
+
+export interface Policy {
+  conditions: Conditions
+  created_at: number
+}
+
+export interface PolicyMap {
+  [host: string]: {
+    [accept: string]: {
+      [type: string]: Policy
+    }
+  }
 }
 
 export interface ContentScriptMessage {
@@ -54,15 +86,13 @@ export interface Nip19Data {
   data : string | ProfilePointer | EventPointer
 }
 
-export interface Relay {
-  url    : string
-  policy : {
-    read  : boolean
-    write : boolean
-  }
+export interface RelayPolicy {
+  url   : string
+  read  : boolean
+  write : boolean
 }
 
-export interface Permission {
+export interface PublishPermissions {
   host   : string
   type   : string
   accept : string
@@ -71,4 +101,15 @@ export interface Permission {
     [key: string]: any
   }
   created_at : number
+}
+
+export interface ExtensionSettings {
+  'general/show_notifications' : boolean
+  'links/is_active'            : boolean
+  'links/resolver_url'         : string | null
+}
+
+export interface ExtensionSettingsProps {
+  settings : ExtensionSettings
+  update   : (settings: Partial<ExtensionSettings>) => void
 }
