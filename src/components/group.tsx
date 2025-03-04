@@ -75,7 +75,7 @@ export default function () {
   return (
     <div className="container">
       <h2 className="section-header">Group Package</h2>
-      <p className="description">Paste your encoded group package (starts with bfgroup). It contains information about your signing group. Share it with other members.</p>
+      <p className="description">Paste your encoded group package (starts with bfgroup). It contains information about the members of your signing group.</p>
       <div className="content-container">
         <div className="input-group">
           <input

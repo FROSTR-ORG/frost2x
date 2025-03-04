@@ -32,8 +32,6 @@ export default function GeneralSettings ({ settings, update }: ExtensionSettings
 
   return (
     <div className="settings-group">
-      <div className="subsection-header">General Settings</div>
-      
       <div className="setting-item">
         <input
           type="checkbox"
