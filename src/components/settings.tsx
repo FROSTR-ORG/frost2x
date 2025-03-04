@@ -15,7 +15,6 @@ export default function Settings({ showMessage }: { showMessage: (msg: string) =
 
   useEffect(() => {
     setSettings(store.settings)
-    console.log('settings loaded:', settings)
   }, [ store.settings ])
 
   const update_settings = (settings: Partial<ExtensionSettings>) => {
@@ -27,7 +26,6 @@ export default function Settings({ showMessage }: { showMessage: (msg: string) =
 
   // Event handlers for main settings
   const save_settings = () => {
-    console.log('saving settings:', settings)
     try {
       update ({
         settings : {
@@ -54,7 +52,7 @@ export default function Settings({ showMessage }: { showMessage: (msg: string) =
         className="button button-primary save-button"
         onClick={save_settings}
       >
-        Save Settings
+        Save
       </button>
     </div>  
   )

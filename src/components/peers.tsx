@@ -16,11 +16,31 @@ export default function () {
   // Add local state to track changes
   const [localPeers, setLocalPeers] = useState<PeerPolicy[]>([])
   const [hasChanges, setHasChanges] = useState(false)
-  
+
+  const has_creds = store.group !== null && store.share !== null
+
   // Initialize local state from store
   useEffect(() => {
-    setLocalPeers(store.peers ?? [])
-  }, [store.peers])
+    if (has_creds && store.peers === null) {
+      update({ peers: init_peers() })
+    } else if (!has_creds && store.peers !== null) {
+      update({ peers: null })
+    } else {
+      setLocalPeers(store.peers ?? [])
+    }
+  }, [ has_creds, store.peers ])
+
+  // Initialize peers from group and share data.
+  const init_peers = () => {
+    if (store.group === null || store.share === null) return []
+    const group  = decode_group_pkg(store.group)
+    const share  = decode_share_pkg(store.share)
+    const pubkey = get_pubkey(share.seckey, 'ecdsa')
+    const peers  = group.commits.filter(commit => commit.pubkey !== pubkey)
+    return peers.map((peer, idx) => 
+      [ peer.pubkey.slice(2), idx === 0, true ] as PeerPolicy
+    )
+  }
   
   // Update peer connectivity status locally
   const update_peer = (idx: number, key: number, value: boolean) => {
@@ -97,7 +117,7 @@ export default function () {
           <div className="action-buttons">
             <button 
               onClick={save}
-              disabled={!hasChanges}
+              disabled={!hasChanges || !has_creds}
               className="button button-primary save-button"
             >
               Save
@@ -119,16 +139,3 @@ export default function () {
     </div>
   )
 }
-
-function init_peers (
-  groupstr : string,
-  sharestr : string
-) : PeerPolicy []{
-  const group  = decode_group_pkg(groupstr)
-  const share  = decode_share_pkg(sharestr)
-  const pubkey = get_pubkey(share.seckey, 'ecdsa')
-  const peers  = group.commits.filter(commit => commit.pubkey !== pubkey)
-  return peers.map((peer, idx) => 
-    [ peer.pubkey.slice(2), idx === 0, true ] as PeerPolicy
-  )
-} 
