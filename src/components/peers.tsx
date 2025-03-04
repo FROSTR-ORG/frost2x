@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-
-import useStore from './store.js'
+import { useStore }            from './store.js'
 
 import {
   decode_group_pkg,
@@ -64,22 +63,16 @@ export default function () {
     setHasChanges(false)
   }
   
-  if (!store.peers && (!store.group || !store.share)) {
-    return (
-      <div className="container">
-        <h2 className="section-header">Peer Connections</h2>
-        <p className="description">Configure connection settings for peers in your signing group.</p>
-        <p className="description">Load a group package and a share package to configure peer connections.</p>
-      </div>
-    )
-  }
-  
   return (
     <div className="container">
       <h2 className="section-header">Peer Connections</h2>
       <p className="description">Configure connection settings for peers in your signing group.</p>
+
+      {!has_creds &&
+        <p className="description">Load a group package and a share package to configure peer connections.</p>
+      }
       
-      {localPeers.length > 0 ? (
+      {has_creds && localPeers.length > 0 &&
         <div>
           <table>
             <thead>
@@ -133,9 +126,7 @@ export default function () {
             )}
           </div>
         </div>
-      ) : (
-        <p className="description">No peers found in the group package.</p>
-      )}
+      }
     </div>
   )
 }

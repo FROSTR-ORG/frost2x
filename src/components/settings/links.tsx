@@ -1,5 +1,6 @@
-import type { ExtensionSettingsProps } from '../../types.js'
 import { useState } from 'react'
+
+import type { ExtensionSettingsProps } from '../../types.js'
 
 export default function LinkSettings ({ settings, update }: ExtensionSettingsProps) {
   const [showInfoModal, setShowInfoModal] = useState(false);

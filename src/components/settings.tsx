@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
+import { useStore }            from './store.js'
 
 import GeneralSettings from './settings/general.js'
 import LinkSettings    from './settings/links.js'
 
-import useStore from './store.js'
-
 import type { ExtensionSettings } from '../types.js'
 
-export default function Settings({ showMessage }: { showMessage: (msg: string) => void }) {
+export default function Settings(
+  { showMessage }: { showMessage: (msg: string) => void }
+) {
   // State management
-  const { store, update } = useStore()
+  const { store, reset, update } = useStore()
 
   const [ settings, setSettings ] = useState<ExtensionSettings>(store.settings)
 
@@ -41,19 +42,32 @@ export default function Settings({ showMessage }: { showMessage: (msg: string) =
   }
   
   return (
-    <div className="container">
-      <h2 className="section-header">Extension Settings</h2>
-      <p className="description">Configure various settings for the signing extension.</p>
+    <>
+      <div className="container">
+        <h2 className="section-header">Extension Settings</h2>
+        <p className="description">Configure various settings for the signing extension.</p>
 
-      <GeneralSettings settings={settings} update={update_settings} />
-      {/* <LinkSettings settings={settings} update={update_settings} /> */}
+        <GeneralSettings settings={settings} update={update_settings} />
+        {/* <LinkSettings settings={settings} update={update_settings} /> */}
 
-      <button
-        className="button button-primary save-button"
-        onClick={save_settings}
-      >
-        Save
-      </button>
-    </div>  
+        <button
+          className="button button-primary save-button"
+          onClick={save_settings}
+        >
+          Save
+        </button>
+      </div>
+      
+      <div className="container">
+        <h2 className="section-header">Danger Zone</h2>
+        <p className="description">For development and testing. Use at your own risk!</p>
+        <button 
+          onClick={() => reset()} 
+          className="reset-button"
+        >
+          reset store
+        </button>
+      </div>
+    </>
   )
 }

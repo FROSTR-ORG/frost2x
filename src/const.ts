@@ -1,3 +1,4 @@
+export const MAX_LOGS      = 100
 export const PROMPT_WIDTH  = 340
 export const PROMPT_HEIGHT = 360
 

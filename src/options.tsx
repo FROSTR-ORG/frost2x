@@ -14,9 +14,9 @@ import PermissionConfig    from './components/permissions.js'
 import RelayConfig         from './components/relays.js'
 import SecretPackageConfig from './components/share.js'
 import ExtensionSettings   from './components/settings.js'
-import LinkSettings        from './components/settings/links.js'
+import Console             from './components/console.js'
 
-import useStore from './components/store.js'
+import { StoreProvider } from './components/store.js'
 
 // Tab icons
 const NodeIcon = () => (
@@ -41,13 +41,18 @@ const PermissionsIcon = () => (
   </svg>
 );
 
+const ConsoleIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="4 17 10 11 4 5"></polyline>
+    <line x1="12" y1="19" x2="20" y2="19"></line>
+  </svg>
+);
+
 function Options(): ReactElement {
   let [ messages, setMessages ]           = useState<string[]>([])
   let [warningMessage, setWarningMessage] = useState('')
-  let [activeTab, setActiveTab]           = useState('node')
+  let [activeTab, setActiveTab]           = useState('console')
   
-  const { store, reset } = useStore()
-
   const showMessage = useCallback((msg: string) => {
     const newMessages = [...messages, msg ]
     setMessages(newMessages)
@@ -77,41 +82,58 @@ function Options(): ReactElement {
         />
         <h1>frost2x</h1>
         <p>frost signer extension</p>
+        <div className="alpha-pill">ALPHA</div>
       </div>
 
       {/* Tab Navigation */}
       <div className="tabs-container">
-        <div className="tabs-navigation">
-          <button 
-            className={`tab-button ${activeTab === 'node' ? 'active' : ''}`}
-            onClick={() => setActiveTab('node')}
-          >
-            <NodeIcon />
-            <span>Node</span>
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'permissions' ? 'active' : ''}`}
-            onClick={() => setActiveTab('permissions')}
-          >
-            <PermissionsIcon />
-            <span>Permissions</span>
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-          >
-            <SettingsIcon />
-            <span>Settings</span>
-          </button>
+        <div className="tabs-nav-wrapper">
+          <div className="tabs-navigation">
+            <button 
+              className={`tab-button ${activeTab === 'console' ? 'active' : ''}`}
+              onClick={() => setActiveTab('console')}
+            >
+              <ConsoleIcon />
+              <span>Console</span>
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'node' ? 'active' : ''}`}
+              onClick={() => setActiveTab('node')}
+            >
+              <NodeIcon />
+              <span>Node</span>
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'permissions' ? 'active' : ''}`}
+              onClick={() => setActiveTab('permissions')}
+            >
+              <PermissionsIcon />
+              <span>Permissions</span>
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
+              onClick={() => setActiveTab('settings')}
+            >
+              <SettingsIcon />
+              <span>Settings</span>
+            </button>
+          </div>
         </div>
 
         <div className="tab-content">
+          {/* Console Tab */}
+          {activeTab === 'console' && (
+            <div className="tab-panel">
+              <Console />
+            </div>
+          )}
+
           {/* Node Tab */}
           {activeTab === 'node' && (
             <div className="tab-panel">
               <SecretPackageConfig />
               <GroupPackageConfig />
-              {store.group && store.share && <PeerNodeConfig />}
+              <PeerNodeConfig />
               <RelayConfig />
             </div>
           )}
@@ -119,18 +141,9 @@ function Options(): ReactElement {
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div className="tab-panel">
-              <ExtensionSettings showMessage={showMessage} />
-              
-              <div className="container">
-                <h2 className="section-header">Danger Zone</h2>
-                <p className="description">For development and testing. Use at your own risk!</p>
-                <button 
-                  onClick={() => reset()} 
-                  className="reset-button"
-                >
-                  reset store
-                </button>
-              </div>
+              <ExtensionSettings 
+                showMessage={showMessage} 
+              />
             </div>
           )}
 
@@ -149,5 +162,9 @@ function Options(): ReactElement {
 const container = document.getElementById('main')
 if (container) {
   const root = createRoot(container)
-  root.render(<Options />)
+  root.render(
+    <StoreProvider>
+      <Options />
+    </StoreProvider>
+  )
 }

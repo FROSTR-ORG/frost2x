@@ -1,17 +1,24 @@
 import { PeerPolicy } from '@frostr/bifrost'
 
+export interface StoreAPI<T> {
+  store  : T
+  reset  : ()                   => void
+  set    : (store : T)          => void
+  update : (store : Partial<T>) => void
+}
+
+export interface LogEntry {
+  timestamp : string
+  message   : string
+  type      : 'info' | 'error' | 'warning' | 'success'
+}
+
 export interface ExtensionStore {
   group    : string       | null
   peers    : PeerPolicy[] | null
   relays   : RelayPolicy[]
   settings : ExtensionSettings
   share    : string       | null
-}
-
-export interface StoreAPI {
-  store  : ExtensionStore
-  reset  : (store : ExtensionStore)          => void
-  update : (store : Partial<ExtensionStore>) => void
 }
 
 export interface PromptResolver {

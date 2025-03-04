@@ -63,40 +63,53 @@ function Popup() : ReactElement {
   }, [])
 
   return (
-    <div style={{ marginBottom: '5px' }}>
-      <h2>frost2x</h2>
+    <div className="popup-container">
+      {/* Header similar to options.tsx but smaller */}
+      <div className="popup-header">
+        <img 
+          src="icons/icon.png"
+          alt="Frostr Logo" 
+          className="frost-logo-small"
+        />
+        <div className="popup-title-container">
+          <h2 className="popup-title">frost2x</h2>
+          <div className="alpha-pill alpha-pill-small">ALPHA</div>
+        </div>
+      </div>
+
       { pubKey === null ? (
-        <div>
-          <button onClick={openOptionsButton}>start here</button>
+        <div className="popup-content">
+          <p>No group package loaded.</p>
+          <button onClick={openOptionsButton} className="button button-primary">Setup Node</button>
         </div>
       ) : (
-        <>
-          <p>
-            <a onClick={toggleKeyType}>↩️</a> your public key:
-          </p>
-          <pre
-            style={{
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-all',
-              width: '200px'
-            }}
-          >
-            <code>{pubKey}</code>
-          </pre>
+        <div className="popup-content">
+          <div className="key-container">
+            <div className="key-header">
+              <a onClick={toggleKeyType} className="key-toggle">↩️</a> 
+              <span>Your public key:</span>
+            </div>
+            <pre className="key-display">
+              <code>{pubKey}</code>
+            </pre>
+          </div>
 
-          <div style={{ marginBottom: '10px' }}>
-            node status: <span style={{
-              color: nodeStatus === 'running' ? 'green' : 
-                     nodeStatus === 'stopped' ? 'red' : 'gray'
-            }}>
+          <div className="node-status-container">
+            <span className="status-label">Node status: </span>
+            <span className={`status-indicator status-${nodeStatus}`}>
               {nodeStatus}
             </span>
           </div>
 
-          <button onClick={handleNodeReset}>
-            reset
-          </button>
-        </>
+          <div className="popup-actions">
+            <button onClick={openOptionsButton} className="button button-secondary">
+              Options
+            </button>
+            <button onClick={handleNodeReset} className="button button-warning">
+              Restart Node
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
@@ -128,9 +141,15 @@ function Popup() : ReactElement {
 
   async function handleNodeReset() {
     try {
+      // Immediately set status to restarting
+      setNodeStatus('restarting');
+      
+      // Send the reset message to the background script
       browser.runtime.sendMessage({ type: 'node_reset' });
     } catch (error) {
       console.error('error resetting node:', error);
+      // If there's an error, revert to 'unknown'
+      setNodeStatus('unknown');
     }
   }
 }

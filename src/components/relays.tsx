@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-
-import useStore from './store.js'
+import { useStore }            from './store.js'
 
 // Add back the type import
 import type { RelayPolicy } from '../types.js'

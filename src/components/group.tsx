@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { decode_group_pkg }    from '@frostr/bifrost/lib'
-
-import useStore from './store.js'
+import { useStore }            from './store.js'
 
 export default function () {
   const { store, update }   = useStore()
