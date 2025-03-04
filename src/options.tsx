@@ -80,9 +80,18 @@ function Options(): ReactElement {
           alt="Frostr Logo" 
           className="frost-logo"
         />
-        <h1>frost2x</h1>
+        <div className="title-container">
+          <h1>frost2x</h1>
+        </div>
         <p>frost signer extension</p>
-        <div className="alpha-pill">ALPHA</div>
+        <a 
+          href="https://frostr.org" 
+          target="_blank" 
+          rel="noopener noreferrer"
+        >
+          https://frostr.org
+        </a>
+        <div className="alpha-pill alpha-pill-standalone">alpha edition</div>
       </div>
 
       {/* Tab Navigation */}
