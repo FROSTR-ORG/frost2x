@@ -684,8 +684,9 @@ pre.code-display {
   cursor: pointer;
   font-weight: 500;
   color: #999;
-  margin-right: 10px;
+  margin-right: 0;
   transition: all 0.25s ease-in-out;
+  border-radius: 0;
 }
 
 .tab-button svg {

@@ -26,7 +26,7 @@ export default function Relays() {
   // Initialize local relays from store
   useEffect(() => {
     setLocalState(store.relays)
-  }, [store.relays])
+  }, [ store.relays ])
   
   // Update relay enabled status locally
   const update_relay = (idx: number, key: 'read' | 'write') => {
@@ -79,6 +79,7 @@ export default function Relays() {
   
   // Discard changes by resetting local state from store
   const cancel = () => {
+    // Create a new array to ensure React detects the change
     setLocalState(store.relays)
     setHasChanges(false)
   }
