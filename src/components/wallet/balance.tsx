@@ -15,6 +15,11 @@ export default function ({ address, showMessage }: Props) {
   const pool_send     = data?.mempool_stats.spent_txo_sum  || 0
   const pool_balance  = pool_recv - pool_send
   const total_balance = chain_balance + pool_balance
+  
+  // Format number with commas
+  const formatNumber = (num: number) => {
+    return num.toLocaleString();
+  }
 
   return (
     <div className="wallet-balance-section">
@@ -25,27 +30,28 @@ export default function ({ address, showMessage }: Props) {
           Failed to load balance information: {error.message}
         </div>
       ) : (
-        <div className="wallet-balance compact">
-          <div className="balance-amount">
-            <span className="total-amount">{total_balance}</span>
-            <span className="unit">sats</span>
+        <div className="wallet-balance">
+          <div className="balance-main">
+            <div className="balance-amount">
+              {formatNumber(total_balance)}<span className="unit">sats</span>
+            </div>
           </div>
           
           <div className="balance-details">
             <div className="balance-confirmed">
-              <span className="balance-value">{chain_balance} confirmed</span>
+              <span className="balance-label">Confirmed</span>
+              <span className="balance-value">{formatNumber(chain_balance)}</span>
             </div>
             
-            {pool_balance > 0 && (
-              <div className="balance-unconfirmed">
-                <span className="balance-value">+{pool_balance} unconfirmed</span>
-              </div>
-            )}
+            <div className="balance-unconfirmed">
+              <span className="balance-label">Pending</span>
+              <span className="balance-value">{formatNumber(pool_balance)}</span>
+            </div>
           </div>
-          
-          {isLoading && <div className="loading-indicator">Updating...</div>}
         </div>
       )}
+      
+      {isLoading && <div className="loading-indicator">Updating...</div>}
     </div>
   )
 }
