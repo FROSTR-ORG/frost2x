@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useStore }            from './store.js'
+import { useStore }            from '../store.js'
 
 import {
   decode_group_pkg,
@@ -8,32 +8,34 @@ import {
 } from '@frostr/bifrost/lib'
 
 import type { PeerPolicy } from '@frostr/bifrost'
+import type { NodeStore }  from '../../types/index.js'
 
-export default function () {
-  const { store, update } = useStore()
+export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
+  const { store } = useStore()
+  const { node  } = store
   
   // Add local state to track changes
   const [localPeers, setLocalPeers] = useState<PeerPolicy[]>([])
   const [hasChanges, setHasChanges] = useState(false)
 
-  const has_creds = store.group !== null && store.share !== null
+  const has_creds = node.group !== null && node.share !== null
 
   // Initialize local state from store
   useEffect(() => {
-    if (has_creds && store.peers === null) {
+    if (has_creds && node.peers === null) {
       update({ peers: init_peers() })
-    } else if (!has_creds && store.peers !== null) {
+    } else if (!has_creds && node.peers !== null) {
       update({ peers: null })
     } else {
-      setLocalPeers(store.peers ?? [])
+      setLocalPeers(node.peers ?? [])
     }
-  }, [ has_creds, store.peers ])
+  }, [ has_creds, node.peers ])
 
   // Initialize peers from group and share data.
   const init_peers = () => {
-    if (store.group === null || store.share === null) return []
-    const group  = decode_group_pkg(store.group)
-    const share  = decode_share_pkg(store.share)
+    if (node.group === null || node.share === null) return []
+    const group  = decode_group_pkg(node.group)
+    const share  = decode_share_pkg(node.share)
     const pubkey = get_pubkey(share.seckey, 'ecdsa')
     const peers  = group.commits.filter(commit => commit.pubkey !== pubkey)
     return peers.map((peer, idx) => 
@@ -59,7 +61,7 @@ export default function () {
   
   // Discard changes by resetting local state from store
   const cancel = () => {
-    setLocalPeers(store.peers ?? [])
+    setLocalPeers(node.peers ?? [])
     setHasChanges(false)
   }
   

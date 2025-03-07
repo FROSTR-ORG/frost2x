@@ -6,21 +6,38 @@ import React, {
 } from 'react'
 
 import type { ReactNode }                from 'react'
-import type { ExtensionStore, StoreAPI } from '../types.js'
+import type { ExtensionStore, StoreAPI } from '../types/index.js'
 
 import browser from 'webextension-polyfill'
 
 const DEBUG = true
 
 const DEFAULT_STORE: ExtensionStore = {
-  group    : null,
-  peers    : null,
-  relays   : [],
-  share    : null,
-  settings : {
-    'general/show_notifications': false,
-    'links/is_active': false,
-    'links/resolver_url': 'https://njump.me/{raw}'
+  init: false,
+  node: {
+    group   : null,
+    peers   : null,
+    relays  : [],
+    share   : null,
+  },
+  settings: {
+    'explorer/api_url'      : 'https://mempool.space/api',
+    'explorer/link_url'     : 'https://mempool.space',
+    'explorer/network'      : 'mainnet',
+    'explorer/rate_limit'   : 5000,
+    'general/notifications' : false,
+    'links/is_active'       : false,
+    'links/resolver_url'    : 'https://njump.me/{raw}',
+    'tx/default_priority'   : 'medium',
+    'tx/max_fee_rate'       : 1000,
+    'tx/max_spend_amount'   : 1000000,
+  },
+  wallet : {
+    address    : null,
+    chain_info : null,
+    chain_txs  : [],
+    pool_txs   : [],
+    utxo_set   : [],
   }
 }
 
@@ -40,7 +57,7 @@ export function StoreProvider (
       
       browser.storage.sync.get('store').then(results => {
         sync_store = results.store ?? {}
-        init_store = { ...init_store, ...sync_store }
+        init_store = merge_stores(init_store, sync_store)
         setStore(init_store)
         setIsInit(true)
         if (is_keys_changed(DEFAULT_STORE, sync_store)) {
@@ -54,28 +71,32 @@ export function StoreProvider (
   // Listen for storage changes
   useEffect(() => {
     const listener = (changes: any) => {
-      const new_store = changes.store?.newValue;
-      if (
-        new_store !== undefined &&
-        is_store_changed(store, new_store) &&
-        is_store_changed(DEFAULT_STORE, new_store)
-      ) {
-        setStore(new_store);
-        if (DEBUG) console.log('store changed:', new_store);
+      const store_changes = changes.store?.newValue;
+      if (store_changes !== undefined) {
+        const new_store = merge_stores(store, store_changes)
+        if (is_store_changed(store, new_store)) {
+          setStore(new_store)
+          if (DEBUG) {
+            console.log('store changes:', store_changes);
+            console.log('store changed:', new_store);
+          }
+        }
       }
-    };
+    }
     
     browser.storage.sync.onChanged.addListener(listener);
     return () => browser.storage.sync.onChanged.removeListener(listener);
-  }, [store])
+  }, [ store ])
 
   const update = (data: Partial<ExtensionStore>) => {
-    // Create a new store with the updated data.
-    const new_store = { ...store, ...data }
     // If the store has changed, update the storage.
+    const new_store = merge_stores(store, data)
     if (is_store_changed(store, new_store)) {
       browser.storage.sync.set({ store: new_store }).then(() => {
-        if (DEBUG) console.log('updated store:', new_store)
+        if (DEBUG) {
+          console.log('store changes:', data)
+          console.log('updated store:', new_store)
+        }
       })
     }
     // Update the store cache.
@@ -86,9 +107,7 @@ export function StoreProvider (
   const reset = () => set(DEFAULT_STORE)
 
   return (
-    <StoreContext.Provider
-      value={{ store, set, update, reset }}
-    >
+    <StoreContext.Provider value={{ store, set, update, reset }}>
       { children }
     </StoreContext.Provider>
   )
@@ -118,4 +137,18 @@ function is_store_changed (
   next: ExtensionStore
 ) {
   return JSON.stringify(curr) !== JSON.stringify(next);
+}
+
+function merge_stores (
+  curr: ExtensionStore,
+  next: Partial<ExtensionStore>
+) {
+  const merged_store = {
+    ...curr, ...next,
+    node     : { ...curr.node,     ...next.node },
+    settings : { ...curr.settings, ...next.settings },
+    wallet   : { ...curr.wallet,   ...next.wallet },
+    init     : true
+  }
+  return merged_store
 }

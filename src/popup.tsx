@@ -1,5 +1,4 @@
 import browser from 'webextension-polyfill'
-import QRCode  from 'react-qr-code'
 
 import * as nip19           from 'nostr-tools/nip19'
 import { createRoot }       from 'react-dom/client'
@@ -12,7 +11,7 @@ import {
   ReactElement
 } from 'react'
 
-import type { ExtensionStore } from './types.js'
+import type { ExtensionStore } from './types/index.js'
 
 function Popup() : ReactElement {
   let [ pubKey, setPubKey ]         = useState<string | null>('')
@@ -24,8 +23,8 @@ function Popup() : ReactElement {
     browser.storage.sync.get(['store']).then((results: {
       store? : ExtensionStore
     }) => {
-      if (typeof results.store?.group === 'string') {
-        const group = decode_group_pkg(results.store.group)
+      if (typeof results.store?.node?.group === 'string') {
+        const group = decode_group_pkg(results.store.node.group)
         let hexKey  = group.group_pk.slice(2)
         let npubKey = nip19.npubEncode(hexKey)
 
@@ -34,10 +33,10 @@ function Popup() : ReactElement {
         keys.current.push(npubKey)
         keys.current.push(hexKey)
 
-        if (results.store?.relays) {
+        if (results.store?.node?.relays) {
           let relaysList: string[] = []
-          for (let url in results.store.relays) {
-            if (results.store.relays[url].write) {
+          for (let url in results.store.node.relays) {
+            if (results.store.node.relays[url].write) {
               relaysList.push(url)
               if (relaysList.length >= 3) break
             }
@@ -64,7 +63,7 @@ function Popup() : ReactElement {
 
   return (
     <div className="popup-container">
-      {/* Header similar to options.tsx but smaller */}
+      {/* Header with smaller logo */}
       <div className="popup-header">
         <img 
           src="icons/icon.png"

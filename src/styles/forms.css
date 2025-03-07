@@ -1,0 +1,180 @@
+/* Form controls, inputs, selects, etc. */
+input[type="text"], 
+input[type="password"],
+input[type="email"],
+input[type="url"],
+input[type="number"],
+input:not([type="checkbox"]):not([type="radio"]) {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgba(100, 140, 210, 0.3);
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  background-color: rgba(20, 30, 50, 0.6);
+  color: #e6e6e6;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
+select {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgba(100, 140, 210, 0.3);
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: rgba(20, 30, 50, 0.6);
+  color: #e6e6e6;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+select:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
+textarea {
+  padding: 10px;
+  border: 1px solid rgba(100, 140, 210, 0.3);
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  background-color: rgba(20, 30, 50, 0.6);
+  color: #e6e6e6;
+  min-height: 100px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
+/* Checkboxes */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+input[type="checkbox"] {
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+/* Form layout improvements for settings pages */
+.settings-form {
+  margin-bottom: 30px;
+}
+
+/* Settings sections with proper spacing */
+.settings-section {
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+}
+
+.settings-section h2 {
+  margin-bottom: 20px;
+  color: #ffffff;
+  font-size: 22px;
+}
+
+/* Form grid layout with labels above inputs */
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+/* Styling for form labels */
+.form-label {
+  font-weight: 500;
+  color: #e6e6e6;
+  margin-bottom: 8px;
+}
+
+/* Description text under form fields */
+.field-description {
+  margin-top: 5px;
+  color: #aaa;
+  font-size: 0.9em;
+}
+
+/* Consistent input styling */
+.form-input, 
+.form-select {
+  width: 100%;
+  background-color: rgba(30, 45, 75, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: #e6e6e6;
+  font-size: 14px;
+}
+
+.form-input:focus,
+.form-select:focus {
+  border-color: rgba(74, 144, 226, 0.5);
+  outline: none;
+}
+
+/* Select dropdown styling */
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23e6e6e6%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px;
+  padding-right: 30px;
+}
+
+/* Special handling for checkbox containers inside form rows */
+.form-row.checkbox-container {
+  flex-direction: row;
+  align-items: center;
+}
+
+.form-row.checkbox-container input[type="checkbox"] {
+  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+  accent-color: #4a90e2;
+}
+
+/* Keep the standard checkbox container as is */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+  accent-color: #4a90e2;
+}
+
+/* Save button positioning */
+.settings-form .save-button {
+  margin-top: 10px;
+  width: auto;
+  padding: 8px 25px;
+} 

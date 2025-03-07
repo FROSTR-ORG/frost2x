@@ -1,8 +1,9 @@
 import browser         from 'webextension-polyfill'
 import * as nip19      from 'nostr-tools/nip19'
 
-import { BifrostNode } from '@frostr/bifrost'
-import { Mutex }       from 'async-mutex'
+import { BifrostNode }  from '@frostr/bifrost'
+import { Mutex }        from 'async-mutex'
+import { FrostrWallet } from './lib/wallet.js'
 
 import {
   showNotification,
@@ -33,15 +34,15 @@ import {
   ContentScriptMessage,
   Message,
   ExtensionStore
-} from './types.js'
+} from './types/index.js'
 
 import * as CONST  from './const.js'
 import * as crypto from './lib/crypto.js'
 
-let promptMutex                       = new Mutex()
-let releasePromptMutex: () => void    = () => {}
-let openPrompt: PromptResolver | null = null
-let node : BifrostNode | null         = null
+let promptMutex                        = new Mutex()
+let releasePromptMutex: () => void     = () => {}
+let openPrompt : PromptResolver | null = null
+let node       : BifrostNode    | null = null
 
 browser.runtime.onInstalled.addListener(async (details: browser.Runtime.OnInstalledDetailsType) => {
   if (details.reason === 'install') browser.runtime.openOptionsPage()
@@ -218,7 +219,7 @@ async function handlePermissionedRequest({ type, params, host } : ContentScriptM
 
   const { store } = await browser.storage.sync.get('store') as { store: ExtensionStore }
 
-  if (!store.peers) {
+  if (!store.node.peers) {
     return { error: { message: 'no peers configured' } }
   }
 
@@ -281,6 +282,18 @@ async function handlePermissionedRequest({ type, params, host } : ContentScriptM
         if (!res.ok) return { error: { message: res.err } }
         const secret = res.data.slice(2)
         return crypto.nip44_decrypt(ciphertext, secret)
+      }
+      case 'wallet.getAddress': {
+        return node.group.group_pk.slice(2)
+      }
+      case 'wallet.getBalance': {
+        return node.group.group_pk.slice(2)
+      }
+      case 'wallet.getUtxos': {
+        return node.group.group_pk.slice(2)
+      }
+      case 'wallet.signPsbt': {
+        return node.group.group_pk.slice(2)
       }
     }
   } catch (error: any) {

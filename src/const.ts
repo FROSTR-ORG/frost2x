@@ -2,6 +2,12 @@ export const MAX_LOGS      = 100
 export const PROMPT_WIDTH  = 340
 export const PROMPT_HEIGHT = 360
 
+export const NETWORK_PREFIX = {
+  mainnet : 'bc',
+  testnet : 'tb',
+  regtest : 'bcrt'
+}
+
 export const PERMISSION_BYPASS = {
   replace_url     : true,
   node_reset      : true,

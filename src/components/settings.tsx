@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useStore }            from './store.js'
 
-import GeneralSettings from './settings/general.js'
-import LinkSettings    from './settings/links.js'
+import ExplorerSettings    from './settings/explorer.js'
+import GeneralSettings     from './settings/general.js'
+import TransactionSettings from './settings/transaction.js'
+import LinkSettings        from './settings/links.js'
 
-import type { ExtensionSettings } from '../types.js'
+import type { SettingStore } from '../types/index.js'
 
 export default function Settings(
   { showMessage }: { showMessage: (msg: string) => void }
@@ -12,13 +14,13 @@ export default function Settings(
   // State management
   const { store, reset, update } = useStore()
 
-  const [ settings, setSettings ] = useState<ExtensionSettings>(store.settings)
+  const [ settings, setSettings ] = useState<SettingStore>(store.settings)
 
   useEffect(() => {
     setSettings(store.settings)
   }, [ store.settings ])
 
-  const update_settings = (settings: Partial<ExtensionSettings>) => {
+  const update_settings = (settings: Partial<SettingStore>) => {
     setSettings((prev) => ({
       ...prev,
       ...settings
@@ -43,11 +45,10 @@ export default function Settings(
   
   return (
     <>
-      <div className="container">
-        <h2 className="section-header">Extension Settings</h2>
-        <p className="description">Configure various settings for the signing extension.</p>
-
+      <div className="container settings-form">
         <GeneralSettings settings={settings} update={update_settings} />
+        <ExplorerSettings settings={settings} update={update_settings} />
+        <TransactionSettings settings={settings} update={update_settings} />
         {/* <LinkSettings settings={settings} update={update_settings} /> */}
 
         <button

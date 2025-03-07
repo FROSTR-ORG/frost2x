@@ -11,7 +11,7 @@ import type {
   SharePackage
 } from '@frostr/bifrost'
 
-import type { ExtensionStore, LogEntry } from '../types.js'
+import type { ExtensionStore, LogEntry } from '../types/index.js'
 
 import browser    from 'webextension-polyfill'
 import * as CONST from '../const.js'
@@ -38,7 +38,7 @@ export async function init_node () : Promise<BifrostNode | null> {
     return null
   }
 
-  const { group, peers, share } = store
+  const { group, peers, relays, share } = store.node
 
   if (group === null || peers === null || share === null) {
     console.error('extension store is missing required fields')
@@ -58,10 +58,10 @@ export async function init_node () : Promise<BifrostNode | null> {
   }
 
   const opt : Partial<BifrostNodeConfig> = {
-    policies : store.peers ?? []
+    policies : peers ?? []
   }
 
-  const relay_urls = store.relays
+  const relay_urls = relays
     .filter((relay) => relay.write)
     .map((relay) => relay.url)
 

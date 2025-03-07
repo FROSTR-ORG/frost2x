@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill'
 
-import type { Conditions, NostrEvent, PolicyMap } from '../types.js'
+import type { Conditions, NostrEvent, PolicyMap } from '../types/index.js'
 
 import * as CONST from '../const.js'
 

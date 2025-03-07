@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { decode_share_pkg }    from '@frostr/bifrost/lib'
-import { useStore }            from './store.js'
+import { useStore }            from '../store.js'
 
-export default function () {
-  const { store, update }   = useStore()
+import type { NodeStore } from '../../types/index.js'
+
+export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
+  const { store } = useStore()
+  const { node  } = store
   const [ input, setInput ] = useState<string>('')
   const [ error, setError ] = useState<string | null>(null)
   const [ show, setShow ]   = useState<boolean>(false)
@@ -58,44 +61,56 @@ export default function () {
   }, [input])
 
   useEffect(() => {
-    setInput(store.share ?? '')
-    if (store.share) {
+    setInput(node.share ?? '')
+    if (node.share) {
       try {
-        parseData(store.share)
+        parseData(node.share)
       } catch (err) {
         // Ignore errors when initializing
       }
     }
-  }, [store.share])
+  }, [node.share])
 
   // Determine if the save button should be active
-  const isSaveActive = isValid && (input !== store.share);
+  const isSaveActive = isValid && (input !== node.share);
+
+  const toggleShow = () => {
+    setShow(!show)
+  }
+
+  const saveData = () => {
+    if (isSaveActive) {
+      updateStore()
+    }
+  }
 
   return (
     <div className="container">
       <h2 className="section-header">Share Package</h2>
       <p className="description">Paste your encoded share package (starts with bfshare). It contains secret information required for signing. Do not share it with anyone.</p>
       <div className="content-container">
-        <div className="input-group">
+        <div className="input-with-button">
           <input
             type={show ? "text" : "password"}
             value={input}
             placeholder='bfshare1...'
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value.trim())}
           />
-          <button 
-            className="button toggle-button" 
-            onClick={() => setShow(!show)}
-          >
-            {show ? 'hide' : 'show'}
-          </button>
-          <button 
-            onClick={() => isSaveActive && updateStore()} 
-            className={`button save-button ${isSaveActive ? 'button-primary' : ''}`}
-            disabled={!isSaveActive}
-          >
-            save
-          </button>
+          <div className="input-actions">
+            <button 
+              className="button"
+              onClick={toggleShow}
+            >
+              show
+            </button>
+            <button 
+              className="button save-button" 
+              onClick={saveData}
+              disabled={!isSaveActive}
+            >
+              save
+            </button>
+          </div>
         </div>
         
         { input !== '' && error === null && show && decodedData && (
@@ -107,4 +122,4 @@ export default function () {
       </div>
     </div>
   )
-} 
+}

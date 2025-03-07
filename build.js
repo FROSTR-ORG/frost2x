@@ -9,7 +9,7 @@ esbuild
     bundle: true,
     entryPoints: {
       'popup.build': './src/popup.tsx',
-      'styles.build': './src/styles.css',
+      'styles.build': './src/styles/styles.css',
       'prompt.build': './src/prompt.tsx',
       'options.build': './src/options.tsx',
       'background.build': './src/background.ts',
@@ -23,10 +23,11 @@ esbuild
       global: 'self'
     },
     loader: {
-      '.js'  : 'js',  // Ensure jsx loader for js files
-      '.jsx' : 'jsx', // Ensure jsx loader for js files
-      '.ts'  : 'ts',  // Use the TypeScript loader for .ts files
-      '.tsx' : 'tsx'  // Use the TypeScript loader for .tsx files
+      '.js'  : 'js',   // Ensure jsx loader for js files
+      '.jsx' : 'jsx',  // Ensure jsx loader for js files
+      '.ts'  : 'ts',   // Use the TypeScript loader for .ts files
+      '.tsx' : 'tsx',  // Use the TypeScript loader for .tsx files
+      '.css' : 'css'   // Add this line to handle CSS imports correctly
     }
   })
   .then(() => console.log('build success.'))

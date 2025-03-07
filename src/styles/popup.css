@@ -1,0 +1,164 @@
+/* Simple, focused styles for the popup */
+.popup-container {
+  width: 320px;
+  padding: 12px;
+  background-color: #0f172a;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+/* Header with logo and title */
+.popup-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+  text-align: center;
+  width: 100%;
+}
+
+.frost-logo-small {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+}
+
+.popup-title-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.popup-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.alpha-pill-small {
+  font-size: 10px;
+  padding: 2px 6px;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Content styles */
+.popup-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Key container */
+.key-container {
+  width: 100%;
+  background-color: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  color: #e2e8f0;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.key-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.key-display {
+  font-size: 12px;
+  font-weight: 400;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  white-space: normal;
+  font-family: monospace;
+  color: #b0bccc;
+  text-align: center;
+  line-height: 1.4;
+  width: 100%;
+  max-width: 296px;
+  box-sizing: border-box;
+  display: block;
+}
+
+/* Node status */
+.node-status-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.status-label {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.status-indicator {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.status-running { background-color: #10b981; color: white; }
+.status-stopped { background-color: #dc2626; color: white; }
+.status-restarting { background-color: #f59e0b; color: white; }
+.status-unknown { background-color: #6b7280; color: white; }
+
+/* Button area */
+.popup-actions {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  flex: 1;
+  text-align: center;
+}
+
+.button-secondary {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.button-warning {
+  background-color: #10b981;
+  color: white;
+} 

@@ -1,11 +1,16 @@
-import type { ExtensionSettingsProps } from '../../types.js'
+import type { SettingStore } from '../../types/index.js'
 
 import browser from 'webextension-polyfill'
 
-export default function GeneralSettings ({ settings, update }: ExtensionSettingsProps) {
+type Props = {
+  settings: SettingStore;
+  update: (s: Partial<SettingStore>) => void;
+}
+
+export default function GeneralSettings({ settings, update }: Props) {
 
   const toggleNotifications = async () => {
-    const newValue = !settings['general/show_notifications']
+    const newValue = !settings['general/notifications']
 
     console.log('toggleNotifications', newValue)
       
@@ -31,23 +36,24 @@ export default function GeneralSettings ({ settings, update }: ExtensionSettings
       console.log('removed', removed)
     }
 
-    update({ 'general/show_notifications': newValue })
+    update({ 'general/notifications': newValue })
   }
 
   return (
-    <div className="settings-group">
-      <div className="setting-item">
-        <input
-          type="checkbox"
-          id="show-notifications"
-          className="checkbox"
-          checked={settings['general/show_notifications']}
+    <section className="settings-section">
+      <h2>General Settings</h2>
+      
+      <div className="form-row checkbox-container">
+        <input 
+          type="checkbox" 
+          id="showNotifications" 
+          checked={settings['general/notifications']}
           onChange={toggleNotifications}
         />
-        <label htmlFor="show-notifications">
-          Show notifications when the extension uses browser permissions
+        <label htmlFor="showNotifications">
+          Show notifications when the extension uses browser permissions.
         </label>
       </div>
-    </div>
+    </section>
   )
 }

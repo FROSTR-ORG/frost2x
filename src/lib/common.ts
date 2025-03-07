@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill'
 
-import type { NotificationParams } from '../types.js'
+import type { NotificationParams } from '../types/index.js'
 
 export async function showNotification (
   host   : string,

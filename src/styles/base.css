@@ -1,0 +1,76 @@
+/* Base styles for typography, colors, and general elements */
+body {
+  color: #e6e6e6;
+  background: #132242; /* Darker blue background */
+  font-size: 0.9em;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.4;
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+}
+
+/* Apply padding only on non-popup pages */
+body:not(.popup-container) {
+  padding: 20px 40px; /* Add more padding on sides */
+  max-width: 800px;
+  margin: 0 auto; /* Center content */
+  overflow-y: auto; /* Allow scrolling */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Remove the radial overlay */
+body::after {
+  display: none;
+}
+
+/* Links */
+a {
+  color: #4a90e2;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: #6aa9f0;
+  text-decoration: underline;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: #d8d8d8;
+  margin-top: 0;
+}
+
+.section-header {
+  font-size: 1.4em;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #d8d8d8; /* Duller white color */
+}
+
+.description {
+  color: #aaaaaa;
+  max-width: 650px;
+}
+
+/* Specific body style for popup context */
+body.popup-body {
+  background-color: #0f172a;
+  color: white;
+}
+
+/* Popup-specific body override that doesn't affect other pages */
+/* This targets only the popup window specifically by its structure */
+@media (max-width: 350px) {
+  body {
+    background-color: #0f172a;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    /* Override border that might be causing the blue outline */
+    border: none !important;
+    outline: none !important;
+  }
+} 

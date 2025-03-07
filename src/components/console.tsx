@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 
 import browser from 'webextension-polyfill'
 
-import type { LogEntry } from '../types.js'
+import type { LogEntry } from '../types/index.js'
 
 export default function Console() {
 

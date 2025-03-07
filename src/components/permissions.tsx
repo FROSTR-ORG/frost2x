@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { removePermissions }   from '../lib/permissions.js'
 
-import type { PublishPermissions } from '../types.js'
+import type { PublishPermissions } from '../types/index.js'
 
 import browser from 'webextension-polyfill'
 

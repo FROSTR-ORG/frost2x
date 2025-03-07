@@ -1,20 +1,11 @@
 import { useEffect, useState } from 'react'
-import { useStore }            from './store.js'
+import { useStore }            from '../store.js'
 
-// Add back the type import
-import type { RelayPolicy } from '../types.js'
+import type { NodeStore, RelayPolicy }   from '../../types/index.js'
 
-function validateUrl(url: string): boolean {
-  try {
-    new URL(url)
-    return true
-  } catch (e) {
-    return false
-  }
-}
-
-export default function Relays() {
-  const { store, update } = useStore()
+export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
+  const { store } = useStore()
+  const { node  } = store
   
   // Update to use the correct type
   const [ localState, setLocalState ] = useState<RelayPolicy[]>([])
@@ -24,8 +15,8 @@ export default function Relays() {
   
   // Initialize local relays from store
   useEffect(() => {
-    setLocalState(store.relays)
-  }, [ store.relays ])
+    setLocalState(node.relays)
+  }, [ node.relays ])
   
   // Update relay enabled status locally
   const update_relay = (idx: number, key: 'read' | 'write') => {
@@ -79,7 +70,7 @@ export default function Relays() {
   // Discard changes by resetting local state from store
   const cancel = () => {
     // Create a new array to ensure React detects the change
-    setLocalState(store.relays)
+    setLocalState(node.relays)
     setHasChanges(false)
   }
   
@@ -118,7 +109,10 @@ export default function Relays() {
                 />
               </td>
               <td className="action-cell">
-                <button onClick={() => remove_relay(idx)} className="button-danger">
+                <button 
+                  onClick={() => remove_relay(idx)} 
+                  className="button button-remove"
+                >
                   Remove
                 </button>
               </td>
@@ -162,4 +156,13 @@ export default function Relays() {
       </div>
     </div>
   )
-} 
+}
+
+function validateUrl(url: string): boolean {
+  try {
+    new URL(url)
+    return true
+  } catch (e) {
+    return false
+  }
+}

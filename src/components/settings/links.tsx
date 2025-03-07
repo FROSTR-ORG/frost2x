@@ -1,13 +1,13 @@
 import { useState } from 'react'
 
-import type { ExtensionSettingsProps } from '../../types.js'
+import type { ExtensionSettingsProps } from '../../types/index.js'
 
 export default function LinkSettings ({ settings, update }: ExtensionSettingsProps) {
   const [showInfoModal, setShowInfoModal] = useState(false);
   
   return (
     <div className="settings-group">
-      <div className="subsection-header">Link Settings</div>
+      <h2 className="section-header">Link Settings</h2>
       
       <div className="setting-item">
         <input
