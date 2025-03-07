@@ -1,8 +1,9 @@
-import browser                    from 'webextension-polyfill'
-import { Mutex }                  from 'async-mutex'
-import { is_permission_required } from '@/lib/perms.js'
-import { init_node }              from '@/services/node.js'
-import { SettingStore }           from '@/stores/settings.js'
+import browser         from 'webextension-polyfill'
+import * as nip19      from 'nostr-tools/nip19'
+
+import { BifrostNode }  from '@frostr/bifrost'
+import { Mutex }        from 'async-mutex'
+import { FrostrWallet } from './lib/wallet.js'
 
 import {
   handleSignerRequest,
@@ -23,17 +24,16 @@ import {
 
 import { 
   ContentScriptMessage,
-  GlobalState,
-  GlobalMessage
+  Message,
+  ExtensionStore
 } from './types/index.js'
 
 import * as CONST  from './const.js'
 
-let global : GlobalState = {
-  mutex  : { lock : new Mutex(), release : () => {} },
-  prompt : null,
-  node   : null
-}
+let promptMutex                        = new Mutex()
+let releasePromptMutex: () => void     = () => {}
+let openPrompt : PromptResolver | null = null
+let node       : BifrostNode    | null = null
 
 // Initialize the extension on load.
 init_extension()
@@ -216,18 +216,89 @@ export async function handlePermissionRequest (
     }
   }
 
-  // If the permission has a response.
-  if (allowed !== null) {
-    // Release the mutex.
-    global.mutex.release()
-    // If the notification setting is enabled, show a notification.
-    if (show_notice) showNotification(host, allowed, type, params)
+  const { store } = await browser.storage.sync.get('store') as { store: ExtensionStore }
+
+  if (!store.node.peers) {
+    return { error: { message: 'no peers configured' } }
   }
 
-  // Handle the permission response.
-  if (allowed === true)  return null
-  if (allowed === false) return 'denied'
-  return 'failed to get permission'
+  node = await keep_alive(node)
+
+  if (!node) {
+    return { error: { message: 'bifrost node is not initialized' } }
+  }
+
+  try {
+    switch (type) {
+      case 'getPublicKey': {
+        return node.group.group_pk.slice(2)
+      }
+      case 'getRelays': {
+        let results = await browser.storage.local.get('relays')
+        return results.relays || {}
+      }
+      case 'signEvent': {
+        const pubkey = node.group.group_pk.slice(2)
+        const tmpl   = { ...params.event, pubkey }
+
+        try {
+          validateEvent(tmpl)
+        } catch (error: any) {
+          return { error: { message: error.message } }
+        }
+
+        const id  = tmpl.id ?? getEventHash(tmpl)
+        const res = await node.req.sign(id)
+
+        if (!res.ok) return { error: { message: res.err } }
+
+        return { ...tmpl, id, sig: res.data }
+      }
+      case 'nip04.encrypt': {
+        let { peer, plaintext } = params
+        const res = await node.req.ecdh(peer)
+        if (!res.ok) return { error: { message: res.err } }
+        const secret = res.data.slice(2)
+        return crypto.nip04_encrypt(secret, plaintext)
+      }
+      case 'nip04.decrypt': {
+        let { peer, ciphertext } = params
+        const res = await node.req.ecdh(peer)
+        if (!res.ok) return { error: { message: res.err } }
+        const secret = res.data.slice(2)
+        return crypto.nip04_decrypt(secret, ciphertext)
+      }
+      case 'nip44.encrypt': {
+        const { peer, plaintext } = params
+        const res = await node.req.ecdh(peer)
+        if (!res.ok) return { error: { message: res.err } }
+        const secret = res.data.slice(2)
+        return crypto.nip44_encrypt(plaintext, secret)
+      }
+      case 'nip44.decrypt': {
+        const { peer, ciphertext } = params
+        const res = await node.req.ecdh(peer)
+        if (!res.ok) return { error: { message: res.err } }
+        const secret = res.data.slice(2)
+        return crypto.nip44_decrypt(ciphertext, secret)
+      }
+      case 'wallet.getAddress': {
+        return node.group.group_pk.slice(2)
+      }
+      case 'wallet.getBalance': {
+        return node.group.group_pk.slice(2)
+      }
+      case 'wallet.getUtxos': {
+        return node.group.group_pk.slice(2)
+      }
+      case 'wallet.signPsbt': {
+        return node.group.group_pk.slice(2)
+      }
+    }
+  } catch (error: any) {
+    console.error('background error:', error)
+    return { error: { message: error.message, stack: error.stack } }
+  }
 }
 
 function parse_content_message (

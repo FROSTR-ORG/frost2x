@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-import type { SettingStore } from '@/types/index.js'
+import type { ExtensionSettingsProps } from '../../types/index.js'
 
 type Props = {
   settings: SettingStore;
@@ -53,8 +53,8 @@ export default function LinkSettings({ settings, saveSettings }: Props) {
   }
 
   return (
-    <section className="settings-section">
-      <h2>Link Settings</h2>
+    <div className="settings-group">
+      <h2 className="section-header">Link Settings</h2>
       
       <div className="form-row checkbox-container">
         <input

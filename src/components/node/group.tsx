@@ -1,86 +1,78 @@
 import { useEffect, useState } from 'react'
-import { NodeStore }           from '@/stores/node.js'
+import { decode_group_pkg }    from '@frostr/bifrost/lib'
+import { useStore }            from '../store.js'
 
-import {
-  decode_group_pkg,
-  encode_group_pkg,
-} from '@frostr/bifrost/lib'
+import type { NodeStore }      from '../../types/index.js'
 
-import type { GroupPackage } from '@frostr/bifrost'
+export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
+  const { store }                       = useStore()
+  const { node  }                       = store
+  const [ input, setInput ]             = useState<string>('')
+  const [ error, setError ]             = useState<string | null>(null)
+  const [ show, setShow ]               = useState<boolean>(false)
+  const [ isValid, setIsValid ]         = useState<boolean>(false)
+  const [ decodedData, setDecodedData ] = useState<any>(null)
 
-
-export default function ({ store } : { store : NodeStore.Type }) {
-  const [ input, setInput ] = useState<string>('')
-  const [ error, setError ] = useState<string | null>(null)
-  const [ show, setShow   ] = useState<boolean>(false)
-  const [ saved, setSaved ] = useState<boolean>(false)
-
-  /**
-   * Handle the update of the store.
-   */
-  const update = () => {
-    // If an error exists, do not update the group.
-    if (error !== null) return
-    // If the input is empty,
-    if (input === '') {
-      // Set the group to null.
-      NodeStore.update({ group : null })
-    } else {
-      // Parse the input into a group package.
-      const group = get_group_pkg(input)
-      // If the group package is invalid, return.
-      if (group === null) return
-      // Update the group in the store.
-      NodeStore.update({ group })
+  const parseData = (pkg : string) => {
+    try {
+      const data = decode_group_pkg(pkg)
+      setDecodedData(data)
+      return data
+    } catch (err) {
+      setDecodedData(null)
+      return null
     }
-    // Set the saved state, and reset it after a short delay.
-    setSaved(true)
-    setTimeout(() => setSaved(false), 1500)
   }
 
-  /**
-   * Handle the validation of the input when it changes.
-   */
-  useEffect(() => {
-    // If the input is empty, clear the error.
-    if (input === '') {
-      setError(null)
-    } else if (!input.startsWith('bfgroup')) {
-      // If the input does not start with "bfgroup", set an error.
-      setError('input must start with "bfgroup1"')
-    } else if (!is_group_string(input)) {
-      // If the input contains invalid characters, set an error.
-      setError('input contains invalid characters')
-    } else {
-      // Parse the input into a group package.
-      const pkg = get_group_pkg(input)
-      // If the group package is valid, clear the error.
-      if (pkg !== null) {
-        setError(null)
+  const updateStore = () => {
+    try {
+      if (input === '') {
+        update({ group : null })
+        setDecodedData(null)
       } else {
-        // If the group package is invalid, set an error.
+        parseData(input)
+        update({ group : input })
+        setError(null)
+      }
+      setError(null)
+    } catch (err) {
+      console.error(err)
+      setError('failed to decode package data')
+    }
+  }
+
+  // Check if input is valid whenever it changes
+  useEffect(() => {
+    if (input === '') {
+      setIsValid(true) // Empty input is considered valid
+      setDecodedData(null)
+    } else {
+      try {
+        const data = decode_group_pkg(input)
+        setDecodedData(data)
+        setIsValid(true)
+        setError(null)
+      } catch (err) {
+        setIsValid(false)
+        setDecodedData(null)
         setError('failed to decode package data')
       }
     }
-  }, [ input ])
+  }, [input])
 
-  /**
-   * Handle the update of the input when the store changes.
-   */
   useEffect(() => {
-    try {
-      if (store.group === null) {
-        setInput('')
-        setError(null)
-      } else {
-        const str = encode_group_pkg(store.group)
-        setInput(str)
-        setError(null)
+    setInput(node.group ?? '')
+    if (node.group) {
+      try {
+        parseData(node.group)
+      } catch (err) {
+        // Ignore errors when initializing
       }
-    } catch (err) {
-      setError('failed to decode package data')
     }
-  }, [ store.group ])
+  }, [node.group])
+
+  // Determine if the save button should be active
+  const isSaveActive = isValid && (input !== node.group);
 
   return (
     <div className="container">
@@ -99,82 +91,25 @@ export default function ({ store } : { store : NodeStore.Type }) {
               className="button"
               onClick={() => setShow(!show)}
             >
-              {show ? 'hide' : 'show'}
+              show
             </button>
-            <button
-              className={`button action-button ${saved ? 'saved-button' : ''}`} 
-              onClick={update}
-              disabled={!is_group_changed(input, store.group) || error !== null}
+            <button 
+              className="button save-button" 
+              onClick={() => isSaveActive && updateStore()}
+              disabled={!isSaveActive}
             >
-              {saved ? 'Saved' : 'Save'}
+              save
             </button>
           </div>
         </div>
         
-        {input !== '' && error === null && show && (
+        {input !== '' && error === null && show && decodedData && (
           <pre className="code-display">
-            {get_group_json(input) ?? 'invalid group package'}
+            {JSON.stringify(decodedData, null, 2)}
           </pre>
         )}
-        <div className="notification-container">
-          {error && <p className="error-text">{error}</p>}
-        </div>
+        {error && <p className="error-text">{error}</p>}
       </div>
     </div>
   )
-}
-
-/**
- * Check if the input is a valid group string.
- */
-function is_group_string(input : string) {
-  return /^bfgroup1[023456789acdefghjklmnpqrstuvwxyz]+$/.test(input)
-}
-
-/**
- * Check if the input has changed and is valid.
- */
-function is_group_changed (
-  input : string,
-  group : GroupPackage | null
-) {
-  // Encode the existing group package to a string.
-  const group_str = get_group_str(group)
-  // Determine if the group input has changed and is valid.
-  return input !== group_str
-}
-
-/**
- * Get the group string from the group package.
- */
-function get_group_str (group : GroupPackage | null) {
-  try {
-    return (group !== null) ? encode_group_pkg(group) : ''
-  } catch {
-    return ''
-  }
-}
-
-/**
- * Get the group package from the input.
- */
-function get_group_pkg (input : string) {
-  try {
-    return (input !== '') ? decode_group_pkg(input) : null
-  } catch {
-    return null
-  }
-}
-
-/**
- * Get the group package from the input.
- */
-function get_group_json(input : string) {
-  try {
-    const group = get_group_pkg(input)
-    if (group === null) return null
-    return JSON.stringify(group, null, 2)
-  } catch (err) {
-    return null
-  }
-}
+} 

@@ -1,64 +1,11 @@
-import { useState, useEffect } from 'react'
-
-import type { ChainNetwork, SettingStore } from '@/types/index.js'
+import type { ChainNetwork, SettingStore } from '../../types/index.js'
 
 type Props = {
   settings: SettingStore;
-  saveSettings: (settings: Partial<SettingStore>) => boolean;
+  update: (s: Partial<SettingStore>) => void;
 }
 
-export default function ExplorerSettings({ settings, saveSettings }: Props) {
-  // Local state for this section
-  const [localSettings, setLocalSettings] = useState({
-    'explorer/network': settings['explorer/network'],
-    'explorer/api_url': settings['explorer/api_url'],
-    'explorer/link_url': settings['explorer/link_url'],
-    'explorer/rate_limit': settings['explorer/rate_limit']
-  })
-  
-  // Update local state when main settings change
-  useEffect(() => {
-    setLocalSettings({
-      'explorer/network': settings['explorer/network'],
-      'explorer/api_url': settings['explorer/api_url'],
-      'explorer/link_url': settings['explorer/link_url'],
-      'explorer/rate_limit': settings['explorer/rate_limit']
-    })
-  }, [settings])
-  
-  // Check if there are unsaved changes
-  const hasChanges = () => {
-    return (
-      localSettings['explorer/network'] !== settings['explorer/network'] ||
-      localSettings['explorer/api_url'] !== settings['explorer/api_url'] ||
-      localSettings['explorer/link_url'] !== settings['explorer/link_url'] ||
-      localSettings['explorer/rate_limit'] !== settings['explorer/rate_limit']
-    )
-  }
-  
-  // Save changes to extension store
-  const handleSave = () => {
-    saveSettings(localSettings)
-  }
-  
-  // Revert unsaved changes
-  const handleCancel = () => {
-    setLocalSettings({
-      'explorer/network': settings['explorer/network'],
-      'explorer/api_url': settings['explorer/api_url'],
-      'explorer/link_url': settings['explorer/link_url'],
-      'explorer/rate_limit': settings['explorer/rate_limit']
-    })
-  }
-
-  // Update local state for a specific field
-  const updateField = (field: string, value: any) => {
-    setLocalSettings({
-      ...localSettings,
-      [field]: value
-    })
-  }
-
+export default function ExplorerSettings({ settings, update }: Props) {
   return (
     <section className="settings-section">
       <h2>Explorer Settings</h2>
@@ -68,8 +15,8 @@ export default function ExplorerSettings({ settings, saveSettings }: Props) {
         <div>
           <select 
             className="form-select"
-            value={localSettings['explorer/network']}
-            onChange={e => updateField('explorer/network', e.target.value as ChainNetwork)}
+            value={settings['explorer/network']}
+            onChange={e => update({ 'explorer/network': e.target.value as ChainNetwork })}
           >
             <option value="mainnet">Mainnet</option>
             <option value="testnet">Testnet</option>
@@ -86,8 +33,8 @@ export default function ExplorerSettings({ settings, saveSettings }: Props) {
           <input 
             type="text"
             className="form-input"
-            value={localSettings['explorer/api_url']}
-            onChange={e => updateField('explorer/api_url', e.target.value)}
+            value={settings['explorer/api_url']}
+            onChange={e => update({ 'explorer/api_url': e.target.value })}
             placeholder="https://mempool.space/api"
           />
           <p className="field-description">
@@ -102,8 +49,8 @@ export default function ExplorerSettings({ settings, saveSettings }: Props) {
           <input 
             type="text"
             className="form-input"
-            value={localSettings['explorer/link_url']}
-            onChange={e => updateField('explorer/link_url', e.target.value)}
+            value={settings['explorer/link_url']}
+            onChange={e => update({ 'explorer/link_url': e.target.value })}
             placeholder="https://mempool.space"
           />
           <p className="field-description">
@@ -118,32 +65,14 @@ export default function ExplorerSettings({ settings, saveSettings }: Props) {
           <input 
             type="number"
             className="form-input"
-            value={localSettings['explorer/rate_limit']}
-            onChange={e => updateField('explorer/rate_limit', parseInt(e.target.value))}
+            value={settings['explorer/rate_limit']}
+            onChange={e => update({ 'explorer/rate_limit': parseInt(e.target.value) })}
             placeholder="1000"
           />
           <p className="field-description">
             Enter the rate limit (in milliseconds) for querying the explorer API.
           </p>
         </div>
-      </div>
-
-      {/* Section action buttons */}
-      <div className="settings-actions">
-        <button 
-          className="button button-secondary" 
-          onClick={handleCancel}
-          style={{ visibility: hasChanges() ? 'visible' : 'hidden' }}
-        >
-          Cancel
-        </button>
-        <button 
-          className="button button-primary" 
-          onClick={handleSave}
-          disabled={!hasChanges()}
-        >
-          Save
-        </button>
       </div>
     </section>
   )

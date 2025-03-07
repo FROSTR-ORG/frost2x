@@ -6,10 +6,12 @@ import type { ReactElement } from 'react'
 import * as Icons from './components/icons.js'
 
 import Console     from './components/console.js'
-import Node        from './components/node/index.js'
-import Permissions from './components/permissions/index.js'
-import Settings    from './components/settings/index.js'
-import Wallet      from './components/wallet/index.js'
+import Node        from './components/node.js'
+import Permissions from './components/permissions.js'
+import Settings    from './components/settings.js'
+import Wallet      from './components/wallet.js'
+
+import { StoreProvider } from './components/store.js'
 
 function Options(): ReactElement {
   const [ activeTab, setActiveTab ] = useState('console')
@@ -89,36 +91,28 @@ function Options(): ReactElement {
           {/* Node Tab */}
           {activeTab === 'node' && (
             <div className="tab-panel">
-              <Node />
+              <Node showMessage={showMessage}/>
             </div>
           )}
 
           {/* Permissions Tab */}
           {activeTab === 'permissions' && (
             <div className="tab-panel">
-              <Permissions />
+              <Permissions showMessage={showMessage} />
             </div>
           )}
 
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div className="tab-panel">
-              <Settings />
+              <Settings showMessage={showMessage} />
             </div>
           )}
 
           {/* Wallet Tab */}
           {activeTab === 'wallet' && (
             <div className="tab-panel">
-              {/* <Wallet showMessage={showMessage} /> */}
-              <div className="tab-panel-placeholder">
-                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center' }}>coming soon</p>
-                <img
-                  src="static/welding.gif"
-                  alt="welding" 
-                  className="gif"
-                />
-              </div>
+              <Wallet showMessage={showMessage} />
             </div>
           )}
         </div>

@@ -1,69 +1,88 @@
 import { useEffect, useState } from 'react'
-import { NodeStore }           from '@/stores/node.js'
+import { decode_share_pkg }    from '@frostr/bifrost/lib'
+import { useStore }            from '../store.js'
 
-import {
-  decode_share_pkg,
-  encode_share_pkg
-} from '@frostr/bifrost/lib'
+import type { NodeStore } from '../../types/index.js'
 
-import type { SharePackage } from '@frostr/bifrost'
-
-export default function ({ store } : { store : NodeStore.Type }) {
+export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
+  const { store } = useStore()
+  const { node  } = store
   const [ input, setInput ] = useState<string>('')
   const [ error, setError ] = useState<string | null>(null)
-  const [ show, setShow   ] = useState<boolean>(false)
-  const [ saved, setSaved ] = useState<boolean>(false)
+  const [ show, setShow ]   = useState<boolean>(false)
+  const [ isValid, setIsValid ] = useState<boolean>(false)
+  const [ decodedData, setDecodedData ] = useState<any>(null)
 
-  // Update the group in the store.
-  const update = () => {
-    // If there is an error, do not update the group.
-    if (error !== null) return
-    // If the input is empty,
-    if (input === '') {
-      // Set the group to null.
-      NodeStore.update({ share : null })
-    } else {
-      // Parse the input and update the group.
-      const share = get_share_pkg(input)
-      if (share === null) return
-      NodeStore.update({ share })
+  const parseData = (pkg: string) => {
+    try {
+      const data = decode_share_pkg(pkg)
+      setDecodedData(data)
+      return data
+    } catch (err) {
+      setDecodedData(null)
+      return null
     }
-    setSaved(true)
-    setTimeout(() => setSaved(false), 1500)
   }
 
-  // Validate the share input when it changes.
+  const updateStore = () => {
+    try {
+      if (input === '') {
+        update({ share: null })
+        setDecodedData(null)
+      } else {
+        parseData(input)
+        update({ share: input })
+        setError(null)
+      }
+      setError(null)
+    } catch (err) {
+      console.error(err)
+      setError('failed to decode package data')
+    }
+  }
+
+  // Check if input is valid whenever it changes
   useEffect(() => {
     if (input === '') {
-      setError(null)
-    } else if (!input.startsWith('bfshare')) {
-      setError('input must start with "bfshare1"')
-    } else if (!is_share_string(input)) {
-      setError('input contains invalid characters')
+      setIsValid(true) // Empty input is considered valid
+      setDecodedData(null)
     } else {
-      const share = get_share_pkg(input)
-      if (share !== null) {
+      try {
+        const data = decode_share_pkg(input)
+        setDecodedData(data)
+        setIsValid(true)
         setError(null)
-      } else {
+      } catch (err) {
+        setIsValid(false)
+        setDecodedData(null)
         setError('failed to decode package data')
       }
     }
-  }, [ input ])
+  }, [input])
 
   useEffect(() => {
-    try {
-      if (store.share === null) {
-        setInput('')
-        setError(null)
-      } else {
-        const str = encode_share_pkg(store.share)
-        setInput(str)
-        setError(null)
+    setInput(node.share ?? '')
+    if (node.share) {
+      try {
+        parseData(node.share)
+      } catch (err) {
+        // Ignore errors when initializing
       }
-    } catch (err) {
-      setError('failed to decode package data')
     }
-  }, [ store.share ])
+  }, [node.share])
+
+  // Determine if the save button should be active
+  const isSaveActive = isValid && (input !== node.share);
+
+  const toggleShow = () => {
+    setShow(!show)
+  }
+
+  const saveData = () => {
+    if (isSaveActive) {
+      updateStore()
+    }
+  }
 
   return (
     <div className="container">
@@ -80,69 +99,27 @@ export default function ({ store } : { store : NodeStore.Type }) {
           <div className="input-actions">
             <button 
               className="button"
-              onClick={() => setShow(!show)}
+              onClick={toggleShow}
             >
-              {show ? 'hide' : 'show'}
+              show
             </button>
-            <button
-              className={`button action-button ${saved ? 'saved-button' : ''}`}
-              onClick={update}
-              disabled={!is_share_changed(input, store.share) || error !== null}
+            <button 
+              className="button save-button" 
+              onClick={saveData}
+              disabled={!isSaveActive}
             >
-              {saved ? 'Saved' : 'Save'}
+              save
             </button>
           </div>
         </div>
         
-        { input !== '' && error === null && show && (
+        { input !== '' && error === null && show && decodedData && (
           <pre className="code-display">
-            {get_share_json(input) ?? 'invalid share package'}
+            {JSON.stringify(decodedData, null, 2)}
           </pre>
         )}
-        <div className="notification-container">
-          {error && <p className="error-text">{error}</p>}
-        </div>
+        {error && <p className="error-text">{error}</p>}
       </div>
     </div>
   )
-}
-
-function is_share_string(input : string) {
-  return /^bfshare1[023456789acdefghjklmnpqrstuvwxyz]+$/.test(input)
-}
-
-function is_share_changed (
-  input : string,
-  share : SharePackage | null
-) {
-  // Encode the existing share package to a string.
-  const share_str = get_share_str(share)
-  // Determine if the share input has changed and is valid.
-  return input !== share_str
-}
-
-function get_share_str (share : SharePackage | null) {
-  try {
-    return (share !== null) ? encode_share_pkg(share) : ''
-  } catch {
-    return ''
-  }
-}
-
-function get_share_pkg (input : string) {
-  try {
-    return (input !== '') ? decode_share_pkg(input) : null
-  } catch {
-    return null
-  }
-}
-
-function get_share_json(input : string) {
-  try {
-    const share = get_share_pkg(input)
-    if (share === null) return null
-    return JSON.stringify(share, null, 2)
-  } catch (err) {
-    return null
-  }
 }

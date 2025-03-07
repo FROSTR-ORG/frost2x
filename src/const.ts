@@ -3,28 +3,16 @@ export const MAX_LOGS      = 100
 export const PROMPT_WIDTH  = 500
 export const PROMPT_HEIGHT = 700
 
-export const DEFAULT_RELAYS = [{
-  url   : 'https://relay.primal.net',
-  read  : true,
-  write : true
-}]
-
 export const NETWORK_PREFIX = {
   mainnet : 'bc',
   testnet : 'tb',
   regtest : 'bcrt'
-} as const
+}
 
-export const ALLOWED_WITNESS_VERSIONS = [ 0x51 ]
-
-export const POLICY_DOMAIN = {
-  NOSTR   : 'nostr',
-  BITCOIN : 'bitcoin'
-} as const
-
-export const STORE_KEY = {
-  SIGNER_PERMISSIONS : 'signer_perms',
-  WALLET_PERMISSIONS : 'wallet_perms'
+export const PERMISSION_BYPASS = {
+  replace_url     : true,
+  node_reset      : true,
+  get_node_status : true
 }
 
 export const NOSTR_MSG_TYPE = {

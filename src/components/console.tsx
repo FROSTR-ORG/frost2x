@@ -8,7 +8,7 @@ import {
   useRef
 } from 'react'
 
-import type { LogEntry } from '@/types/index.js'
+import type { LogEntry } from '../types/index.js'
 
 export default function Console() {
   // State for logs

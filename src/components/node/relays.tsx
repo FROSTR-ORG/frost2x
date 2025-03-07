@@ -1,28 +1,22 @@
 import { useEffect, useState } from 'react'
-import { NodeStore }           from '@/stores/node.js'
+import { useStore }            from '../store.js'
 
-import type { RelayPolicy } from '@/types/index.js'
+import type { NodeStore, RelayPolicy }   from '../../types/index.js'
 
-export default function ({ store } : { store : NodeStore.Type }) {
-  const [ relays, setRelays ]   = useState<RelayPolicy[]>(store.relays)
-  const [ relayUrl, setUrl ]    = useState('')
-  const [ changes, setChanges ] = useState<boolean>(false)
-  const [ error, setError ]     = useState<string | null>(null)
-  const [ saved, setSaved ]     = useState<boolean>(false)
-
-  // Update the peer policies in the store.
-  const update = () => {
-    NodeStore.update({ relays })
-    setChanges(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 1500)
-  }
-
-  // Discard changes by resetting local state from store
-  const cancel = () => {
-    setRelays(store.relays)
-    setChanges(false)
-  }
+export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
+  const { store } = useStore()
+  const { node  } = store
+  
+  // Update to use the correct type
+  const [ localState, setLocalState ] = useState<RelayPolicy[]>([])
+  const [ hasChanges, setHasChanges ] = useState(false)
+  const [ relayUrl, setRelayUrl ]     = useState('')
+  const [ error, setError ]           = useState('')
+  
+  // Initialize local relays from store
+  useEffect(() => {
+    setLocalState(node.relays)
+  }, [ node.relays ])
   
   // Update relay enabled status locally
   const update_relay = (idx: number, key: 'read' | 'write') => {
@@ -53,8 +47,21 @@ export default function ({ store } : { store : NodeStore.Type }) {
   
   // Remove a relay from local state
   const remove_relay = (idx: number) => {
-    setRelays(prev => prev.filter((_, i) => i !== idx))
-    setChanges(true)
+    setLocalState(prev => prev.filter((_, i) => i !== idx))
+    setHasChanges(true)
+  }
+  
+  // Save changes to the store
+  const save = () => {
+    update({ relays: localState })
+    setHasChanges(false)
+  }
+  
+  // Discard changes by resetting local state from store
+  const cancel = () => {
+    // Create a new array to ensure React detects the change
+    setLocalState(node.relays)
+    setHasChanges(false)
   }
 
   useEffect(() => {

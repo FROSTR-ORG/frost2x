@@ -1,62 +1,91 @@
 import { useEffect, useState } from 'react'
-import { NodeStore }           from '@/stores/node.js'
+import { useStore }            from '../store.js'
+
+import {
+  decode_group_pkg,
+  decode_share_pkg,
+  get_pubkey
+} from '@frostr/bifrost/lib'
 
 import type { PeerPolicy } from '@frostr/bifrost'
+import type { NodeStore }  from '../../types/index.js'
 
-export default function ({ store } : { store : NodeStore.Type }) {
-  const [ peers, setPeers ]     = useState<PeerPolicy[] | null>(store.peers)
-  const [ changes, setChanges ] = useState<boolean>(false)
-  const [ saved, setSaved ]     = useState<boolean>(false)
+export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
+  const { store } = useStore()
+  const { node  } = store
+  
+  // Add local state to track changes
+  const [localPeers, setLocalPeers] = useState<PeerPolicy[]>([])
+  const [hasChanges, setHasChanges] = useState(false)
 
-  // Update the peer policies in the store.
-  const update = () => {
-    NodeStore.update({ peers })
-    setChanges(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 1500)
+  const has_creds = node.group !== null && node.share !== null
+
+  // Initialize local state from store
+  useEffect(() => {
+    if (has_creds && node.peers === null) {
+      update({ peers: init_peers() })
+    } else if (!has_creds && node.peers !== null) {
+      update({ peers: null })
+    } else {
+      setLocalPeers(node.peers ?? [])
+    }
+  }, [ has_creds, node.peers ])
+
+  // Initialize peers from group and share data.
+  const init_peers = () => {
+    if (node.group === null || node.share === null) return []
+    const group  = decode_group_pkg(node.group)
+    const share  = decode_share_pkg(node.share)
+    const pubkey = get_pubkey(share.seckey, 'ecdsa')
+    const peers  = group.commits.filter(commit => commit.pubkey !== pubkey)
+    return peers.map((peer, idx) => 
+      [ peer.pubkey.slice(2), idx === 0, true ] as PeerPolicy
+    )
   }
-
-  // Discard changes by resetting local state from store
-  const cancel = () => {
-    setPeers(store.peers)
-    setChanges(false)
-  }
-
+  
   // Update peer connectivity status locally
   const update_peer = (idx: number, key: number, value: boolean) => {
-    setPeers(prev => {
-      const updated = [ ...prev ?? [] ]
+    setLocalPeers(prev => {
+      const updated = [...prev]
       updated[idx][key] = value
       return updated
     })
-    setChanges(true)
+    setHasChanges(true)
   }
-
-  useEffect(() => {
-    setPeers(store.peers)
-  }, [ store.peers ])
-
+  
+  // Save changes to the store
+  const save = () => {
+    update({ peers: localPeers })
+    setHasChanges(false)
+  }
+  
+  // Discard changes by resetting local state from store
+  const cancel = () => {
+    setLocalPeers(node.peers ?? [])
+    setHasChanges(false)
+  }
+  
   return (
     <div className="container">
       <h2 className="section-header">Peer Connections</h2>
-      <p className="description">Configure how you communicate with other peers in your signing group. "Request" will send signature requests to that peer, and "Respond" will co-sign requests from that peer.</p>
+      <p className="description">Configure connection settings for peers in your signing group.</p>
 
-      {peers === null &&
-        <p className="description">You must configure your node's credentials first.</p>
+      {!has_creds &&
+        <p className="description">Load a group package and a share package to configure peer connections.</p>
       }
       
-      {peers !== null &&
+      {has_creds && localPeers.length > 0 &&
         <div>
           <table>
             <thead>
               <tr>
-                <th>Peer Public Key</th>
+                <th>Pubkey</th>
                 <th className="checkbox-cell">Request</th>
                 <th className="checkbox-cell">Respond</th>
               </tr>
             </thead>
             <tbody>
-              {peers.map((peer, idx) => (
+              {localPeers.map((peer, idx) => (
                 <tr key={idx}>
                   <td className="pubkey-cell">{peer[0]}</td>
                   <td className="checkbox-cell">
@@ -82,14 +111,14 @@ export default function ({ store } : { store : NodeStore.Type }) {
           
           <div className="action-buttons">
             <button 
-              onClick={update}
-              disabled={!changes}
-              className={`button button-primary action-button ${saved ? 'saved-button' : ''}`}
+              onClick={save}
+              disabled={!hasChanges || !has_creds}
+              className="button button-primary save-button"
             >
-              {saved ? 'Saved' : 'Save'}
+              Save
             </button>
             
-            {changes && (
+            {hasChanges && (
               <button 
                 onClick={cancel}
                 className="button"

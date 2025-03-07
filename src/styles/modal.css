@@ -1,0 +1,63 @@
+/* Modal styling */
+.modal {
+  background-color: rgba(255, 255, 255, 0.974);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.modal-content {
+  padding: 0 20px;
+  width: 100%;
+  font-size: 1.3rem;
+}
+
+.modal-header {
+  font-weight: bold;
+  margin: 20px 0px;
+  color: black;
+}
+
+.modal-body {
+  overflow-y: auto;
+  max-height: 70vh;
+  font-size: 1rem;
+  margin-bottom: 20px;
+  color: black;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.modal-footer button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border: none;
+  font-weight: bold;
+}
+
+.modal-cancel {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.modal-cancel:hover {
+  background-color: #d0d0d0;
+}
+
+.modal-confirm {
+  background-color: #3498db;
+  color: white;
+}
+
+.modal-confirm:hover {
+  background-color: #2980b9;
+} 

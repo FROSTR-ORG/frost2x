@@ -11,7 +11,7 @@ import {
   useEffect
 } from 'react'
 
-import type { ReactElement } from 'react'
+import type { ExtensionStore } from './types/index.js'
 
 function Popup() : ReactElement {
   const [ store, setStore ]           = useState<NodeStore.Type>(NodeStore.DEFAULT)
@@ -21,19 +21,39 @@ function Popup() : ReactElement {
   const keys = useRef<string[]>([])
 
   useEffect(() => {
-    if (store.group !== null) {
-      const group = store.group
-      let hexKey  = group.group_pk.slice(2)
-      let npubKey = nip19.npubEncode(hexKey)
+    browser.storage.sync.get(['store']).then((results: {
+      store? : ExtensionStore
+    }) => {
+      if (typeof results.store?.node?.group === 'string') {
+        const group = decode_group_pkg(results.store.node.group)
+        let hexKey  = group.group_pk.slice(2)
+        let npubKey = nip19.npubEncode(hexKey)
 
       setPubKey(npubKey)
 
       keys.current.push(npubKey)
       keys.current.push(hexKey)
 
-    } else {
-      setPubKey(null)
-    }
+        if (results.store?.node?.relays) {
+          let relaysList: string[] = []
+          for (let url in results.store.node.relays) {
+            if (results.store.node.relays[url].write) {
+              relaysList.push(url)
+              if (relaysList.length >= 3) break
+            }
+          }
+          if (relaysList.length) {
+            let nprofileKey = nip19.nprofileEncode({
+              pubkey: hexKey,
+              relays: relaysList
+            })
+            keys.current.push(nprofileKey)
+          }
+        }
+      } else {
+        setPubKey(null)
+      }
+    })
 
     checkNodeStatus()
     
