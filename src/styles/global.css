@@ -1,0 +1,541 @@
+/* global.css - Master Stylesheet for Frostr Chrome Extension */
+/* Generated: March 06, 2025 */
+
+/* ========================================================================= */
+/* Base Styles - Foundation of the Design System */
+body {
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  color: #e6e6e6;
+  background: #132242;
+  font: 0.9em/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (max-width: 350px) {
+  body { background: #0f172a; padding: 0; margin: 0; overflow: hidden; border: none !important; outline: none !important; }
+}
+
+a { color: #4a90e2; text-decoration: none; transition: color 0.2s; }
+a:hover { color: #6aa9f0; text-decoration: underline; }
+
+h1, h2, h3, h4, h5, h6 { color: #d8d8d8; margin-top: 0; }
+.section-header { font: bold 1.4em/1.4 inherit; color: #d8d8d8; margin-bottom: 1rem; }
+.description { color: #aaa; max-width: 650px; }
+
+/* ========================================================================= */
+/* Components - Reusable UI Elements */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 15px;
+  border-radius: 4px;
+  background: #1a3265;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e6e6e6;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.button:hover { background: #234383; border-color: rgba(255, 255, 255, 0.2); }
+.button-primary { background: #4a90e2; color: #fff; border: none; font-weight: 500; }
+.button-primary:hover { background: #3a80d2; }
+.button-danger { background: #e74c3c; color: #fff; }
+.button-danger:hover { background: #d44333; }
+.button-remove { background: #7f1d2f; color: #fff; border: none; padding: 6px 12px; font-size: 13px; }
+.button-remove:hover { background: #9c2539; }
+
+.pill { display: inline-block; background: rgba(74, 144, 226, 0.2); color: #4a90e2; border-radius: 30px; padding: 3px 10px; font-size: 12px; margin-left: 6px; vertical-align: middle; }
+.alpha-pill { background: rgba(227, 92, 92, 0.2); color: #e84545; border-radius: 12px; padding: 3px 10px; font-size: 10px; margin-left: 8px; }
+
+.frost-logo { width: 80px; height: 80px; margin-bottom: 1rem; transition: all 0.3s ease; filter: drop-shadow(0 0 5px rgba(74, 144, 226, 0.3)); }
+.frost-logo:hover { filter: drop-shadow(0 0 8px rgba(74, 144, 226, 0.6)); transform: scale(1.05); }
+.frost-logo-small { width: 48px; height: 48px; margin-bottom: 8px; }
+
+pre.code-display {
+  font: 13px/1.4 monospace;
+  background: rgba(15, 25, 45, 0.7);
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+  overflow-x: auto;
+  max-width: 650px;
+  color: #e6e6e6;
+  border: 1px solid rgba(100, 140, 210, 0.3);
+}
+.error-text { color: #e74c3c; margin-top: 5px; }
+
+.input-group { display: flex; align-items: center; margin-bottom: 15px; }
+.input-group input { flex: 1; margin-right: 10px; }
+.input-group-vertical { display: flex; flex-direction: column; margin-bottom: 15px; }
+.input-group-vertical input { margin-bottom: 8px; }
+
+.input-with-button { display: flex; width: 100%; box-sizing: border-box; }
+.input-with-button > * { margin: 0; box-sizing: border-box; }
+.input-with-button input { flex: 1; height: 36px; border-radius: 4px 0 0 4px; padding: 8px 12px; border: 1px solid rgba(255, 255, 255, 0.1); border-right: none; }
+.input-with-button .input-actions { display: flex; gap: 8px; }
+.input-with-button .button { height: 36px; padding: 0 15px; }
+.input-with-button .input-actions .button:first-child { border-radius: 0 4px 4px 0; border-left: none; }
+
+.action-buttons { display: flex; gap: 10px; margin-top: 15px; }
+
+/* ========================================================================= */
+/* Forms - Input Elements */
+input[type="text"], input[type="password"], input[type="email"], input[type="url"], input[type="number"], input:not([type="checkbox"]):not([type="radio"]) {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgba(100, 140, 210, 0.3);
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+  background: rgba(20, 30, 50, 0.6);
+  color: #e6e6e6;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus { border-color: #4a90e2; box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3); outline: none; }
+
+select {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgba(100, 140, 210, 0.3);
+  border-radius: 4px;
+  font-size: 14px;
+  background: rgba(20, 30, 50, 0.6);
+  color: #e6e6e6;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+select:focus { border-color: #4a90e2; box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3); outline: none; }
+
+textarea {
+  padding: 10px;
+  border: 1px solid rgba(100, 140, 210, 0.3);
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+  background: rgba(20, 30, 50, 0.6);
+  color: #e6e6e6;
+  min-height: 100px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+textarea:focus { border-color: #4a90e2; box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3); outline: none; }
+
+.checkbox-container { display: flex; align-items: center; margin-bottom: 10px; }
+input[type="checkbox"] { margin-right: 10px; width: 16px; height: 16px; accent-color: #4a90e2; cursor: pointer; }
+
+/* ========================================================================= */
+/* Utilities - Reusable Classes */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-left { text-align: left; }
+.mt-1 { margin-top: 0.5rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mb-2 { margin-bottom: 1rem; }
+.flex { display: flex; }
+.flex-column { display: flex; flex-direction: column; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.p-1 { padding: 0.5rem; }
+.p-2 { padding: 1rem; }
+.p-3 { padding: 1.5rem; }
+.m-1 { margin: 0.5rem; }
+.m-2 { margin: 1rem; }
+.m-3 { margin: 1.5rem; }
+.w-100 { width: 100%; }
+.w-75 { width: 75%; }
+.w-50 { width: 50%; }
+.w-25 { width: 25%; }
+
+.status-ok { color: #00b894; }
+.status-warning { color: #fdcb6e; }
+.status-error { color: #e74c3c; }
+
+/* ========================================================================= */
+/* Compatibility - Legacy and Miscellaneous */
+.group-container, .share-container { margin-bottom: 20px; }
+.input-valid { border-color: rgba(46, 204, 113, 0.5) !important; }
+.input-invalid { border-color: rgba(231, 76, 60, 0.5) !important; }
+.text-small { font-size: 0.85em; }
+.text-muted { color: #999; }
+.text-bold { font-weight: bold; }
+.divider { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 15px 0; }
+.fade { opacity: 0.7; }
+
+.alert { padding: 10px 15px; border-radius: 4px; margin-bottom: 15px; }
+.alert-info { background: rgba(52, 152, 219, 0.2); border: 1px solid rgba(52, 152, 219, 0.3); }
+.alert-warning { background: rgba(243, 156, 18, 0.2); border: 1px solid rgba(243, 156, 18, 0.3); }
+.alert-error { background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.3); }
+.alert-success { background: rgba(46, 204, 113, 0.2); border: 1px solid rgba(46, 204, 113, 0.3); }
+
+/* Icon and Navigation Alignment Fix */
+/* Remove the problematic code first */
+
+/* Add a targeted icon alignment fix that works with the existing structure */
+.tab-button,
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Ensure SVG icons align properly with text */
+.tab-button svg,
+.button svg {
+  flex-shrink: 0;
+  position: relative;
+  top: 0;
+}
+
+/* Fix alignment in tabs navigation */
+.tabs-navigation {
+  display: flex;
+  align-items: center;
+}
+
+/* Ensure tabs have proper alignment */
+.tab-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Make sure button text is properly aligned */
+.button span,
+.tab-button span {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Responsive Navigation for Options page */
+@media (max-width: 720px) {
+  /* Make tabs stack vertically (icon above text) */
+  .tabs-navigation {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .tab-button {
+    flex-direction: column;
+    padding: 8px 12px;
+    gap: 4px;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .tab-button svg {
+    margin: 0 auto 4px;
+    display: block;
+  }
+  
+  .tab-button span {
+    font-size: 12px;
+    text-align: center;
+    display: block;
+    width: 100%;
+  }
+  
+  /* Center the tabs in the navigation bar */
+  .tabs-nav-wrapper {
+    display: flex;
+    justify-content: center;
+  }
+  
+  /* Add more room for the stacked text */
+  .tabs-container {
+    padding-bottom: 10px;
+  }
+  
+  /* Ensure the content adjusts properly */
+  .tab-content {
+    padding-top: 10px;
+  }
+}
+
+/* Console styling */
+.console-container {
+  margin-bottom: 20px;
+}
+
+.console-output {
+  background: rgba(13, 25, 45, 0.7);
+  border: 1px solid rgba(100, 140, 210, 0.3);
+  border-radius: 6px;
+  color: #e6e6e6;
+  font-family: monospace;
+  font-size: 13px;
+  height: 350px;
+  margin: 15px 0;
+  overflow-y: auto;
+  padding: 10px;
+  width: 100%;
+}
+
+.console-entry {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  line-height: 1.5;
+  margin-bottom: 4px;
+  padding: 4px 0;
+}
+
+.console-timestamp {
+  color: #4a90e2;
+  display: inline-block;
+  margin-right: 10px;
+  user-select: none;
+}
+
+.console-message {
+  color: #e6e6e6;
+}
+
+.console-info {
+  color: #e6e6e6;
+}
+
+.console-warn {
+  color: #fdcb6e;
+}
+
+.console-error {
+  color: #e74c3c;
+}
+
+.console-success {
+  color: #00b894;
+}
+
+.console-empty {
+  color: #888;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+}
+
+.console-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+/* Add scrollbar styling for the console */
+.console-output::-webkit-scrollbar {
+  width: 8px;
+}
+
+.console-output::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.console-output::-webkit-scrollbar-thumb {
+  background: rgba(100, 140, 210, 0.3);
+  border-radius: 4px;
+}
+
+.console-output::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 140, 210, 0.5);
+}
+
+/* Table styles - Global enhancements for all tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+/* Dark background for table headers with left-aligned text */
+th {
+  background: rgba(30, 45, 75, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e6e6e6;
+  font-weight: 500;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+/* Basic cell styling */
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  text-align: left;
+}
+
+/* Center content for cells with buttons or checkboxes */
+.checkbox-cell,
+.action-cell,
+td:has(input[type="checkbox"]),
+td:has(button) {
+  text-align: center;
+}
+
+/* Alternating row colors for better readability */
+tr:nth-child(even) {
+  background-color: rgba(30, 45, 75, 0.3);
+}
+
+/* Hover effect for interactive rows */
+tr:hover:not(thead tr) {
+  background-color: rgba(74, 144, 226, 0.1);
+}
+
+/* Responsive table handling */
+@media (max-width: 768px) {
+  /* Table container to allow horizontal scrolling on small screens */
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Ensure all tables are minimally responsive */
+  table {
+    min-width: 100%;
+    table-layout: fixed;
+  }
+}
+
+/* Text overflow handling for all tables */
+td.overflow-cell,
+td.pubkey-cell,
+td.address-cell,
+td.txid-cell,
+td:has(code),
+td:has(pre) {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* When hovering over cells with hidden text, show the full content */
+td.overflow-cell:hover,
+td.pubkey-cell:hover,
+td.address-cell:hover,
+td.txid-cell:hover,
+td:has(code):hover,
+td:has(pre):hover {
+  white-space: normal;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+  background: rgba(30, 45, 75, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Make sure table headers define the minimum width */
+table th {
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+/* Ensure tables with potentially long content are wrapped in responsive containers */
+.peers-table,
+.utxo-table,
+.tx-table,
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Table responsiveness - Works with existing styles */
+/* Wrap tables in responsive containers */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+/* Handle long text in table cells more gracefully */
+td.long-text {
+  max-width: 15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Show full text on hover for truncated cells */
+td.long-text:hover {
+  overflow: visible;
+  white-space: normal;
+  background: #1e293b;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure minimum column widths based on content */
+table {
+  table-layout: auto;
+}
+
+/* Keep button cells centered while text cells remain left-aligned */
+td.action-cell,
+td.button-cell,
+td.checkbox-cell {
+  text-align: center;
+}
+
+/* Make sure tables don't break the layout on small screens */
+@media (max-width: 720px) {
+  table {
+    width: 100%;
+    /* Keep table-layout as auto to respect content size */
+  }
+  
+  /* Adjust cell padding on small screens */
+  th, td {
+    padding: 6px 8px;
+  }
+}
+
+/* Specific fixes for Wallet component tables */
+
+/* UTXO table improvements */
+.utxo-section table td:first-child {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ensure transaction tables stay within their containers */
+.transaction-section .tx-tab-content {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Fix for table containers to prevent page overflow */
+.tx-table-container,
+.utxo-list {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Better handle long texts in UTXO and Transaction tables */
+.txid-link {
+  display: inline-block;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Fix conflicts in table layout properties */
+@media (max-width: 768px) {
+  .tx-table,
+  .utxo-section table {
+    table-layout: auto;
+    min-width: 100%;
+  }
+  
+  /* Ensure UTXO location cells don't grow too wide */
+  .utxo-section table th:first-child,
+  .utxo-section table td:first-child {
+    width: 50%;
+  }
+}

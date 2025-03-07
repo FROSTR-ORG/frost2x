@@ -1,0 +1,36 @@
+/* prompt.css - Styles for prompt.html in Frostr Chrome Extension */
+/* Generated: March 06, 2025 */
+
+@import 'global.css';
+
+/* ========================================================================= */
+/* Modal - Overlay Dialogs */
+.modal { background: rgba(255, 255, 255, 0.974); width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.modal-content { padding: 0 20px; width: 100%; font-size: 1.3rem; }
+.modal-header { font-weight: bold; margin: 20px 0; color: #000; }
+.modal-body { overflow-y: auto; max-height: 70vh; font-size: 1rem; margin-bottom: 20px; color: #000; }
+.modal-footer { display: flex; justify-content: space-around; margin-bottom: 20px; width: 100%; }
+.modal-footer button { padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; border: none; font-weight: bold; }
+.modal-cancel { background: #e0e0e0; color: #333; }
+.modal-cancel:hover { background: #d0d0d0; }
+.modal-confirm { background: #3498db; color: #fff; }
+.modal-confirm:hover { background: #2980b9; }
+
+.qr-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.qr-modal { background: #1e2a42; border-radius: 8px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); width: 300px; max-width: 90%; padding: 20px; }
+.qr-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.qr-modal-header h4 { margin: 0; color: #fff; font-size: 18px; }
+.qr-close-button { background: transparent; border: none; color: #aaa; font-size: 24px; cursor: pointer; }
+.qr-code-container { background: #fff; padding: 15px; border-radius: 4px; display: flex; justify-content: center; margin-bottom: 15px; }
+.qr-address { font: 12px/1.4 monospace; word-break: break-all; color: #ddd; text-align: center; }
+
+/* ========================================================================= */
+/* Tables - Data Presentation */
+table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+table th { text-align: left; padding: 10px; border-bottom: 1px solid #333; font-weight: 600; color: #aaa; }
+table td { padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+table tr:hover { background: rgba(35, 50, 75, 0.6); }
+table input { width: 100%; box-sizing: border-box; }
+table .checkbox-cell { text-align: center; width: 80px; }
+table .checkbox-cell input[type="checkbox"] { margin: 0 auto; display: block; }
+table .action-cell { text-align: center; width: 100px; }

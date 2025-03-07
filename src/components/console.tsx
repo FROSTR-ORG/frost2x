@@ -81,7 +81,7 @@ export default function Console() {
       
       <div className="console-controls">
         <button className="button" onClick={clear}>Clear Console</button>
-        <button className="button button-warning" onClick={reset}>Reset Node</button>
+        <button className="button button-reset" onClick={reset}>Reset Node</button>
       </div>
     </div>
   );

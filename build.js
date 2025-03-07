@@ -8,13 +8,16 @@ esbuild
   .build({
     bundle: true,
     entryPoints: {
-      'popup.build': './src/popup.tsx',
-      'styles.build': './src/styles/styles.css',
-      'prompt.build': './src/prompt.tsx',
-      'options.build': './src/options.tsx',
-      'background.build': './src/background.ts',
-      'content-script.build': './src/content-script.ts',
-      'nostr-provider': './src/nostr-provider.ts'
+      'popup.build'          : './src/popup.tsx',
+      'prompt.build'         : './src/prompt.tsx',
+      'options.build'        : './src/options.tsx',
+      'background.build'     : './src/background.ts',
+      'content-script.build' : './src/content-script.ts',
+      'nostr-provider'       : './src/nostr-provider.ts',
+      'global.styles.build'  : './src/styles/global.css',
+      'options.styles.build' : './src/styles/options.css',
+      'popup.styles.build'   : './src/styles/popup.css',
+      'prompt.styles.build'  : './src/styles/prompt.css'
     },
     outdir: './extension',
     sourcemap: prod ? false : 'inline',

@@ -26,7 +26,7 @@ export default function Utxos({ address, showMessage }: Props) {
             <thead>
               <tr>
                 <th>Location</th>
-                <th>Value</th>
+                <th>Value (sats)</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -45,8 +45,8 @@ export default function Utxos({ address, showMessage }: Props) {
                         {outpoint}
                       </a>
                     </td>
-                    <td>{formatAmount(utxo.value)} sats</td>
-                    <td>{utxo.status.confirmed ? 'Confirmed' : 'Unconfirmed'}</td>
+                    <td>{formatAmount(utxo.value)}</td>
+                    <td>{utxo.status.confirmed ? 'confirmed' : 'Unconfirmed'}</td>
                   </tr>
                 )
               })}
