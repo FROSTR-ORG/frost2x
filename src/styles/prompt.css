@@ -4,190 +4,17 @@
 @import 'global.css';
 
 /* ========================================================================= */
-/* Base Styles */
-body {
-  margin: 0;
-  padding: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: #1e293b;
-  color: #e2e8f0;
-  height: 100vh;
-  width: 100vw;
-  overflow-y: auto;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
-}
-
-#main {
-  display: flex;
-  flex-direction: column;
-  height: 100vh; /* Fixed height to contain everything */
-  padding: 10px;
-  box-sizing: border-box;
-  position: relative; /* For absolute positioning of children */
-  overflow: hidden; /* Prevent main from scrolling */
-}
-
-/* ========================================================================= */
-/* Prompt Content */
-.prompt-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  padding: 5px;
-  margin: 0 auto;
-  padding-bottom: 160px; /* Space for buttons at bottom */
-  overflow-y: auto; /* This container scrolls */
-  height: 100%; /* Fill the main container */
-  box-sizing: border-box;
-}
-
-.prompt-header {
-  text-align: center;
-  margin-bottom: 15px;
-}
-
-.prompt-hostname {
-  font-size: 200%;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.prompt-content {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 20px;
-  min-height: 0;
-  overflow: hidden;
-}
-
-/* JSON display */
-.json-container {
-  background-color: #0f172a;
-  border-radius: 4px;
-  padding: 8px;
-  margin: 5px 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  border: 1px solid #334155;
-  max-height: calc(100vh - 300px); /* Dynamic max height based on viewport */
-}
-
-pre.json-content {
-  margin: 0;
-  color: #e2e8f0;
-  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  white-space: pre-wrap; /* Allow wrapping */
-  word-wrap: break-word; /* Break long words */
-  word-break: break-word; /* Break words at arbitrary points */
-}
-
-/* JSON syntax highlighting */
-.json-key {
-  color: #93c5fd; /* light blue */
-}
-
-.json-string {
-  color: #86efac; /* light green */
-}
-
-.json-number {
-  color: #fb923c; /* orange */
-}
-
-.json-boolean {
-  color: #fbbf24; /* yellow */
-}
-
-/* ========================================================================= */
-/* Buttons */
-.buttons-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  padding: 15px;
-  background-color: #1e293b;
-  z-index: 100;
-  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06);
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 10px; /* Add consistent gap between button rows */
-}
-
-.button-row {
-  display: flex;
-  width: 100%;
-  gap: 10px; /* Increase gap between buttons in the same row */
-  min-height: 42px; /* Ensure consistent button height */
-}
-
-.button-full-width {
-  flex: 1;
-}
-
-.button-half-width {
-  flex: 1;
-}
-
-.prompt-button {
-  background-color: #334155;
-  color: #e2e8f0;
-  border: none;
-  border-radius: 5px;
-  padding: 12px 15px; /* Increase padding for better button size */
-  cursor: pointer;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-  font-weight: 600;
-  transition: all 0.2s;
-  text-align: center;
-  font-size: 12px;
-  letter-spacing: 0.7px;
-  text-transform: uppercase;
-  height: 100%; /* Make button fill the row height */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.prompt-button:hover {
-  background-color: #475569;
-}
-
-.authorize-button {
-  background-color: #10b981;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-}
-
-.authorize-button:hover {
-  background-color: #059669;
-}
-
-.reject-button {
-  background-color: #7b0000;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-}
-
-.reject-button:hover {
-  background-color: #9b0000;
-}
-
-/* ========================================================================= */
 /* Modal - Overlay Dialogs */
-.modal { background: rgba(31, 41, 55, 0.95); width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.modal { background: rgba(255, 255, 255, 0.974); width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .modal-content { padding: 0 20px; width: 100%; font-size: 1.3rem; }
-.modal-header { font-weight: bold; margin: 20px 0; color: #e2e8f0; }
-.modal-body { overflow-y: auto; max-height: 70vh; font-size: 1rem; margin-bottom: 20px; color: #e2e8f0; }
+.modal-header { font-weight: bold; margin: 20px 0; color: #000; }
+.modal-body { overflow-y: auto; max-height: 70vh; font-size: 1rem; margin-bottom: 20px; color: #000; }
 .modal-footer { display: flex; justify-content: space-around; margin-bottom: 20px; width: 100%; }
 .modal-footer button { padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; border: none; font-weight: bold; }
-.modal-cancel { background: #475569; color: #e2e8f0; }
-.modal-cancel:hover { background: #64748b; }
-.modal-confirm { background: #3b82f6; color: #fff; }
-.modal-confirm:hover { background: #2563eb; }
+.modal-cancel { background: #e0e0e0; color: #333; }
+.modal-cancel:hover { background: #d0d0d0; }
+.modal-confirm { background: #3498db; color: #fff; }
+.modal-confirm:hover { background: #2980b9; }
 
 .qr-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .qr-modal { background: #1e2a42; border-radius: 8px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); width: 300px; max-width: 90%; padding: 20px; }
@@ -200,30 +27,10 @@ pre.json-content {
 /* ========================================================================= */
 /* Tables - Data Presentation */
 table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
-table th { text-align: left; padding: 10px; border-bottom: 1px solid #475569; font-weight: 600; color: #94a3b8; }
+table th { text-align: left; padding: 10px; border-bottom: 1px solid #333; font-weight: 600; color: #aaa; }
 table td { padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-table tr:hover { background: rgba(51, 65, 85, 0.6); }
+table tr:hover { background: rgba(35, 50, 75, 0.6); }
 table input { width: 100%; box-sizing: border-box; }
 table .checkbox-cell { text-align: center; width: 80px; }
 table .checkbox-cell input[type="checkbox"] { margin: 0 auto; display: block; }
 table .action-cell { text-align: center; width: 100px; }
-
-/* Add styling for scrollbars to make them more visible */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 0; /* Hide horizontal scrollbar */
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(71, 85, 105, 0.8);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.9);
-}

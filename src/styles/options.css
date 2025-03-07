@@ -7,7 +7,7 @@
 /* Layout - Options Page Specific */
 body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; overflow-x: hidden; }
 
-.container { width: 100%; max-width: 700px; padding: 12px 0; margin-bottom: 1.5rem; }
+.container { width: 100%; max-width: 700px; padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 1.5rem; }
 .content-container { width: 100%; margin-top: 10px; }
 
 .page-header {
@@ -28,7 +28,9 @@ body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; o
 
 /* ========================================================================= */
 /* Forms - Settings Specific */
+.settings-form { margin-bottom: 30px; }
 .settings-section { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+.settings-section:last-child { border-bottom: none; }
 .settings-section h2 { font-size: 22px; color: #fff; margin-bottom: 20px; }
 
 .form-row { display: flex; flex-direction: column; margin-bottom: 20px; }
@@ -42,69 +44,13 @@ body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; o
 .setting-item { display: flex; align-items: flex-start; margin-bottom: 15px; }
 .setting-item input[type="checkbox"] { margin: 3px 10px 0 0; }
 
-/* Add special styling for checkbox containers */
-.checkbox-container {
-  flex-direction: row;
-  align-items: flex-start;
-}
-
-/* Add styling for peer table */
-.pubkey-cell {
-  max-width: 280px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: monospace;
-  font-size: 12px;
-}
-
-/* Ensure the cell maintains these properties even when highlighted */
-tr:hover .pubkey-cell {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Style for checkbox cells in the peer table */
-.checkbox-cell {
-  width: 80px;
-  text-align: center;
-}
-
-.checkbox-container input[type="checkbox"] {
-  margin-right: 10px;
-  margin-top: 3px; /* Align with first line of text */
-}
-
-.checkbox-container label {
-  margin-bottom: 0;
-}
-
 /* ========================================================================= */
 /* Tabs - Navigation for Options */
 .tabs-navigation { display: flex; width: 100%; margin-bottom: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; overflow: hidden; }
 .tab-button { flex: 1; padding: 10px 15px; background: none; border: none; color: rgba(255, 255, 255, 0.7); cursor: pointer; font-size: 14px; transition: background-color 0.3s, color 0.3s; justify-content: center; }
 .tab-button:hover { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9); }
 .tab-button.active { background: rgba(255, 255, 255, 0.15); color: #4a90e2; }
-
-/* Updated tab-content to center its content */
-.tab-content { 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  margin: 0 auto;
-}
-
-.tab-panel { 
-  background: transparent; 
-  padding: 15px 2rem; 
-  border-radius: 0 0 8px 8px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+.tab-panel { background: transparent; padding: 15px 0; border-radius: 0 0 8px 8px; }
 
 .tx-navigation { display: flex; max-width: 100%; }
 .tx-navigation .tab-button { padding: 0.5rem 1rem; border-bottom: 2px solid transparent; transition: all 0.2s ease; }
@@ -112,98 +58,15 @@ tr:hover .pubkey-cell {
 
 /* ========================================================================= */
 /* Wallet - Financial UI Components */
-.wallet-balance {
-  display: flex;
-  flex-direction: column;
-  height: 160px; /* Reduced from 200px */
-  padding: 0;
-  overflow: hidden;
-  border-radius: 8px;
-  box-shadow: none; /* Removed drop shadow */
-  margin-bottom: 30px; /* Additional bottom margin */
-  border: 1px solid rgba(100, 140, 210, 0.3); /* Added border to replace shadow */
-}
-
-/* Main balance section - takes up 70% of the height instead of 75% */
-.balance-main {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 70%;
-  padding: 15px; /* Reduced padding */
-  background: rgba(30, 45, 75, 0.7);
-  text-align: center;
-}
-
-/* Large balance amount with monospace and comma separation */
-.balance-amount {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 36px;
-  font-weight: 600;
-  margin: 5px 0;
-  letter-spacing: -0.5px;
-}
-
-/* Style the "sats" text in purple with more spacing */
-.unit {
-  color: #a78bfa; /* Purple color */
-  font-size: 20px;
-  margin-left: 12px; /* Increased from 5px for more space */
-}
-
-/* Bottom section with confirmed and pending balances */
-.balance-details {
-  display: flex;
-  height: 30%; /* Increased from 25% for better proportions */
-  width: 100%;
-}
-
-/* Confirmed balance section */
-.balance-confirmed {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: rgba(16, 185, 129, 0.15); /* Subtle green */
-  padding: 10px;
-}
-
-/* Pending balance section */
-.balance-unconfirmed {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: rgba(245, 158, 11, 0.15); /* Subtle yellow */
-  padding: 10px;
-}
-
-/* Balance labels */
-.balance-label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 4px;
-}
-
-/* Balance values in bottom sections */
-.balance-confirmed .balance-value,
-.balance-unconfirmed .balance-value {
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.balance-confirmed .balance-value {
-  color: #10b981; /* Green for confirmed */
-}
-
-.balance-unconfirmed .balance-value {
-  color: #f59e0b; /* Amber for pending */
-}
+.wallet-balance { padding: 20px; margin-bottom: 25px; background: rgba(30, 45, 75, 0.5); border-radius: 8px; border: 1px solid rgba(100, 140, 210, 0.3); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+.balance-header { font-size: 18px; color: #aaa; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+.balance-header .refresh-button { background: transparent; border: none; color: #4a90e2; cursor: pointer; font-size: 14px; padding: 0; }
+.balance-header .refresh-button:hover { color: #6aa9f0; text-decoration: underline; }
+.balance-amount { font: 500 36px/1.4 inherit; color: #fff; text-align: center; margin: 15px 0; }
+.balance-amount .unit { font-size: 20px; color: #aaa; margin-left: 5px; }
+.balance-confirmed, .balance-unconfirmed { font-size: 16px; margin: 8px 0; display: flex; justify-content: space-between; }
+.balance-label { color: #aaa; }
+.balance-value { font-weight: 500; }
 
 .tx-info-bar { display: flex; justify-content: space-between; background: rgba(42, 57, 89, 0.5); padding: 0.5rem 1rem; border-radius: 4px 4px 0 0; border: 1px solid rgba(255, 255, 255, 0.1); border-bottom: none; }
 .info-stat { display: flex; align-items: center; white-space: nowrap; }
@@ -231,6 +94,11 @@ tr:hover .pubkey-cell {
 
 /* ========================================================================= */
 /* Console - Terminal Style Output */
+.console-container {
+  width: 100%;
+  margin-bottom: 30px;
+}
+
 .console-output {
   background: rgba(13, 25, 45, 0.7);
   border: 1px solid rgba(100, 140, 210, 0.3);
@@ -250,7 +118,6 @@ tr:hover .pubkey-cell {
   line-height: 1.5;
   margin-bottom: 4px;
   padding: 4px 0;
-  text-align: left;
 }
 
 .console-timestamp {
@@ -258,12 +125,10 @@ tr:hover .pubkey-cell {
   display: inline-block;
   margin-right: 10px;
   user-select: none;
-  text-align: left;
 }
 
 .console-message {
   color: #e6e6e6;
-  text-align: left;
 }
 
 .console-info {
@@ -293,7 +158,6 @@ tr:hover .pubkey-cell {
   display: flex;
   gap: 10px;
   margin-top: 15px;
-  align-self: center;
 }
 
 /* Add scrollbar styling for the console */
@@ -365,183 +229,4 @@ tr:hover .pubkey-cell {
     padding: 6px 8px;
     font-size: 13px;
   }
-}
-
-/* Compact checkbox cell styling */
-.utxo-section table th:first-child,
-.utxo-section table td.checkbox-cell {
-  width: 24px;
-  min-width: 24px;
-  max-width: 24px;
-  padding: 0;
-  text-align: center;
-}
-
-.utxo-section table td.checkbox-cell input[type="checkbox"] {
-  margin: 0;
-  vertical-align: middle;
-}
-
-/* Settings action buttons */
-.settings-actions {
-  display: flex;
-  justify-content: flex-start;
-  gap: 10px;
-  margin-top: 20px;
-  padding-top: 15px;
-}
-
-.settings-actions .button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.button-primary {
-  background: rgba(74, 144, 226, 0.8);
-  color: white;
-  border: none;
-}
-
-.button-primary:hover {
-  background: rgba(74, 144, 226, 1);
-}
-
-.button-primary:disabled {
-  background: rgba(74, 144, 226, 0.3);
-  cursor: not-allowed;
-}
-
-.button-secondary {
-  background: transparent;
-  color: #e6e6e6;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.button-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-/* Make the console output and its elements left-aligned */
-.tab-panel .console-output {
-  align-self: stretch; /* Makes the console output take full width */
-  width: 100%;
-}
-
-/* Ensure console text content is left-aligned */
-.console-entry {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  line-height: 1.5;
-  margin-bottom: 4px;
-  padding: 4px 0;
-  text-align: left; /* Explicitly set text alignment */
-}
-
-/* Make the console timestamp and message left-aligned */
-.console-timestamp,
-.console-message {
-  text-align: left;
-}
-
-/* Make console controls container take full width but keep buttons centered */
-.console-controls {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-  align-self: center; /* Center the buttons container */
-}
-
-/* Updated styling for action buttons (save buttons) */
-.action-button {
-  background: rgba(74, 144, 226, 0.8);
-  color: white;
-  transition: all 0.2s ease;
-}
-
-.action-button:hover:not(:disabled) {
-  background: rgba(74, 144, 226, 1);
-}
-
-.action-button:disabled {
-  background: rgba(74, 144, 226, 0.3);
-  color: rgba(255, 255, 255, 0.5);
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* Style for input action containers */
-.input-actions {
-  display: flex;
-  gap: 8px;
-}
-
-/* Style specifically for action buttons (save buttons) in input sections */
-.input-with-button .action-button {
-  background: rgba(74, 144, 226, 0.8);
-  color: white;
-}
-
-.input-with-button .action-button:hover:not(:disabled) {
-  background: rgba(74, 144, 226, 1);
-}
-
-.input-with-button .action-button:disabled {
-  background: rgba(74, 144, 226, 0.3);
-  color: rgba(255, 255, 255, 0.5);
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* Style for input action containers - keep this */
-.input-actions {
-  display: flex;
-  gap: 8px;
-}
-
-/* New notification container class for settings */
-.notification-container {
-  margin-right: auto;
-  text-align: left;
-  flex-shrink: 0;
-  flex-basis: auto;
-  align-self: center;
-  display: flex;
-  align-items: center;
-  min-height: 36px; /* Match button height */
-}
-
-.notification-container p {
-  margin: 0;
-  padding: 0;
-}
-
-/* Filter controls styling */
-.filter-controls {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  width: 100%;
-  margin-bottom: 15px;
-}
-
-.filter-input {
-  flex: 1;
-  background: rgba(30, 45, 75, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  padding: 8px 12px;
-  color: #e6e6e6;
-  font-size: 14px;
-}
-
-.filter-input:focus {
-  border-color: rgba(74, 144, 226, 0.5);
-  outline: none;
-}
-
-.filter-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
 }

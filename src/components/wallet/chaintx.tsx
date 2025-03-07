@@ -56,7 +56,7 @@ export default function ChainTransactions({ address, showMessage }: Props) {
                   <th>Transaction ID</th>
                   <th>Amount (sats)</th>
                   <th>Fee (sats)</th>
-                  <th>Confirmed</th>
+                  <th>Block Height</th>
                 </tr>
               </thead>
               <tbody>
@@ -66,7 +66,7 @@ export default function ChainTransactions({ address, showMessage }: Props) {
                     const amount = calculateTxAmount(tx)
                     const fee    = tx.fee || 0
                     const height = (tx.status?.block_height)
-                      ? `block ${tx.status.block_height}`
+                      ? `${tx.status.block_height}`
                       : 'unconfirmed'
                     
                     return (
