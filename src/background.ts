@@ -1,82 +1,80 @@
-import browser         from 'webextension-polyfill'
-import * as nip19      from 'nostr-tools/nip19'
-
-import { BifrostNode }  from '@frostr/bifrost'
-import { Mutex }        from 'async-mutex'
-import { FrostrWallet } from './lib/wallet.js'
+import browser       from 'webextension-polyfill'
+import { Mutex }     from 'async-mutex'
+import { init_node } from './lib/node.js'
 
 import {
-  showNotification,
-  getPosition
-} from './lib/common.js'
+  fetchExtensionStore,
+  onExtensionStoreUpdate
+} from './stores/extension.js'
 
 import {
-  init_node,
-  keep_alive
-} from './lib/node.js'
+  handleSignerRequest,
+  handleNodeRequest,
+  handleLinkRequest,
+  handleWalletRequest
+} from './handlers/index.js'
 
 import {
-  getPermissionStatus,
-  updatePermission,
-  is_permission_required
-} from './lib/permissions.js'
+  getPosition,
+  showNotification
+} from './lib/browser.js'
 
 import {
-  getEventHash,
-  validateEvent
-} from 'nostr-tools/pure'
+  is_permission_required,
+  getSignerPermissionStatus,
+  updateSignerPermission,
+  getWalletPermissionStatus,
+  updateWalletPermission
+} from './permissions/index.js'
 
 import { 
-  PromptResolver,
-  ProfilePointer,
-  EventPointer,
-  Nip19Data,
   ContentScriptMessage,
-  Message,
-  ExtensionStore
+  ExtensionStore,
+  GlobalState,
+  Message
 } from './types/index.js'
 
 import * as CONST  from './const.js'
-import * as crypto from './lib/crypto.js'
 
-let promptMutex                        = new Mutex()
-let releasePromptMutex: () => void     = () => {}
-let openPrompt : PromptResolver | null = null
-let node       : BifrostNode    | null = null
+let global : GlobalState = {
+  mutex  : { lock : new Mutex(), release : () => {} },
+  prompt : null,
+  node   : null
+}
 
+initializeExtension()
+
+/**
+ * Handle extension installation event.
+ */
 browser.runtime.onInstalled.addListener(async (details: browser.Runtime.OnInstalledDetailsType) => {
+  // Open the options page if the extension is installed.
   if (details.reason === 'install') browser.runtime.openOptionsPage()
-  node = await init_node()
+  // Initialize the extension.
+  await initializeExtension()
 })
 
-browser.storage.onChanged.addListener(async (changes: { [key: string]: any }, area: string) => {
-  if (area === 'sync') {
-    if ('store' in changes) {
-      node = await init_node()
-    }
-  }
-})
-
+/**
+ * Handle messages from browser runtime.
+ */
 browser.runtime.onMessage.addListener((
   message : unknown,
   sender  : browser.Runtime.MessageSender
 ) => {
   const msg = message as Message
-  if (msg.openSignUp) {
-    openSignUpWindow()
-    if (sender.tab?.windowId) {
-      browser.windows.remove(sender.tab.windowId)
-    }
+
+  if (msg.prompt) {
+    handlePromptMessage(msg, sender)
   } else {
-    if (msg.prompt) {
-      handlePromptMessage(msg, sender)
-    } else {
-      return handleContentScriptMessage(msg as ContentScriptMessage)
-    }
+    return handleContentScriptMessage(msg as ContentScriptMessage)
   }
+
   return true
 })
 
+/**
+ * Handle messages from external sources.
+ */
 browser.runtime.onMessageExternal.addListener(async (
   message : unknown,
   sender  : browser.Runtime.MessageSender
@@ -86,118 +84,119 @@ browser.runtime.onMessageExternal.addListener(async (
   return handleContentScriptMessage({ type, params, host: extensionId })
 })
 
+/**
+ * Handle window removal event.
+ */
 browser.windows.onRemoved.addListener((_: number) => {
-  if (openPrompt) {
+  if (global.prompt) {
     // calling this with a simple "no" response will not store anything, so it's fine
     // it will just return a failure
     handlePromptMessage({ accept: false }, null)
   }
 })
 
-async function handleContentScriptMessage(msg : ContentScriptMessage) {
-  if (is_permission_required(msg.type)) {
-    return handlePermissionedRequest(msg)
-  } else {
-    return handleSafeRequest(msg)
-  }
+// In your background script
+async function initializeExtension() {
+  console.log('Initializing extension')
+  global.node  = await init_node()
 }
 
-async function handleSafeRequest({ type, params } : ContentScriptMessage) {
-
-  switch (type) {
-
-    case 'node_reset':
-      node = await init_node()
-      return
-
-    case 'get_node_status':
-      return { status: node !== null ? 'running' : 'stopped' }
-    
-    case 'replace_url': {
-      let { protocol_handler } = await browser.storage.local.get([
-        'protocol_handler'
-      ]) as { protocol_handler: string }
-
-      if (!protocol_handler) return false
-
-      let { url }   = params
-      let raw       = url.split('nostr:')[1]
-      let decoded   = nip19.decode(raw) as Nip19Data
-      let nip19Type = decoded.type
-      let data      = decoded.data
-
-      const typeMap = {
-        npub     : { p_or_e: 'p', u_or_n: 'u' },
-        note     : { p_or_e: 'e', u_or_n: 'n' },
-        nprofile : { p_or_e: 'p', u_or_n: 'u' },
-        nevent   : { p_or_e: 'e', u_or_n: 'n' },
-        naddr    : { p_or_e: 'p', u_or_n: 'u' },
-        nsec     : { p_or_e: 'p', u_or_n: 'u' }
-      } as const
-
-      const replacements = {
-        raw,
-        hrp: nip19Type,
-        hex: (() => {
-          if (nip19Type === 'npub' || nip19Type === 'note') return data as string
-          if (nip19Type === 'nprofile') return (data as ProfilePointer).pubkey
-          if (nip19Type === 'nevent') return (data as EventPointer).id
-          return null
-        })(),
-        p_or_e: typeMap[nip19Type as keyof typeof typeMap]?.p_or_e ?? null,
-        u_or_n: typeMap[nip19Type as keyof typeof typeMap]?.u_or_n ?? null,
-        relay0: nip19Type === 'nprofile' ? (data as ProfilePointer).relays?.[0] ?? null : null,
-        relay1: nip19Type === 'nprofile' ? (data as ProfilePointer).relays?.[1] ?? null : null,
-        relay2: nip19Type === 'nprofile' ? (data as ProfilePointer).relays?.[2] ?? null : null
-      }
-
-      let result = protocol_handler
-      Object.entries(replacements).forEach(([pattern, value]) => {
-        if (typeof result === 'string') {
-          result = result.replace(new RegExp(`{ *${pattern} *}`, 'g'), value || '')
-        }
-      })
-
-      return result
+async function handleContentScriptMessage(msg : ContentScriptMessage) {
+  // Get the domain of the request.
+  const domain = msg.type?.split('.').at(0)
+  // If the request does not require permission,
+  if (!is_permission_required(msg.type)) {
+    switch (domain) {
+      case 'node':
+        // Handle requests to manage the node.
+        return handleNodeRequest(global, msg)
+      case 'link':
+        // Handle requests to resolve links.
+        return handleLinkRequest(msg)
+    }
+  } else {
+    // Get the permission response.
+    const res = await handlePermissionRequest(msg)
+    // If the response is not null, return it.
+    if (res !== null) return res
+    // Handle the permissioned request.
+    switch (domain) { 
+      case 'nostr':
+        return handleSignerRequest(global, msg)
+      case 'wallet':
+        return handleWalletRequest(msg)
     }
   }
 }
 
-async function handlePermissionedRequest({ type, params, host } : ContentScriptMessage) {
-  // acquire mutex here before reading policies
-  releasePromptMutex = await promptMutex.acquire()
+async function handlePromptMessage (
+  { host, type, accept, conditions }: Message,
+  sender: browser.Runtime.MessageSender | null
+) {
+  // Get the extension store.
+  const store = await fetchExtensionStore()
+  // Return the response to the prompt.
+  global.prompt?.resolve?.(accept!)
+  // Get the domain of the request.
+  const domain = type?.split('.').at(0)
 
-  let allowed = await getPermissionStatus(
-    host!,
-    type,
-    type === 'signEvent' ? params.event : undefined
-  )
+  // Update the permission status.
+  switch (domain) { 
+    case 'nostr':
+      await updateSignerPermission(host!, type!, accept!, conditions!)
+      break
+    case 'wallet':
+      updateWalletPermission(store,host!, type!, accept!)
+      break
+  }
 
-  if (allowed === true) {
-    // authorized, proceed
-    releasePromptMutex()
-    showNotification(host!, allowed, type, params)
-  } else if (allowed === false) {
-    // denied, just refuse immediately
-    releasePromptMutex()
-    showNotification(host!, allowed, type, params)
-    return {  error: { message: 'denied' } }
-  } else {
-    // ask for authorization
+  // Cleanup the prompt resolver.
+  global.prompt = null
+
+  // Release the mutex after updating policies.
+  global.mutex.release()
+
+  // close prompt
+  if (sender?.tab?.windowId) {
+    browser.windows.remove(sender.tab.windowId)
+  }
+}
+
+export async function handlePermissionRequest (
+  msg : ContentScriptMessage
+) : Promise<Record<string, string> | null> {
+  // Unpack message details.
+  const { host, type, params } = msg
+  // Get the extension store.
+  const store = await fetchExtensionStore()
+
+  // Get the notification setting from the store.
+  let show_notice = store.settings['general/notifications']
+
+  // Acquire a lock on the mutex.
+  global.mutex.release = await global.mutex.lock.acquire()
+
+  // Get the permission status for the request.
+  let allowed : boolean | null = await getPermission(store, host!, type, params)
+
+  if (allowed === null) {
     try {
-      let id = Math.random().toString().slice(4)
+      // Disable notifications.
+      show_notice = false
+      // Create a URL search params object.
       let qs = new URLSearchParams({
-        host: host!,
-        id,
-        params: JSON.stringify(params),
+        host   : host!,
+        id     : Math.random().toString().slice(4),
+        params : JSON.stringify(params),
         type
       })
-      // center prompt
+      // Get the position of the prompt.
       const { top, left } = await getPosition(CONST.PROMPT_WIDTH, CONST.PROMPT_HEIGHT)
-      // prompt will be resolved with true or false
-      let accept = await new Promise<boolean>((resolve, reject) => {
-        openPrompt = { resolve, reject }
-
+      // Get a promise that resolves to the user's response.
+      allowed = await new Promise<boolean>((resolve, reject) => {
+        // Set the prompt resolver.
+        global.prompt = { resolve, reject }
+        // Create the prompt window.
         browser.windows.create({
           url    : `${browser.runtime.getURL('prompt.html')}?${qs.toString()}`,
           type   : 'popup',
@@ -207,134 +206,42 @@ async function handlePermissionedRequest({ type, params, host } : ContentScriptM
           left   : left
         })
       })
-
-      // denied, stop here
-      if (!accept) return { error: { message: 'denied' } }
     } catch (err: any) {
-      // errored, stop here
-      releasePromptMutex()
-      return { error: { message: err.message, stack: err.stack } }
+      // Release the mutex.
+      global.mutex.release()
+      // Return an error.
+      return { message: err.message }
     }
   }
 
-  const { store } = await browser.storage.sync.get('store') as { store: ExtensionStore }
-
-  if (!store.node.peers) {
-    return { error: { message: 'no peers configured' } }
+  // If the permission has a response.
+  if (allowed !== null) {
+    // Release the mutex.
+    global.mutex.release()
+    // If the notification setting is enabled, show a notification.
+    if (show_notice) showNotification(host!, allowed, type, params)
   }
 
-  node = await keep_alive(node)
-
-  if (!node) {
-    return { error: { message: 'bifrost node is not initialized' } }
-  }
-
-  try {
-    switch (type) {
-      case 'getPublicKey': {
-        return node.group.group_pk.slice(2)
-      }
-      case 'getRelays': {
-        let results = await browser.storage.local.get('relays')
-        return results.relays || {}
-      }
-      case 'signEvent': {
-        const pubkey = node.group.group_pk.slice(2)
-        const tmpl   = { ...params.event, pubkey }
-
-        try {
-          validateEvent(tmpl)
-        } catch (error: any) {
-          return { error: { message: error.message } }
-        }
-
-        const id  = tmpl.id ?? getEventHash(tmpl)
-        const res = await node.req.sign(id)
-
-        if (!res.ok) return { error: { message: res.err } }
-
-        return { ...tmpl, id, sig: res.data }
-      }
-      case 'nip04.encrypt': {
-        let { peer, plaintext } = params
-        const res = await node.req.ecdh(peer)
-        if (!res.ok) return { error: { message: res.err } }
-        const secret = res.data.slice(2)
-        return crypto.nip04_encrypt(secret, plaintext)
-      }
-      case 'nip04.decrypt': {
-        let { peer, ciphertext } = params
-        const res = await node.req.ecdh(peer)
-        if (!res.ok) return { error: { message: res.err } }
-        const secret = res.data.slice(2)
-        return crypto.nip04_decrypt(secret, ciphertext)
-      }
-      case 'nip44.encrypt': {
-        const { peer, plaintext } = params
-        const res = await node.req.ecdh(peer)
-        if (!res.ok) return { error: { message: res.err } }
-        const secret = res.data.slice(2)
-        return crypto.nip44_encrypt(plaintext, secret)
-      }
-      case 'nip44.decrypt': {
-        const { peer, ciphertext } = params
-        const res = await node.req.ecdh(peer)
-        if (!res.ok) return { error: { message: res.err } }
-        const secret = res.data.slice(2)
-        return crypto.nip44_decrypt(ciphertext, secret)
-      }
-      case 'wallet.getAddress': {
-        return node.group.group_pk.slice(2)
-      }
-      case 'wallet.getBalance': {
-        return node.group.group_pk.slice(2)
-      }
-      case 'wallet.getUtxos': {
-        return node.group.group_pk.slice(2)
-      }
-      case 'wallet.signPsbt': {
-        return node.group.group_pk.slice(2)
-      }
-    }
-  } catch (error: any) {
-    console.error('background error:', error)
-    return { error: { message: error.message, stack: error.stack } }
-  }
+  // Handle the permission response.
+  if (allowed === true)  return null
+  if (allowed === false) return { message: 'denied' }
+  return { message: 'failed to get permission' }
 }
 
-async function handlePromptMessage (
-  { host, type, accept, conditions }: Message,
-  sender: browser.Runtime.MessageSender | null
-) {
-  // return response
-  openPrompt?.resolve?.(accept!)
+async function getPermission (
+  store : ExtensionStore,
+  host  : string,
+  type  : string,
+  params: any
+) : Promise<boolean | null> {
+  const domain = type.split('.').at(0)
 
-  // update policies
-  if (conditions) {
-    await updatePermission(host!, type!, accept!, conditions)
+  switch (domain) {
+    case 'nostr':
+      return getSignerPermissionStatus(host, type, params)
+    case 'wallet':
+      return getWalletPermissionStatus(store, host, type)
+    default:
+      return null
   }
-
-  // cleanup this
-  openPrompt = null
-
-  // release mutex here after updating policies
-  releasePromptMutex()
-
-  // close prompt
-  if (sender?.tab?.windowId) {
-    browser.windows.remove(sender.tab.windowId)
-  }
-}
-
-async function openSignUpWindow(): Promise<void> {
-  const { top, left } = await getPosition(CONST.PROMPT_WIDTH, CONST.PROMPT_HEIGHT)
-
-  browser.windows.create({
-    url    : `${browser.runtime.getURL('signup.html')}`,
-    type   : 'popup',
-    width  : CONST.PROMPT_WIDTH,
-    height : CONST.PROMPT_HEIGHT,
-    top    : top,
-    left   : left
-  })
 }

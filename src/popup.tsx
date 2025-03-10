@@ -2,7 +2,6 @@ import browser from 'webextension-polyfill'
 
 import * as nip19           from 'nostr-tools/nip19'
 import { createRoot }       from 'react-dom/client'
-import { decode_group_pkg } from '@frostr/bifrost/lib'
 
 import {
   useState,
@@ -11,55 +10,53 @@ import {
   ReactElement
 } from 'react'
 
-import type { ExtensionStore } from './types/index.js'
+import { ExtensionStoreProvider, useExtensionStore } from './stores/extension.js'
 
 function Popup() : ReactElement {
-  let [ pubKey, setPubKey ]         = useState<string | null>('')
+  const { store } = useExtensionStore()
+
+  let [ pubKey, setPubKey ]         = useState<string | null>(null)
   let [ nodeStatus, setNodeStatus ] = useState<string>('stopped')
 
   let keys = useRef<string[]>([])
 
   useEffect(() => {
-    browser.storage.sync.get(['store']).then((results: {
-      store? : ExtensionStore
-    }) => {
-      if (typeof results.store?.node?.group === 'string') {
-        const group = decode_group_pkg(results.store.node.group)
-        let hexKey  = group.group_pk.slice(2)
-        let npubKey = nip19.npubEncode(hexKey)
+    if (store.node.group !== null) {
+      const group = store.node.group
+      let hexKey  = group.group_pk.slice(2)
+      let npubKey = nip19.npubEncode(hexKey)
 
-        setPubKey(npubKey)
+      setPubKey(npubKey)
 
-        keys.current.push(npubKey)
-        keys.current.push(hexKey)
+      keys.current.push(npubKey)
+      keys.current.push(hexKey)
 
-        if (results.store?.node?.relays) {
-          let relaysList: string[] = []
-          for (let url in results.store.node.relays) {
-            if (results.store.node.relays[url].write) {
-              relaysList.push(url)
-              if (relaysList.length >= 3) break
-            }
-          }
-          if (relaysList.length) {
-            let nprofileKey = nip19.nprofileEncode({
-              pubkey: hexKey,
-              relays: relaysList
-            })
-            keys.current.push(nprofileKey)
+      if (store.node.relays) {
+        let relaysList: string[] = []
+        for (let url in store.node.relays) {
+          if (store.node.relays[url].write) {
+            relaysList.push(url)
+            if (relaysList.length >= 3) break
           }
         }
-      } else {
-        setPubKey(null)
+        if (relaysList.length) {
+          let nprofileKey = nip19.nprofileEncode({
+            pubkey: hexKey,
+            relays: relaysList
+          })
+          keys.current.push(nprofileKey)
+        }
       }
-    })
+    } else {
+      setPubKey(null)
+    }
 
     checkNodeStatus()
     
     const interval = setInterval(checkNodeStatus, 2500)
     
     return () => clearInterval(interval)
-  }, [])
+  }, [ store.node.group ])
 
   return (
     <div className="popup-container">
@@ -157,5 +154,11 @@ const container = document.getElementById('main')
 
 if (container) {
   const root = createRoot(container)
-  root.render(<Popup />)
+  root.render(
+    <>
+      <ExtensionStoreProvider>
+        <Popup />
+      </ExtensionStoreProvider>
+    </>
+  )
 }

@@ -1,5 +1,5 @@
-import { useStore } from '../store.js'
-import { usePoolHistory } from '../../hooks/explorer.js'
+import { useExtensionStore } from '../../stores/extension.js'
+import { usePoolHistory }    from '../../hooks/explorer.js'
 
 interface Props {
   address: string | null
@@ -8,7 +8,7 @@ interface Props {
 
 export default function MempoolTransactions({ address, showMessage }: Props) {
   const { data: poolTxs = [], isLoading, error } = usePoolHistory(address)
-  const { 'explorer/link_url': link_url } = useStore().store.settings
+  const { 'explorer/link_url': link_url } = useExtensionStore().store.settings
   
   // Helper functions
   const getExplorerUrl = (txid: string) => `${link_url}/tx/${txid}`

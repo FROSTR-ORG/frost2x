@@ -1,5 +1,3 @@
-import type { WalletAccount, WalletUtxo } from './types/index.js'
-
 // First declare the window nostr property type
 declare global {
   interface Window {
@@ -17,12 +15,6 @@ declare global {
         encrypt(peer: string, plaintext: string): Promise<string>;
         decrypt(peer: string, ciphertext: string): Promise<string>;
       };
-      wallet: {
-        getAccount(): Promise<WalletAccount>;
-        getBalance(): Promise<number>;
-        getUtxos(amount: number): Promise<WalletUtxo[]>;
-        signPsbt(psbt: string): Promise<string>;
-      };
       _call(type: string, params: Record<string, any>): Promise<any>;
     }
   }
@@ -34,7 +26,7 @@ window.nostr = {
 
   async getPublicKey() {
     if (this._pubkey === null) {
-      this._pubkey = await this._call('getPublicKey', {})
+      this._pubkey = await this._call('nostr.getPublicKey', {})
     }
     if (typeof this._pubkey !== 'string') {
       throw new Error('Failed to get public key')
@@ -43,48 +35,30 @@ window.nostr = {
   },
 
   async signEvent(event: any) {
-    return this._call('signEvent', { event })
+    return this._call('nostr.signEvent', { event })
   },
 
   async getRelays() {
-    return this._call('getRelays', {})
+    return this._call('nostr.getRelays', {})
   },
 
   nip04: {
     async encrypt(peer: string, plaintext: string) {
-      return window.nostr._call('nip04.encrypt', {peer, plaintext})
+      return window.nostr._call('nostr.nip04.encrypt', {peer, plaintext})
     },
 
     async decrypt(peer: string, ciphertext: string) {
-      return window.nostr._call('nip04.decrypt', {peer, ciphertext})
+      return window.nostr._call('nostr.nip04.decrypt', {peer, ciphertext})
     }
   },
 
   nip44: {
     async encrypt(peer: string, plaintext: string) {
-      return window.nostr._call('nip44.encrypt', {peer, plaintext})
+      return window.nostr._call('nostr.nip44.encrypt', {peer, plaintext})
     },
 
     async decrypt(peer: string, ciphertext: string) {
-      return window.nostr._call('nip44.decrypt', {peer, ciphertext})
-    }
-  },
-
-  wallet: {
-    async getAccount() {
-      return window.nostr._call('wallet.getAccount', {})
-    },
-  
-    async getBalance() {
-      return window.nostr._call('wallet.getBalance', {})
-    },
-  
-    async getUtxos(amount: number) {
-      return window.nostr._call('wallet.getUtxos', { amount })
-    },
-  
-    async signPsbt(psbt: string) {
-      return window.nostr._call('wallet.signPsbt', { psbt })
+      return window.nostr._call('nostr.nip44.decrypt', {peer, ciphertext})
     }
   },
 

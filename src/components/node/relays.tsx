@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useStore }            from '../store.js'
+import { useExtensionStore }   from '../../stores/extension.js'
 
 import type { NodeStore, RelayPolicy }   from '../../types/index.js'
 
 export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
-  const { store } = useStore()
+  const { store } = useExtensionStore()
   const { node  } = store
   
   // Update to use the correct type

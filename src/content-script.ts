@@ -5,6 +5,7 @@ let script = document.createElement('script')
 script.setAttribute('async', 'false')
 script.setAttribute('type', 'text/javascript')
 script.setAttribute('src', browser.runtime.getURL('nostr-provider.js'))
+script.setAttribute('src', browser.runtime.getURL('wallet-provider.js'))
 document.head.appendChild(script)
 
 // listen for messages from that script

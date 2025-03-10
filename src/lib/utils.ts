@@ -15,7 +15,7 @@ const decoder = new TextDecoder()
 const minPlaintextSize = 0x0001 // 1b msg => padded to 32b
 const maxPlaintextSize = 0xffff // 65535 (64kb-1) => padded to 64kb
 
-export function get_conversation_key(shared_secret : string): Uint8Array {
+export function get_conversation_key (shared_secret : string): Uint8Array {
   const secret = Buff.hex(shared_secret)
   return hkdf_extract(sha256, secret, 'nip44-v2')
 }

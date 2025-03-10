@@ -5,33 +5,11 @@ import browser from 'webextension-polyfill'
 import type { LogEntry } from '../types/index.js'
 
 export default function Console() {
-
-  const [ logs, setLogs ]     = useState<LogEntry[]>([])
-  const [ isInit, setIsInit ] = useState(false)
+  // Keep logs only in component state
+  const [logs, setLogs] = useState<LogEntry[]>([])
   
   // Create a ref for the console output element
   const consoleOutputRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!isInit) {
-      browser.storage.sync.get(['logs']).then((result) => {
-        setLogs(result.logs as LogEntry[] || [])
-        setIsInit(true)
-      })
-    }
-  }, [ isInit ])
-
-  useEffect(() => {
-    const listener = (changes: any) => {
-      const new_logs = changes.logs?.newValue
-      if (is_logs_changed(logs, new_logs)) {
-        setLogs(new_logs as LogEntry[] || [])
-      }
-    }
-    
-    browser.storage.sync.onChanged.addListener(listener)
-    return () => browser.storage.sync.onChanged.removeListener(listener)
-  }, [ logs ])
 
   // Auto-scroll to bottom when logs change
   useEffect(() => {
@@ -41,20 +19,52 @@ export default function Console() {
     }
   }, [logs])
 
-  const clear = () => {
-    browser.storage.sync.set({ logs: [] })
+  // Function to add a new log entry
+  const addLog = (log: LogEntry) => {
+    setLogs(prevLogs => [...prevLogs, log])
   }
 
-  // Add resetNode function
+  // Clear logs from memory only
+  const clear = () => {
+    setLogs([])
+  }
+
+  // Reset node but maintain in-memory approach
   const reset = () => {
     try {
+      // Clear logs
       clear()
+      // Still send message to reset the node
       browser.runtime.sendMessage({ type: 'node_reset' })
     } catch (error) {
       console.error('error resetting node:')
       console.error(error)
+      
+      // Add error to logs
+      addLog({
+        type      : 'error',
+        message   : `Error resetting node: ${error}`,
+        timestamp : new Date().toISOString()
+      })
     }
   }
+
+  // Example of how to listen for messages from background/content scripts
+  useEffect(() => {
+    const handleMessage = (message: any) => {
+      // If the message contains a log entry, add it
+      if (message.type === 'log') {
+        addLog(message.data)
+      }
+      return undefined
+    }
+    
+    // Set up listener for messages
+    browser.runtime.onMessage.addListener(handleMessage)
+    
+    // Clean up on unmount
+    return () => browser.runtime.onMessage.removeListener(handleMessage)
+  }, [])
 
   return (
     <div className="container console-container">
@@ -85,11 +95,4 @@ export default function Console() {
       </div>
     </div>
   );
-}
-
-function is_logs_changed (
-  curr: LogEntry[],
-  next: LogEntry[]
-) {
-  return JSON.stringify(curr) !== JSON.stringify(next)
 }

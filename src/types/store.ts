@@ -1,7 +1,13 @@
-import type { PeerPolicy }  from '@frostr/bifrost'
-import type { WalletStore } from './wallet.js'
+import type { GroupPackage, PeerPolicy, SharePackage }  from '@frostr/bifrost'
 
+import type { WalletStore }              from './wallet.js'
 import type { ChainNetwork, TxPriority } from './base.js'
+
+import {
+  AddressPermission,
+  SignerPermission,
+  WalletPermission
+} from './permission.js'
 
 export interface StoreAPI<T> {
   store  : T
@@ -11,10 +17,11 @@ export interface StoreAPI<T> {
 }
 
 export interface ExtensionStore {
-  init     : boolean
-  node     : NodeStore
-  settings : SettingStore
-  wallet   : WalletStore
+  init        : boolean
+  node        : NodeStore
+  permissions : PermissionStore
+  settings    : SettingStore
+  wallet      : WalletStore
 }
 
 export interface RelayPolicy {
@@ -24,10 +31,16 @@ export interface RelayPolicy {
 }
 
 export interface NodeStore {
-  group   : string       | null
+  group   : GroupPackage | null
   peers   : PeerPolicy[] | null
   relays  : RelayPolicy[]
-  share   : string       | null
+  share   : SharePackage | null
+}
+
+export interface PermissionStore {
+  address : AddressPermission[]
+  signer  : SignerPermission[]
+  wallet  : WalletPermission[]
 }
 
 export interface SettingStore {

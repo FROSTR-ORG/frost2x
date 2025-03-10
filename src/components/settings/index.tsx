@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react'
-import { useStore }            from './store.js'
+import { useExtensionStore }   from '../../stores/extension.js'
 
-import ExplorerSettings    from './settings/explorer.js'
-import GeneralSettings     from './settings/general.js'
-import TransactionSettings from './settings/transaction.js'
-import LinkSettings        from './settings/links.js'
+import ExplorerSettings    from './explorer.js'
+import GeneralSettings     from './general.js'
+import TransactionSettings from './transaction.js'
+import LinkSettings        from './links.js'
 
-import type { SettingStore } from '../types/index.js'
+import type { SettingStore } from '../../types/index.js'
 
 export default function Settings(
   { showMessage }: { showMessage: (msg: string) => void }
 ) {
   // State management
-  const { store, reset, update } = useStore()
+  const { store, reset, update } = useExtensionStore()
 
   const [ settings, setSettings ] = useState<SettingStore>(store.settings)
 

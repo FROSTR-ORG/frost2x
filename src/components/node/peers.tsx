@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useStore }            from '../store.js'
+import { useExtensionStore }   from '../../stores/extension.js'
 
 import {
   decode_group_pkg,
@@ -11,13 +11,13 @@ import type { PeerPolicy } from '@frostr/bifrost'
 import type { NodeStore }  from '../../types/index.js'
 
 export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
-  const { store } = useStore()
-  const { node  } = store
+  const { store } = useExtensionStore()
   
   // Add local state to track changes
   const [localPeers, setLocalPeers] = useState<PeerPolicy[]>([])
   const [hasChanges, setHasChanges] = useState(false)
 
+  const node      = store.node
   const has_creds = node.group !== null && node.share !== null
 
   // Initialize local state from store
@@ -34,10 +34,8 @@ export default function ({ update } : { update: (data: Partial<NodeStore>) => vo
   // Initialize peers from group and share data.
   const init_peers = () => {
     if (node.group === null || node.share === null) return []
-    const group  = decode_group_pkg(node.group)
-    const share  = decode_share_pkg(node.share)
-    const pubkey = get_pubkey(share.seckey, 'ecdsa')
-    const peers  = group.commits.filter(commit => commit.pubkey !== pubkey)
+    const pubkey = get_pubkey(node.share.seckey, 'ecdsa')
+    const peers  = node.group.commits.filter(commit => commit.pubkey !== pubkey)
     return peers.map((peer, idx) => 
       [ peer.pubkey.slice(2), idx === 0, true ] as PeerPolicy
     )

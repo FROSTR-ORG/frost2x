@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react'
-import { decode_share_pkg }    from '@frostr/bifrost/lib'
-import { useStore }            from '../store.js'
+import { decode_share_pkg, encode_share_pkg }    from '@frostr/bifrost/lib'
+import { useExtensionStore }   from '../../stores/extension.js'
 
 import type { NodeStore } from '../../types/index.js'
 
 export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
-  const { store } = useStore()
-  const { node  } = store
-  const [ input, setInput ] = useState<string>('')
-  const [ error, setError ] = useState<string | null>(null)
-  const [ show, setShow ]   = useState<boolean>(false)
-  const [ isValid, setIsValid ] = useState<boolean>(false)
+  const { store } = useExtensionStore()
+  const [ input, setInput ]             = useState<string>('')
+  const [ error, setError ]             = useState<string | null>(null)
+  const [ show, setShow ]               = useState<boolean>(false)
+  const [ isValid, setIsValid ]         = useState<boolean>(false)
   const [ decodedData, setDecodedData ] = useState<any>(null)
+
+  const share_str = (store.node.share !== null)
+    ? encode_share_pkg(store.node.share) 
+    : ''
 
   const parseData = (pkg: string) => {
     try {
@@ -31,7 +34,7 @@ export default function ({ update } : { update: (data: Partial<NodeStore>) => vo
         setDecodedData(null)
       } else {
         parseData(input)
-        update({ share: input })
+        update({ share: decodedData })
         setError(null)
       }
       setError(null)
@@ -61,18 +64,14 @@ export default function ({ update } : { update: (data: Partial<NodeStore>) => vo
   }, [input])
 
   useEffect(() => {
-    setInput(node.share ?? '')
-    if (node.share) {
-      try {
-        parseData(node.share)
-      } catch (err) {
-        // Ignore errors when initializing
-      }
+    if (store.node.share !== null) {
+      setInput(encode_share_pkg(store.node.share))
+      setDecodedData(store.node.share)
     }
-  }, [node.share])
+  }, [ store.node.share ])
 
   // Determine if the save button should be active
-  const isSaveActive = isValid && (input !== node.share);
+  const isSaveActive = isValid && (input !== share_str);
 
   const toggleShow = () => {
     setShow(!show)

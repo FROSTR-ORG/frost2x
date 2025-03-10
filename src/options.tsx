@@ -11,12 +11,12 @@ import type { ReactElement } from 'react'
 import * as Icons from './components/icons.js'
 
 import Console     from './components/console.js'
-import Node        from './components/node.js'
-import Permissions from './components/permissions.js'
-import Settings    from './components/settings.js'
-import Wallet      from './components/wallet.js'
+import Node        from './components/node/index.js'
+import Permissions from './components/permissions/index.js'
+import Settings    from './components/settings/index.js'
+import Wallet      from './components/wallet/index.js'
 
-import { StoreProvider } from './components/store.js'
+import { ExtensionStoreProvider } from './stores/extension.js'
 
 function Options(): ReactElement {
   let [ messages, setMessages ]           = useState<string[]>([])
@@ -151,8 +151,10 @@ const container = document.getElementById('main')
 if (container) {
   const root = createRoot(container)
   root.render(
-    <StoreProvider>
-      <Options />
-    </StoreProvider>
+    <>
+      <ExtensionStoreProvider>
+        <Options />
+      </ExtensionStoreProvider>
+    </>
   )
 }

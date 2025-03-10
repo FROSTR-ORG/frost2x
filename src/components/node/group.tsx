@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react'
-import { decode_group_pkg }    from '@frostr/bifrost/lib'
-import { useStore }            from '../store.js'
+import { decode_group_pkg, encode_group_pkg }    from '@frostr/bifrost/lib'
+import { useExtensionStore }   from '../../stores/extension.js'
 
 import type { NodeStore }      from '../../types/index.js'
 
 export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
-  const { store }                       = useStore()
-  const { node  }                       = store
+  const { store }                       = useExtensionStore()
   const [ input, setInput ]             = useState<string>('')
   const [ error, setError ]             = useState<string | null>(null)
   const [ show, setShow ]               = useState<boolean>(false)
   const [ isValid, setIsValid ]         = useState<boolean>(false)
   const [ decodedData, setDecodedData ] = useState<any>(null)
+
+  const group_str = (store.node.group !== null)
+    ? encode_group_pkg(store.node.group)
+    : ''
 
   const parseData = (pkg : string) => {
     try {
@@ -31,7 +34,7 @@ export default function ({ update } : { update: (data: Partial<NodeStore>) => vo
         setDecodedData(null)
       } else {
         parseData(input)
-        update({ group : input })
+        update({ group : decodedData })
         setError(null)
       }
       setError(null)
@@ -61,18 +64,14 @@ export default function ({ update } : { update: (data: Partial<NodeStore>) => vo
   }, [input])
 
   useEffect(() => {
-    setInput(node.group ?? '')
-    if (node.group) {
-      try {
-        parseData(node.group)
-      } catch (err) {
-        // Ignore errors when initializing
-      }
+    if (store.node.group !== null) {
+      setInput(encode_group_pkg(store.node.group))
+      setDecodedData(store.node.group)
     }
-  }, [node.group])
+  }, [ store.node.group ])
 
   // Determine if the save button should be active
-  const isSaveActive = isValid && (input !== node.group);
+  const isSaveActive = isValid && (input !== group_str);
 
   return (
     <div className="container">
