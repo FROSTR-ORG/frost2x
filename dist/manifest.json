@@ -1,7 +1,7 @@
 {
   "name": "frost2x",
   "description": "Frost Signer Extension",
-  "version": "0.1.1",
+  "version": "0.0.5",
   "homepage_url": "https://github.com/frostr-org/frost2x",
   "manifest_version": 3,
   "icons": {
@@ -33,7 +33,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "nostr-provider.build.js"
+        "nostr-provider.js",
+        "wallet-provider.js"
       ],
       "matches": [
         "https://*/*",

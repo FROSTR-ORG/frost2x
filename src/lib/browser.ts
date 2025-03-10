@@ -3,11 +3,11 @@ import browser from 'webextension-polyfill'
 export async function showNotification (
   host   : string,
   policy : boolean,
-  method : string,
+  type   : string,
   params : Record<string, unknown>
 ): Promise<void> {
   const action  = policy ? 'allowed' : 'denied'
-  const title   = `${method} ${action} for ${host}`
+  const title   = `${type} ${action} for ${host}`
   const message = JSON.stringify(params, null, 2)
   await browser.notifications.create(undefined, {
     type: 'basic',

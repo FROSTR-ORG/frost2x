@@ -1,6 +1,6 @@
 import useSWR from 'swr'
 
-import { useStore } from '../components/store.js'
+import { useExtensionStore } from '../stores/extension.js'
 
 import type {
   ExplorerAddressInfo,
@@ -13,7 +13,7 @@ const fetcher = (url : string) => fetch(url).then((res) => res.json())
 export function useAddressInfo (address : string | null) {
   const {
     'explorer/api_url': host_url,
-  } = useStore().store.settings
+  } = useExtensionStore().store.settings
   const url = (address !== null)
     ? `${host_url}/address/${address}`
     : null
@@ -23,7 +23,7 @@ export function useAddressInfo (address : string | null) {
 export function usePoolHistory (address : string | null) {
   const {
     'explorer/api_url': host_url,
-  } = useStore().store.settings
+  } = useExtensionStore().store.settings
   const url  = (address !== null)
     ? `${host_url}/address/${address}/txs/mempool`
     : null
@@ -33,7 +33,7 @@ export function usePoolHistory (address : string | null) {
 export function useChainHistory (address : string | null) {
   const {
     'explorer/api_url': host_url,
-  } = useStore().store.settings
+  } = useExtensionStore().store.settings
   const url  = (address !== null)
     ? `${host_url}/address/${address}/txs/chain`
     : null
@@ -43,7 +43,7 @@ export function useChainHistory (address : string | null) {
 export function useUtxoSet (address : string | null) {
   const {
     'explorer/api_url': host_url,
-  } = useStore().store.settings
+  } = useExtensionStore().store.settings
   const url = (address !== null)
     ? `${host_url}/address/${address}/utxo`
     : null

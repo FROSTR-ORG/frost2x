@@ -1,24 +1,20 @@
-import { useEffect, useState } from 'react'
-import { PermStore }           from '@/stores/perms.js'
-
-import SignerPermissions  from './signer.js'
+import AddressPermissions from './address.js'
+import EventPermissions   from './events.js'
 import WalletPermissions  from './wallet.js'
 
-export default function Permissions() {
-  const [ store, setStore ] = useState<PermStore.Type>(PermStore.DEFAULT)
+interface PermissionsProps {
+  showMessage: (msg: string) => void
+}
 
-  useEffect(() => {
-    PermStore.fetch().then(store => setStore(store))
-    const unsub = PermStore.subscribe(store => setStore(store))
-    return () => unsub()
-  }, [])
-
+export default function Permissions({ showMessage }: PermissionsProps) {
   return (
-    <>
-      <SignerPermissions store={store} />
-      {/* <div className="section-separator"></div> */}
-      {/* <WalletPermissions showMessage={showMessage} /> */}
-      {/* <div className="section-separator"></div> */}
-    </>
+    <div>
+      <AddressPermissions showMessage={showMessage} />
+      <div className="section-separator"></div>
+      <EventPermissions showMessage={showMessage} />
+      <div className="section-separator"></div>
+      <WalletPermissions showMessage={showMessage} />
+      <div className="section-separator"></div>
+    </div>
   )
 }

@@ -1,65 +1,44 @@
-// First declare the window nostr property type
+import type { WalletUtxo, WalletSignMainifest } from '../types/index.js'
+
+// First declare the window btc property type
 declare global {
   interface Window {
-    nostr: {
+    btc_wallet: {
       _requests: Record<string, { resolve: (value: any) => void, reject: (error: Error) => void }>;
-      _pubkey: string | null;
-      getPublicKey(): Promise<string>;
-      signEvent(event: any): Promise<any>;
-      getRelays(): Promise<any>;
-      nip04: {
-        encrypt(peer: string, plaintext: string): Promise<string>;
-        decrypt(peer: string, ciphertext: string): Promise<string>;
-      };
-      nip44: {
-        encrypt(peer: string, plaintext: string): Promise<string>;
-        decrypt(peer: string, ciphertext: string): Promise<string>;
-      };
+      _account: string | null;
+      getAccount(): Promise<string>;
+      getBalance(): Promise<number>;
+      getUtxos(amount: number): Promise<WalletUtxo[]>;
+      signPsbt(psbt: string, manifest: WalletSignMainifest): Promise<string>;
       _call(type: string, params: Record<string, any>): Promise<any>;
     }
   }
 }
 
-window.nostr = {
+window.btc_wallet = {
   _requests : {},
-  _pubkey   : null,
+  _account  : null,
 
-  async getPublicKey() {
-    if (this._pubkey === null) {
-      this._pubkey = await this._call('nostr.getPublicKey', {})
+  async getAccount() {
+    if (this._account === null) {
+      this._account = await this._call('wallet.getAccount', {})
     }
-    if (typeof this._pubkey !== 'string') {
-      throw new Error('Failed to get public key')
+    if (typeof this._account !== 'string') {
+      throw new Error('Failed to get wallet account')
     }
-    return this._pubkey
+    return this._account
   },
 
-  async signEvent(event: any) {
-    return this._call('nostr.signEvent', { event })
+  async getBalance() {
+    return window.btc_wallet._call('wallet.getBalance', {})
   },
 
-  async getRelays() {
-    return this._call('nostr.getRelays', {})
+  async getUtxos(amount: number) {
+    return window.btc_wallet._call('wallet.getUtxos', { amount })
   },
 
-  nip04: {
-    async encrypt(peer: string, plaintext: string) {
-      return window.nostr._call('nostr.nip04.encrypt', {peer, plaintext})
-    },
-
-    async decrypt(peer: string, ciphertext: string) {
-      return window.nostr._call('nostr.nip04.decrypt', {peer, ciphertext})
-    }
-  },
-
-  nip44: {
-    async encrypt(peer: string, plaintext: string) {
-      return window.nostr._call('nostr.nip44.encrypt', {peer, plaintext})
-    },
-
-    async decrypt(peer: string, ciphertext: string) {
-      return window.nostr._call('nostr.nip44.decrypt', {peer, ciphertext})
-    }
+  async signPsbt(psbt: string, manifest: WalletSignMainifest) {
+    return window.btc_wallet._call('wallet.signPsbt', { psbt, manifest })
   },
 
   _call(type: string, params: Record<string, any>) {
@@ -100,16 +79,16 @@ window.addEventListener('message', message => {
     message.data.response === null ||
     message.data.response === undefined ||
     message.data.ext !== 'frost2x' ||
-    !window.nostr._requests[message.data.id]
+    !window.btc_wallet._requests[message.data.id]
   )
     return
 
   if (message.data.response.error) {
     let error = new Error('frost2x: ' + message.data.response.error.message)
     error.stack = message.data.response.error.stack
-    window.nostr._requests[message.data.id].reject(error)
+    window.btc_wallet._requests[message.data.id].reject(error)
   } else {
-    window.nostr._requests[message.data.id].resolve(message.data.response)
+    window.btc_wallet._requests[message.data.id].resolve(message.data.response)
   }
 
   console.log(
@@ -126,7 +105,7 @@ window.addEventListener('message', message => {
     'font-weight:bold;color:#08589d'
   )
 
-  delete window.nostr._requests[message.data.id]
+  delete window.btc_wallet._requests[message.data.id]
 })
 
 // Fix the replacing variable type
@@ -136,11 +115,11 @@ let replacing: boolean | null = null;
 document.addEventListener('mousedown', replaceNostrSchemeLink)
 async function replaceNostrSchemeLink(e: MouseEvent) {
   const target = e.target as HTMLAnchorElement;
-  if (target.tagName !== 'A' || !target.href.startsWith('nostr:')) return
+  if (target.tagName !== 'A' || !target.href.startsWith('psbt:')) return
   
   if (replacing === false) return
 
-  let response = await window.nostr._call(MESSAGE_TYPE.URL_REPLACE, {url: target.href})
+  let response = await window.btc_wallet._call('replace_url', {url: target.href})
 
   if (response === false) {
     replacing = false

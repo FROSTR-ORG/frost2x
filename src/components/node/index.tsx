@@ -1,26 +1,24 @@
-import { useEffect, useState } from 'react'
-import { NodeStore }           from '@/stores/node.js'
-
 import GroupPackageConfig    from './group.js'
 import PeerNodeConfig        from './peers.js'
 import RelayConfig           from './relays.js'
 import SecretPackageConfig   from './share.js'
+import { useExtensionStore } from '../../stores/extension.js'
 
-export default function () {
-  const [ store, setStore ] = useState<NodeStore.Type>(NodeStore.DEFAULT)
-  
-  useEffect(() => {
-    NodeStore.fetch().then(store => setStore(store))
-    const unsub = NodeStore.subscribe(store => setStore(store))
-    return () => unsub()
-  }, [])
+import type { NodeStore } from '../../types/store.js'
+
+export default function ({ showMessage }: { showMessage: (msg: string) => void }) {
+  const { store, update } = useExtensionStore()
+
+  const update_node = (data: Partial<NodeStore>) => {
+    update({ node: { ...store.node, ...data } })
+  }
 
   return (
     <>
-      <SecretPackageConfig store={store} />
-      <GroupPackageConfig  store={store} />
-      <PeerNodeConfig      store={store} />
-      <RelayConfig         store={store} />
+      <SecretPackageConfig update={update_node}/>
+      <GroupPackageConfig  update={update_node}/>
+      <PeerNodeConfig      update={update_node}/>
+      <RelayConfig         update={update_node}/>
     </>
   )
 }

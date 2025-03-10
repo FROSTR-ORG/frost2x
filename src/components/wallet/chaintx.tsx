@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useStore } from '../store.js'
-import { useChainHistory } from '../../hooks/explorer.js'
+import { useExtensionStore } from '../../stores/extension.js'
+import { useChainHistory }   from '../../hooks/explorer.js'
 
 interface Props {
   address: string | null
@@ -9,7 +9,7 @@ interface Props {
 
 export default function ChainTransactions({ address, showMessage }: Props) {
   const { data: chainTxs = [], isLoading, error } = useChainHistory(address)
-  const { 'explorer/link_url': link_url } = useStore().store.settings
+  const { 'explorer/link_url': link_url } = useExtensionStore().store.settings
   
   // State for pagination
   const [txPage, setTxPage] = useState(1)

@@ -1,154 +1,121 @@
-import { PermStore } from '@/stores/perms.js'
+import { remove_reverse_policy } from './util.js'
 
-import {
-  find_policy_idx,
-  remove_reverse_policy
-} from '@/lib/perms.js'
+import { 
+  fetchExtensionStore,
+  updateExtensionStore 
+} from '../stores/extension.js'
 
 import type {
   NostrEvent,
-  PolicyMethod,
-  SignerPolicy,
-  SignerPolicyConditions,
-} from '@/types/index.js'
+  SignerConditions
+} from '../types/index.js'
 
-export async function get_signer_permission (
-  host    : string,
-  type    : string,
-  params? : { event?: NostrEvent }
+export async function getSignerPermissionStatus (
+  host   : string,
+  type   : string,
+  event? : NostrEvent
 ): Promise<boolean | null> {
-  const perms = await PermStore.fetch().then(store => store.signer)
+  // Get the extension store.
+  const store = await fetchExtensionStore()
+  // Get the signer permissions.
+  const perms = store.permissions.signer
   // Iterate over the permissions.
   for (const policy of perms) {
     // If the policy matches the host and type,
     if (policy.host === host && policy.type === type) {
       // If the type is signEvent,
-      if (type === 'nostr.signEvent' && params?.event) {
-        // If the event has conditions set,
-        if (policy.conditions) {
-          // If the conditions have a kinds object,
-          if (policy.conditions.kinds) {
-            // If the event matches the conditions,
-            if (match_event_conditions(policy.conditions, params.event)) {
-              // Return the accept value.
-              return policy.accept === 'true' ? true : false
-            }
-          } else {
-            // Accept all is set for events.
-            return policy.accept === 'true' ? true : false
-          }
+      if (type === 'nostr.signEvent') {
+        // If the event matches the conditions,
+        if (event && match_event_conditions(policy.conditions, event)) {
+          // Return the accept value.
+          return policy.accept === 'true' ? true : false
         }
       } else {
-        // Accept all is set for non-signEvent requests.
+        // Return the accept value.
         return policy.accept === 'true' ? true : false
       }
     }
   }
-  // Return null if no policy matches the host and type.
   return null
 }
 
-export async function update_signer_permission (
-  host        : string,
-  type        : PolicyMethod,
-  accept      : boolean,
-  conditions? : SignerPolicyConditions
+export async function updateSignerPermission (
+  host       : string,
+  type       : string,
+  accept     : boolean,
+  conditions : SignerConditions
 ) : Promise<void> {
+  // Get the extension store.
+  const store = await fetchExtensionStore()
   // Create a new array to avoid mutating the original
-  const perms = await PermStore.fetch().then(store => store.signer)
+  const perms = [...store.permissions.signer]
   // Check if we already have a matching policy
-  const policy_idx = find_policy_idx(perms, host, type, accept)
+  let policy_idx = perms.findIndex(policy => 
+    policy.host === host && 
+    policy.type === type && 
+    policy.accept === String(accept)
+  )
   // If we found an existing policy with same accept value,
-  if (policy_idx != -1) {
-    const existing = perms[policy_idx]
-    const updated  = update_policy(existing, conditions)
+  if (policy_idx >= 0) {
+    // Create a copy of the policy before modifying
+    const updated_policy = { 
+      ...perms[policy_idx],
+      conditions: JSON.parse(JSON.stringify(perms[policy_idx].conditions || {})),
+      created_at: Math.round(Date.now() / 1000) 
+    }
+    // Merge conditions properly
+    updated_policy.conditions = merge_conditions(updated_policy.conditions, conditions)
     // Update the policy.
-    perms[policy_idx] = updated
+    perms[policy_idx] = updated_policy
   // Else, we need to add a new policy.
   } else {
+    // Remove the reverse policy if it exists.
+    remove_reverse_policy(perms, host, type, accept)
     // Add new policy
-    const policy : SignerPolicy = {
+    const new_policy = {
       host,
       type,
-      conditions,
-      accept     : accept ? 'true' : 'false',
+      accept     : String(accept),
+      conditions : JSON.parse(JSON.stringify(conditions)),
       created_at : Math.round(Date.now() / 1000)
     }
-    remove_reverse_policy(perms, policy)
-    perms.push(policy)
+    perms.push(new_policy)
   }
-  // Update the policy store.
-  return PermStore.update({ signer: perms }).then()
+  // Update the extension store.
+  updateExtensionStore({
+    ...store,
+    permissions: { ...store.permissions, signer: perms }
+  })
 }
 
 function match_event_conditions (
-  conditions : SignerPolicyConditions,
+  conditions : SignerConditions,
   event      : NostrEvent
 ): boolean {
-  // If there are kind conditions,
   if (conditions?.kinds) {
-    // If the event kind is in the kinds object,
-    const kind_policy = conditions.kinds[event.kind]
-    if (kind_policy !== undefined) {
-      // Return the value of the event kind in the kinds object.
-      return kind_policy
-    }
+    if (event.kind in conditions.kinds) return true
+    else return false
   }
-  // Otherwise, return false.
-  return false
+  return true
 }
 
-function update_policy (
-  policy      : SignerPolicy,
-  conditions? : SignerPolicyConditions
-): SignerPolicy {
-  // Define the new conditions variable.
-  let new_conditions : SignerPolicyConditions | undefined
-  // If both the policy and the new conditions are defined,
-  if (policy?.conditions !== undefined && conditions !== undefined) {
-    // If the new conditions are empty,
-    if (Object.keys(conditions).length === 0) {
-      // Return the new conditions.
-      new_conditions = conditions
-    } else {  
-      // Make a deep copy of the conditions.
-      const copied = copy_conditions(policy?.conditions)
-      // Merge conditions properly.
-      new_conditions = merge_event_conditions(copied, conditions)
+function merge_conditions (
+  existingConditions : SignerConditions,
+  newConditions      : SignerConditions
+): SignerConditions {
+  // Create a deep copy to avoid mutating the original
+  const result: SignerConditions = JSON.parse(JSON.stringify(existingConditions || {}))
+  // Merge kinds
+  if (newConditions.kinds) {
+    if (!result.kinds) {
+      result.kinds = {}
     }
-    // Else, if only the policy has conditions,
-  } else if (policy?.conditions !== undefined) {
-    // Return the policy conditions.
-    new_conditions = policy?.conditions
-  } else {
-    // Return undefined.
-    new_conditions = undefined
-  }
-  // Return the updated policy.
-  return {
-    ...policy,
-    conditions : new_conditions,
-    created_at : Math.floor(Date.now() / 1000)
-  }
-}
-
-function merge_event_conditions (
-  curr : SignerPolicyConditions,
-  next : SignerPolicyConditions
-): SignerPolicyConditions {
-  if (next.kinds !== undefined) {
-    if (!curr.kinds) {
-      curr.kinds = {}
-    }
-    Object.keys(next.kinds).forEach(kind => {
-      curr.kinds![Number(kind)] = true
+    Object.keys(newConditions.kinds).forEach(kind => {
+      result.kinds![Number(kind)] = true
     })
   }
-  return curr
+  // Merge other condition types here as needed
+  // For example, if there are authors, tags, etc.
+  return result
 }
 
-function copy_conditions (
-  conditions? : SignerPolicyConditions
-): SignerPolicyConditions {
-  return JSON.parse(JSON.stringify(conditions ?? {}))
-}

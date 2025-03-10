@@ -1,4 +1,5 @@
 import { useAddressInfo } from '../../hooks/explorer.js'
+import { useExtensionStore } from '../../stores/extension.js'
 
 interface Props {
   address     : string | null
@@ -7,6 +8,7 @@ interface Props {
 
 export default function ({ address, showMessage }: Props) {
   const { data, isLoading, error } = useAddressInfo(address)
+  const { store } = useExtensionStore()
 
   const chain_recv    = data?.chain_stats.funded_txo_sum   || 0
   const chain_send    = data?.chain_stats.spent_txo_sum    || 0
@@ -15,6 +17,11 @@ export default function ({ address, showMessage }: Props) {
   const pool_send     = data?.mempool_stats.spent_txo_sum  || 0
   const pool_balance  = pool_recv - pool_send
   const total_balance = chain_balance + pool_balance
+  
+  // Calculate the selected balance from UTXOs marked as selected
+  const selected_balance = store.wallet.utxo_set
+    .filter(utxo => utxo.selected)
+    .reduce((sum, utxo) => sum + utxo.value, 0)
   
   // Format number with commas
   const formatNumber = (num: number) => {
@@ -39,8 +46,8 @@ export default function ({ address, showMessage }: Props) {
           
           <div className="balance-details">
             <div className="balance-confirmed">
-              <span className="balance-label">Confirmed</span>
-              <span className="balance-value">{formatNumber(chain_balance)}</span>
+              <span className="balance-label">Selected</span>
+              <span className="balance-value">{formatNumber(selected_balance)}</span>
             </div>
             
             <div className="balance-unconfirmed">

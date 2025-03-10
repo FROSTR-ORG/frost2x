@@ -1,11 +1,6 @@
-import { init_node } from '@/services/node.js'
+import { init_node } from '../lib/node.js'
 
-import type {
-  ContentScriptMessage,
-  GlobalState
-} from '@/types/index.js'
-
-import { MESSAGE_TYPE } from '@/const.js'
+import type { ContentScriptMessage, GlobalState } from '../types/index.js'
 
 export async function handleNodeRequest (
   ctx : GlobalState,
@@ -15,10 +10,10 @@ export async function handleNodeRequest (
   const { type } = msg
 
   switch (type) {
-    case MESSAGE_TYPE.NODE_RESET:
+    case 'node.reset':
       ctx.node = await init_node()
       return { status: node !== null ? 'running' : 'stopped' }
-    case MESSAGE_TYPE.NODE_STATUS:
+    case 'node.status':
       return { status: node !== null ? 'running' : 'stopped' }
   }
 }

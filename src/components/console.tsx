@@ -11,18 +11,11 @@ import {
 import type { LogEntry } from '../types/index.js'
 
 export default function Console() {
-  // State for logs
-  const [ logs, setLogs ] = useState<LogEntry[]>([])
+  // Keep logs only in component state
+  const [logs, setLogs] = useState<LogEntry[]>([])
   
   // Create a ref for the console output element
   const consoleOutputRef = useRef<HTMLDivElement>(null)
-
-  // Load logs on mount and set up subscription.
-  useEffect(() => {
-    LogStore.fetch().then(logs => setLogs(logs))
-    const unsub = LogStore.subscribe(logs => setLogs(logs))
-    return () => unsub()
-  }, [])
 
   // Auto-scroll to bottom when logs change
   useEffect(() => {
@@ -32,20 +25,52 @@ export default function Console() {
     }
   }, [ logs ])
 
-  // Clear logs handler
-  const clear_handler = async () => {
-    LogStore.clear().then(() => setLogs([]))
+  // Function to add a new log entry
+  const addLog = (log: LogEntry) => {
+    setLogs(prevLogs => [...prevLogs, log])
   }
 
-  // Reset node handler
-  const reset_handler = async () => {
+  // Clear logs from memory only
+  const clear = () => {
+    setLogs([])
+  }
+
+  // Reset node but maintain in-memory approach
+  const reset = () => {
     try {
+      // Clear logs
+      clear()
       // Still send message to reset the node
-      await browser.runtime.sendMessage({ type: MESSAGE_TYPE.NODE_RESET })
+      browser.runtime.sendMessage({ type: 'node_reset' })
     } catch (error) {
-      console.error('error resetting node:', error)
+      console.error('error resetting node:')
+      console.error(error)
+      
+      // Add error to logs
+      addLog({
+        type      : 'error',
+        message   : `Error resetting node: ${error}`,
+        timestamp : new Date().toISOString()
+      })
     }
   }
+
+  // Example of how to listen for messages from background/content scripts
+  useEffect(() => {
+    const handleMessage = (message: any) => {
+      // If the message contains a log entry, add it
+      if (message.type === 'log') {
+        addLog(message.data)
+      }
+      return undefined
+    }
+    
+    // Set up listener for messages
+    browser.runtime.onMessage.addListener(handleMessage)
+    
+    // Clean up on unmount
+    return () => browser.runtime.onMessage.removeListener(handleMessage)
+  }, [])
 
   return (
     <div className="container">
