@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill'
 
-import * as nip19           from 'nostr-tools/nip19'
-import { createRoot }       from 'react-dom/client'
+import * as nip19     from 'nostr-tools/nip19'
+import { createRoot } from 'react-dom/client'
 
 import {
   useState,
@@ -10,6 +10,8 @@ import {
 } from 'react'
 
 import { ExtensionStoreProvider, useExtensionStore } from './stores/extension.js'
+
+import { MESSAGE_TYPE } from './const.js'
 
 function Popup() : ReactElement {
   const { store } = useExtensionStore()

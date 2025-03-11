@@ -1,31 +1,24 @@
-import { Buff } from '@cmdcode/buff'
+import { Buff }          from '@cmdcode/buff'
+import { TxOpts }        from '@scure/btc-signer/transaction'
 
-import { Transaction } from '@scure/btc-signer'
+import {
+  TaprootControlBlock,
+  Transaction
+} from '@scure/btc-signer'
 
 import type {
-  TaprootControlBlock,
   TransactionInput,
   TransactionOutput
 } from '@scure/btc-signer/psbt'
 
-export type PSBTData   = Transaction
-export type PSBTInput  = TransactionInput
-export type PSBTOutput = TransactionOutput
-export type PSBTCBlock = typeof TaprootControlBlock
-
-export interface PSBTPrevouts {
-  amounts : bigint[]
-  scripts : Uint8Array[]
-}
+type PSBTData = string | Transaction
 
 /**
  * Takes a base64 string or PSBT object, returns a PSBT object.
  * @param psbt : PSBT object or base64 string.
  * @returns
  */
-export function parse_psbt (
-  psbt : PSBTData | string
-) : Transaction {
+export function parse_psbt (psbt : PSBTData) : Transaction {
   if (psbt instanceof Transaction) {
     return psbt
   } else if (typeof psbt === 'string') {
@@ -53,20 +46,4 @@ export function decode_psbt (b64str : string) : Transaction {
 export function encode_psbt (psbt : Transaction) : string {
   const psbt_bytes = psbt.toPSBT(0)
   return new Buff(psbt_bytes).base64
-}
-
-export function get_prevouts (
-  psbt : Transaction
-) : PSBTPrevouts | null {
-  const amounts : bigint[]     = []
-  const scripts : Uint8Array[] = []
-  const pdata = parse_psbt(psbt)
-  for (let i = 0; i < pdata.inputsLength; i++) {
-    const input   = pdata.getInput(i)
-    const prevout = input.witnessUtxo
-    if (prevout === undefined) return null
-    amounts.push(prevout.amount)
-    scripts.push(prevout.script)
-  }
-  return { amounts, scripts }
 }

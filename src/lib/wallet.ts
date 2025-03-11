@@ -3,12 +3,17 @@ import { Buff }    from '@cmdcode/buff'
 
 import type {
   ChainNetwork,
+  Result,
   WalletAccount,
   WalletConnector,
+  WalletSignMainifest,
+  WalletStoreUtxo,
   WalletUtxo
 } from '../types/index.js'
 
 import * as CONST from '../const.js'
+import * as PSBT from '../util/psbt.js'
+const RANDOM_SORT = () => Math.random() > 0.5 ? 1 : -1
 
 export class FrostrWallet {
   private readonly _account   : WalletAccount
@@ -82,15 +87,68 @@ export function get_p2tr_address (
   return bech32m.encode(prefix, words)
 }
 
-function select_utxos (
-  utxos : WalletUtxo[],
-  amount : number
-) {
-  return []
+export function filter_utxos (utxos : WalletStoreUtxo[]) {
+  return utxos
+    .filter(utxo => utxo.confirmed && utxo.selected)
+    .map(({ txid, vout, value, script }) => ({ txid, vout, value, script }))
 }
 
-function sign_psbt (
-  psbt : string,
-) {
-  return ''
+export function select_utxos (
+  utxos  : WalletUtxo[],
+  amount : number,
+  sorter = RANDOM_SORT
+) : Result<WalletUtxo[]> {
+  const selected : WalletUtxo[] = []
+
+  let total = 0
+
+  utxos.sort(sorter)
+
+  for (const utxo of utxos) {
+    selected.push(utxo)
+    total += utxo.value
+    if (total > amount + CONST.DUST_LIMIT) {
+      return { ok: true, value: selected }
+    }
+  }
+
+  return { ok: false, err: `insufficient sats: total(${total}) < amount(${amount}) + dust(${CONST.DUST_LIMIT})` }
 }
+
+export function get_utxo_balance (utxos : WalletUtxo[]) {
+  return utxos.reduce((acc, utxo) => acc + utxo.value, 0)
+}
+
+/**
+ * TODO:
+ * - We have to collect the sighashes first.
+ * - then we have to pass them to the node to collect the signatures.
+ * - then we have to finalize the PSBT.
+ * - this means we have to detect p2tr key spending, and script spending.
+ * - p2tr key spending should be tweaked by default
+ * - p2tr script spending should commit to the script in the sighash.
+ */
+
+// export function get_psbt_sighashes (
+//   psbt     : string,
+//   manifest : WalletSignMainifest
+// ) {
+//   const pdata = PSBT.parse_psbt(psbt)
+//   const sighashes : string[] = []
+//   for (let idx = 0; idx < pdata.inputsLength; idx++) {
+//     try {
+//       const txinput = pdata.getInput(idx)
+//       const prevout = txinput.witnessUtxo
+//       if (prevout === undefined) continue
+      
+//     }
+//     return PSBT.encode_psbt(pdata)
+//   }
+// }
+
+// export function update_psbt (
+//   psbt     : string | Transaction,
+//   manifest : WalletSignMainifest
+// ) {
+//   return ''
+// }

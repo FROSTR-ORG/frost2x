@@ -1,6 +1,6 @@
-import browser          from 'webextension-polyfill'
-import { LogStore }     from '@/stores/logs.js'
-import { MESSAGE_TYPE } from '@/const.js'
+import browser from 'webextension-polyfill'
+
+import { MESSAGE_TYPE } from '../const.js'
 
 import {
   useEffect,
@@ -8,14 +8,42 @@ import {
   useRef
 } from 'react'
 
+import {
+  getLogs,
+  clearLogs,
+  subscribeToLogs
+} from '../stores/logs.js'
+
 import type { LogEntry } from '../types/index.js'
 
 export default function Console() {
-  // Keep logs only in component state
+  // State for logs
   const [logs, setLogs] = useState<LogEntry[]>([])
   
   // Create a ref for the console output element
   const consoleOutputRef = useRef<HTMLDivElement>(null)
+
+  // Load logs on mount and set up subscription
+  useEffect(() => {
+    // Initially fetch logs
+    fetchLogs()
+    
+    // Subscribe to log changes
+    const unsubscribe = subscribeToLogs((updatedLogs) => {
+      setLogs(updatedLogs)
+    })
+    
+    // Unsubscribe on unmount
+    return () => {
+      unsubscribe()
+    }
+  }, [])
+  
+  // Function to fetch logs from storage
+  const fetchLogs = async () => {
+    const storedLogs = await getLogs()
+    setLogs(storedLogs)
+  }
 
   // Auto-scroll to bottom when logs change
   useEffect(() => {
@@ -25,52 +53,21 @@ export default function Console() {
     }
   }, [ logs ])
 
-  // Function to add a new log entry
-  const addLog = (log: LogEntry) => {
-    setLogs(prevLogs => [...prevLogs, log])
-  }
-
-  // Clear logs from memory only
-  const clear = () => {
+  // Clear logs handler
+  const handleClear = async () => {
+    await clearLogs()
     setLogs([])
   }
 
-  // Reset node but maintain in-memory approach
-  const reset = () => {
+  // Reset node handler
+  const reset = async () => {
     try {
-      // Clear logs
-      clear()
       // Still send message to reset the node
-      browser.runtime.sendMessage({ type: 'node_reset' })
+      await browser.runtime.sendMessage({ type: MESSAGE_TYPE.NODE_RESET })
     } catch (error) {
-      console.error('error resetting node:')
-      console.error(error)
-      
-      // Add error to logs
-      addLog({
-        type      : 'error',
-        message   : `Error resetting node: ${error}`,
-        timestamp : new Date().toISOString()
-      })
+      console.error('error resetting node:', error)
     }
   }
-
-  // Example of how to listen for messages from background/content scripts
-  useEffect(() => {
-    const handleMessage = (message: any) => {
-      // If the message contains a log entry, add it
-      if (message.type === 'log') {
-        addLog(message.data)
-      }
-      return undefined
-    }
-    
-    // Set up listener for messages
-    browser.runtime.onMessage.addListener(handleMessage)
-    
-    // Clean up on unmount
-    return () => browser.runtime.onMessage.removeListener(handleMessage)
-  }, [])
 
   return (
     <div className="container">
@@ -96,7 +93,7 @@ export default function Console() {
       </div>
       
       <div className="console-controls">
-        <button className="button" onClick={clear}>Clear Console</button>
+        <button className="button" onClick={handleClear}>Clear Console</button>
         <button className="button button-reset" onClick={reset}>Reset Node</button>
       </div>
     </div>

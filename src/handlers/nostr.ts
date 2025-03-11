@@ -14,7 +14,7 @@ import {
   GlobalState
 } from '../types/index.js'
 
-import * as crypto from '../lib/crypto.js'
+import * as crypto from '../lib/cipher.js'
 
 export async function handleSignerRequest (
   ctx : GlobalState,

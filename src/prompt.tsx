@@ -32,14 +32,81 @@ function Prompt() {
     return JSON.stringify(json, null, 2);
   }
 
-  // Apply basic syntax highlighting for JSON
-  const renderHighlightedJSON = (jsonString: string) => {
-    return jsonString
-      .replace(/"(\w+)":/g, '<span class="json-key">"$1":</span>')
-      .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
-      .replace(/: (\d+)/g, ': <span class="json-number">$1</span>')
-      .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
-  }
+  return (
+    <>
+      <div>
+        <b style={{display: 'block', textAlign: 'center', fontSize: '200%'}}>
+          {host}
+        </b>{' '}
+        <p>
+          is requesting your permission to <b>{type && CONST.PERMISSION_LABELS[type]}:</b>
+        </p>
+      </div>
+      {params && (
+        <>
+          <p>now acting on</p>
+          <pre style={{overflow: 'auto', maxHeight: '120px'}}>
+            <code>{JSON.stringify(event || params, null, 2)}</code>
+          </pre>
+        </>
+      )}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-around'
+        }}
+      >
+        <button
+          style={{marginTop: '5px'}}
+          onClick={authorizeHandler(
+            true,
+            {} // store this and answer true forever
+          )}
+        >
+          authorize forever
+        </button>
+        {event?.kind !== undefined && (
+          <button
+            style={{marginTop: '5px'}}
+            onClick={authorizeHandler(
+              true,
+              {kinds: {[event.kind]: true}} // store and always answer true for all events that match this condition
+            )}
+          >
+            authorize kind {event.kind} forever
+          </button>
+        )}
+        <button style={{marginTop: '5px'}} onClick={authorizeHandler(true, undefined)}>
+          authorize just this
+        </button>
+        {event?.kind !== undefined ? (
+          <button
+            style={{marginTop: '5px'}}
+            onClick={authorizeHandler(
+              false,
+              {kinds: {[event.kind]: true}} // idem
+            )}
+          >
+            reject kind {event.kind} forever
+          </button>
+        ) : (
+          <button
+            style={{marginTop: '5px'}}
+            onClick={authorizeHandler(
+              false,
+              {} // idem
+            )}
+          >
+            reject forever
+          </button>
+        )}
+        <button style={{marginTop: '5px'}} onClick={authorizeHandler(false, undefined)}>
+          reject
+        </button>
+      </div>
+    </>
+  )
 
   const perm_type   = msg.type as keyof typeof CONST.PERMISSION_LABELS
   const perm_label  = CONST.PERMISSION_LABELS[perm_type]

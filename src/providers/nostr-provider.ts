@@ -1,3 +1,5 @@
+import { MESSAGE_TYPE } from '../const.js'
+
 // First declare the window nostr property type
 declare global {
   interface Window {
@@ -35,30 +37,30 @@ window.nostr = {
   },
 
   async signEvent(event: any) {
-    return this._call('nostr.signEvent', { event })
+    return this._call(MESSAGE_TYPE.SIGN_EVENT, { event })
   },
 
   async getRelays() {
-    return this._call('nostr.getRelays', {})
+    return this._call(MESSAGE_TYPE.GET_RELAYS, {})
   },
 
   nip04: {
     async encrypt(peer: string, plaintext: string) {
-      return window.nostr._call('nostr.nip04.encrypt', {peer, plaintext})
+      return window.nostr._call(MESSAGE_TYPE.NIP04_ENCRYPT, {peer, plaintext})
     },
 
     async decrypt(peer: string, ciphertext: string) {
-      return window.nostr._call('nostr.nip04.decrypt', {peer, ciphertext})
+      return window.nostr._call(MESSAGE_TYPE.NIP04_DECRYPT, {peer, ciphertext})
     }
   },
 
   nip44: {
     async encrypt(peer: string, plaintext: string) {
-      return window.nostr._call('nostr.nip44.encrypt', {peer, plaintext})
+      return window.nostr._call(MESSAGE_TYPE.NIP44_ENCRYPT, {peer, plaintext})
     },
 
     async decrypt(peer: string, ciphertext: string) {
-      return window.nostr._call('nostr.nip44.decrypt', {peer, ciphertext})
+      return window.nostr._call(MESSAGE_TYPE.NIP44_DECRYPT, {peer, ciphertext})
     }
   },
 
