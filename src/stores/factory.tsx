@@ -1,13 +1,17 @@
+import browser from 'webextension-polyfill'
+
+import { MESSAGE_TYPE } from '../const.js'
+
 import {
   useState,
   useEffect,
   useCallback,
   createContext,
   useContext,
-} from 'react';
-import browser from 'webextension-polyfill';
-import type { ReactNode } from 'react';
-import type { StoreAPI } from '../types/index.js';
+} from 'react'
+
+import type { ReactNode } from 'react'
+import type { StoreAPI }  from '../types/index.js'
 
 // ============================================================================
 // SECTION 1: Configuration and Constants
@@ -73,7 +77,7 @@ async function updateStoreInDB<T>(storeName: string, newStore: T): Promise<void>
     await browser.storage.local.set({ [storeName]: newStore })
     if (DEBUG) console.log(`[${storeName}] Updated store in DB:`, newStore)
     // Notify all listeners (React and background) of the update
-    const message = { type: `store_updated`, name : storeName, data: newStore }
+    const message = { type: MESSAGE_TYPE.STORE_UPDATE, name : storeName, data: newStore }
     browser.runtime.sendMessage(message).catch((err) =>
       console.warn(`[${storeName}] Failed to send update message:`, err)
     )
@@ -101,7 +105,7 @@ export function createStore<T extends { init: boolean }>(storeName: string, conf
   // Subscribe to store updates with a callback (for background or other listeners)
   function subscribeToStoreUpdates(callback: (newStore: T) => void): () => void {
     const listener = (message: any) => {
-      if (message.type === `store_updated` && message.name === storeName) {
+      if (message.type === MESSAGE_TYPE.STORE_UPDATE && message.name === storeName) {
         const updatedStore = deepMerge(config, message.data);
         if (DEBUG) console.log(`[${storeName}] Subscription triggered:`, updatedStore);
         callback(updatedStore);

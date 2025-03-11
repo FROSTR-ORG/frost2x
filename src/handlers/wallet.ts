@@ -1,28 +1,57 @@
+import { MESSAGE_TYPE }        from '../const.js'
 import { fetchExtensionStore } from '../stores/extension.js'
+
+import {
+  filter_utxos,
+  get_utxo_balance,
+  select_utxos
+} from '../lib/wallet.js'
 
 import type { ContentScriptMessage } from '../types/index.js'
 
 export async function handleWalletRequest (
   msg : ContentScriptMessage
 ) {
-  const { type } = msg
+  const { params, type } = msg
 
   const store = await fetchExtensionStore()
+  const utxos = filter_utxos(store.wallet.utxo_set)
   
   try {
     switch (type) {
-      case 'wallet.getAccount': {
+      case MESSAGE_TYPE.GET_ACCOUNT: {
         return { account: store.wallet.address }
       }
-      case 'wallet.getBalance': {
-        return { error: { message: 'not implemented' } }
+      case MESSAGE_TYPE.GET_BALANCE: {
+        const balance = get_utxo_balance(utxos)
+        return { sats: balance }
       }
-      case 'wallet.getUtxos': {
-        const utxos    = store.wallet.utxo_set.filter(utxo => utxo.selected && utxo.confirmed)
-        const selected = utxos.filter(utxo => utxo.selected)
-        return { utxos: selected }
+      case MESSAGE_TYPE.GET_UTXOS: {
+        // Parse the amount in the request, if any.
+        const amount = parse_utxo_amount(params.amount)
+        // If the amount is invalid,
+        if (amount === null) {
+          // Return an error.
+          return { error: { message: `invalid amount: ${params.amount}` } }
+        }
+        // If the amount is provided,
+        if (amount !== undefined) {
+          // Select the funding utxos.
+          const ret = select_utxos(utxos, amount)
+          // If the selection failed,
+          if (!ret.ok) {
+            // Return an error.
+            return { error: { message: ret.err } }
+          } else {
+            // Return the selected utxos.
+            return { utxos: ret.value }
+          }
+        } else {
+          // Return all utxos.
+          return { utxos }
+        }
       }
-      case 'wallet.signPsbt': {
+      case MESSAGE_TYPE.SIGN_PSBT: {
         return { error: { message: 'not implemented' } }
       }
     }
@@ -30,4 +59,10 @@ export async function handleWalletRequest (
     console.error('background error:', error)
     return { error: { message: error.message, stack: error.stack } }
   }
+}
+
+function parse_utxo_amount (value: any) {
+  if (typeof value === 'number')    return value
+  if (typeof value === 'undefined') return undefined
+  return null
 }

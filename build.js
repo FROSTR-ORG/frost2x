@@ -8,17 +8,17 @@ esbuild
   .build({
     bundle: true,
     entryPoints: {
-      'popup.build'          : './src/popup.tsx',
-      'prompt.build'         : './src/prompt.tsx',
-      'options.build'        : './src/options.tsx',
-      'background.build'     : './src/background.ts',
-      'content-script.build' : './src/content-script.ts',
-      'nostr-provider'       : './src/providers/nostr-provider.ts',
-      'wallet-provider'      : './src/providers/wallet-provider.ts',
-      'global.styles.build'  : './src/styles/global.css',
-      'options.styles.build' : './src/styles/options.css',
-      'popup.styles.build'   : './src/styles/popup.css',
-      'prompt.styles.build'  : './src/styles/prompt.css'
+      'popup.build'            : './src/popup.tsx',
+      'prompt.build'           : './src/prompt.tsx',
+      'options.build'          : './src/options.tsx',
+      'background.build'       : './src/background.ts',
+      'content-script.build'   : './src/content-script.ts',
+      'nostr-provider.build'   : './src/providers/nostr-provider.ts',
+      'bitcoin-provider.build' : './src/providers/bitcoin-provider.ts',
+      'global.styles.build'    : './src/styles/global.css',
+      'options.styles.build'   : './src/styles/options.css',
+      'popup.styles.build'     : './src/styles/popup.css',
+      'prompt.styles.build'    : './src/styles/prompt.css'
     },
     outdir: './extension',
     sourcemap: prod ? false : 'inline',

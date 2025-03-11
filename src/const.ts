@@ -1,3 +1,4 @@
+export const DUST_LIMIT    = 546
 export const MAX_LOGS      = 100
 export const PROMPT_WIDTH  = 340
 export const PROMPT_HEIGHT = 360
@@ -8,23 +9,56 @@ export const NETWORK_PREFIX = {
   regtest : 'bcrt'
 }
 
-export const PERMISSION_BYPASS = {
-  store_updated   : true,
-  replace_url     : true,
-  node_reset      : true,
-  get_node_status : true
+export const ALLOWED_WITNESS_VERSIONS = [ 0x51 ]
+
+const NOSTR_MSG_TYPE = {
+  GET_PUBLIC_KEY : 'nostr.getPublicKey',
+  GET_RELAYS     : 'nostr.getRelays',
+  SIGN_EVENT     : 'nostr.signEvent',
+  NIP04_ENCRYPT  : 'nostr.nip04.encrypt',
+  NIP04_DECRYPT  : 'nostr.nip04.decrypt',
+  NIP44_ENCRYPT  : 'nostr.nip44.encrypt',
+  NIP44_DECRYPT  : 'nostr.nip44.decrypt',
+  GET_ACCOUNT    : 'wallet.getAccount' 
 }
 
-export const PERMISSION_NAMES = Object.fromEntries([
-  ['nostr.getPublicKey',  'read your public key'],
-  ['nostr.getRelays',     'read your list of preferred relays'],
-  ['nostr.signEvent',     'sign events using your private key'],
-  ['nostr.nip04.encrypt', 'encrypt messages to peers'],
-  ['nostr.nip04.decrypt', 'decrypt messages from peers'],
-  ['nostr.nip44.encrypt', 'encrypt messages to peers'],
-  ['nostr.nip44.decrypt', 'decrypt messages from peers'],
-  ['wallet.getAccount',   'read your wallet account'],
-  ['wallet.getBalance',   'read your wallet balance'],
-  ['wallet.getUtxos',     'read your wallet utxos'],
-  ['wallet.signPsbt',     'sign psbt transactions']
+const WALLET_MSG_TYPE = {
+  GET_ACCOUNT : 'wallet.getAccount',
+  GET_BALANCE : 'wallet.getBalance',
+  GET_UTXOS   : 'wallet.getUtxos',
+  SIGN_PSBT   : 'wallet.signPsbt'
+}
+
+const SYS_MESSAGE_TYPE = {
+  STORE_UPDATE : 'store.update',
+  NODE_RESET   : 'node.reset',
+  NODE_STATUS  : 'node.status',
+  URL_REPLACE  : 'url.replace'
+}
+
+export const MESSAGE_TYPE = {
+  ...SYS_MESSAGE_TYPE,
+  ...NOSTR_MSG_TYPE,
+  ...WALLET_MSG_TYPE
+}
+
+export const PERMISSION_BYPASS : Record<string, boolean> = {
+  [MESSAGE_TYPE.STORE_UPDATE] : true,
+  [MESSAGE_TYPE.NODE_RESET]   : true,
+  [MESSAGE_TYPE.NODE_STATUS]  : true,
+  [MESSAGE_TYPE.URL_REPLACE]  : true
+}
+
+export const PERMISSION_LABELS = Object.fromEntries([
+  [MESSAGE_TYPE.GET_PUBLIC_KEY, 'read your public key'],
+  [MESSAGE_TYPE.GET_RELAYS,     'read your list of preferred relays'],
+  [MESSAGE_TYPE.SIGN_EVENT,     'sign events using your private key'],
+  [MESSAGE_TYPE.NIP04_ENCRYPT,  'encrypt messages to peers'],
+  [MESSAGE_TYPE.NIP04_DECRYPT,  'decrypt messages from peers'],
+  [MESSAGE_TYPE.NIP44_ENCRYPT,  'encrypt messages to peers'],
+  [MESSAGE_TYPE.NIP44_DECRYPT,  'decrypt messages from peers'],
+  [MESSAGE_TYPE.GET_ACCOUNT,    'read your wallet address'],
+  [MESSAGE_TYPE.GET_BALANCE,    'read your wallet balance'],
+  [MESSAGE_TYPE.GET_UTXOS,      'read your wallet utxos'],
+  [MESSAGE_TYPE.SIGN_PSBT,      'sign psbt transactions']
 ])

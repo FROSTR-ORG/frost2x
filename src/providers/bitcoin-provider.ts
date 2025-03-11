@@ -1,9 +1,10 @@
+import { MESSAGE_TYPE } from '../const.js';
 import type { WalletUtxo, WalletSignMainifest } from '../types/index.js'
 
 // First declare the window btc property type
 declare global {
   interface Window {
-    btc_wallet: {
+    bitcoin: {
       _requests: Record<string, { resolve: (value: any) => void, reject: (error: Error) => void }>;
       _account: string | null;
       getAccount(): Promise<string>;
@@ -15,30 +16,32 @@ declare global {
   }
 }
 
-window.btc_wallet = {
+window.bitcoin = {
   _requests : {},
   _account  : null,
 
   async getAccount() {
     if (this._account === null) {
-      this._account = await this._call('wallet.getAccount', {})
-    }
-    if (typeof this._account !== 'string') {
-      throw new Error('Failed to get wallet account')
+      const res = await this._call(MESSAGE_TYPE.GET_ACCOUNT, {}) as { account: string }
+      if (typeof res.account !== 'string') {
+        throw new Error('Failed to get wallet account')
+      } else {
+        this._account = res.account
+      }
     }
     return this._account
   },
 
   async getBalance() {
-    return window.btc_wallet._call('wallet.getBalance', {})
+    return window.bitcoin._call(MESSAGE_TYPE.GET_BALANCE, {})
   },
 
   async getUtxos(amount: number) {
-    return window.btc_wallet._call('wallet.getUtxos', { amount })
+    return window.bitcoin._call(MESSAGE_TYPE.GET_UTXOS, { amount })
   },
 
   async signPsbt(psbt: string, manifest: WalletSignMainifest) {
-    return window.btc_wallet._call('wallet.signPsbt', { psbt, manifest })
+    return window.bitcoin._call(MESSAGE_TYPE.SIGN_PSBT, { psbt, manifest })
   },
 
   _call(type: string, params: Record<string, any>) {
@@ -79,16 +82,16 @@ window.addEventListener('message', message => {
     message.data.response === null ||
     message.data.response === undefined ||
     message.data.ext !== 'frost2x' ||
-    !window.btc_wallet._requests[message.data.id]
+    !window.bitcoin._requests[message.data.id]
   )
     return
 
   if (message.data.response.error) {
     let error = new Error('frost2x: ' + message.data.response.error.message)
     error.stack = message.data.response.error.stack
-    window.btc_wallet._requests[message.data.id].reject(error)
+    window.bitcoin._requests[message.data.id].reject(error)
   } else {
-    window.btc_wallet._requests[message.data.id].resolve(message.data.response)
+    window.bitcoin._requests[message.data.id].resolve(message.data.response)
   }
 
   console.log(
@@ -105,7 +108,7 @@ window.addEventListener('message', message => {
     'font-weight:bold;color:#08589d'
   )
 
-  delete window.btc_wallet._requests[message.data.id]
+  delete window.bitcoin._requests[message.data.id]
 })
 
 // Fix the replacing variable type
@@ -119,7 +122,7 @@ async function replaceNostrSchemeLink(e: MouseEvent) {
   
   if (replacing === false) return
 
-  let response = await window.btc_wallet._call('replace_url', {url: target.href})
+  let response = await window.bitcoin._call(MESSAGE_TYPE.URL_REPLACE, {url: target.href})
 
   if (response === false) {
     replacing = false

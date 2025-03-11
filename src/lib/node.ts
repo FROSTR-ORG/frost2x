@@ -1,9 +1,8 @@
 import { BifrostNode }         from '@frostr/bifrost'
 import { fetchExtensionStore } from '../stores/extension.js'
+import { addLog }              from '../stores/logs.js'
 
 import type { BifrostNodeConfig } from '@frostr/bifrost'
-
-import browser from 'webextension-polyfill'
 
 export async function keep_alive (
   node : BifrostNode | null
@@ -59,8 +58,5 @@ async function log (
   const timestamp = new Date().toISOString()
   const entry     = { timestamp, message, type }
 
-  browser.runtime.sendMessage({ 
-    type: 'log',
-    data: entry 
-  }).catch(err => console.error('Failed to send log message:', err))
+  await addLog(entry)
 }

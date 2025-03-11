@@ -29,7 +29,7 @@ function Prompt() {
           {host}
         </b>{' '}
         <p>
-          is requesting your permission to <b>{type && CONST.PERMISSION_NAMES[type]}:</b>
+          is requesting your permission to <b>{type && CONST.PERMISSION_LABELS[type]}:</b>
         </p>
       </div>
       {params && (

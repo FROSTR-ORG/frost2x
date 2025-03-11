@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill'
 
-import * as nip19           from 'nostr-tools/nip19'
-import { createRoot }       from 'react-dom/client'
+import * as nip19     from 'nostr-tools/nip19'
+import { createRoot } from 'react-dom/client'
 
 import {
   useState,
@@ -11,6 +11,8 @@ import {
 } from 'react'
 
 import { ExtensionStoreProvider, useExtensionStore } from './stores/extension.js'
+
+import { MESSAGE_TYPE } from './const.js'
 
 function Popup() : ReactElement {
   const { store } = useExtensionStore()
@@ -127,7 +129,7 @@ function Popup() : ReactElement {
 
   async function checkNodeStatus() {
     try {
-      const res = await browser.runtime.sendMessage({ type: 'get_node_status' }) as { status: string }
+      const res = await browser.runtime.sendMessage({ type: MESSAGE_TYPE.NODE_STATUS }) as { status: string }
       setNodeStatus(res.status)
     } catch (error) {
       console.error('Error checking node status:', error)
@@ -141,7 +143,7 @@ function Popup() : ReactElement {
       setNodeStatus('restarting');
       
       // Send the reset message to the background script
-      browser.runtime.sendMessage({ type: 'node_reset' });
+      browser.runtime.sendMessage({ type: MESSAGE_TYPE.NODE_RESET });
     } catch (error) {
       console.error('error resetting node:', error);
       // If there's an error, revert to 'unknown'
