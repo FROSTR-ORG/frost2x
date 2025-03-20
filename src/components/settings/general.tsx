@@ -87,18 +87,18 @@ export default function GeneralSettings({ settings, saveSettings }: Props) {
       {/* Section action buttons */}
       <div className="settings-actions">
         <button 
-          className="button button-secondary" 
-          onClick={handleCancel}
-          style={{ visibility: hasChanges() ? 'visible' : 'hidden' }}
-        >
-          Cancel
-        </button>
-        <button 
           className="button button-primary" 
           onClick={handleSave}
           disabled={!hasChanges()}
         >
           Save
+        </button>
+        <button 
+          className="button button-secondary" 
+          onClick={handleCancel}
+          style={{ visibility: hasChanges() ? 'visible' : 'hidden' }}
+        >
+          Cancel
         </button>
       </div>
     </section>

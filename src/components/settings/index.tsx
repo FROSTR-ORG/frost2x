@@ -38,24 +38,21 @@ export default function Settings(
   }
   
   return (
-    <>
-      <div className="container settings-form">
-        <GeneralSettings settings={store.settings} saveSettings={saveSettings} />
-        <ExplorerSettings settings={store.settings} saveSettings={saveSettings} />
-        <TransactionSettings settings={store.settings} saveSettings={saveSettings} />
-        {/* <LinkSettings settings={store.settings} saveSettings={saveSettings} /> */}
-      </div>
-      
-      <div className="container">
-        <h2 className="section-header">Danger Zone</h2>
+    <div className="container">
+      <GeneralSettings settings={store.settings} saveSettings={saveSettings} />
+      {/* <ExplorerSettings settings={store.settings} saveSettings={saveSettings} /> */}
+      {/* <TransactionSettings settings={store.settings} saveSettings={saveSettings} /> */}
+      {/* <LinkSettings settings={store.settings} saveSettings={saveSettings} /> */}
+      <section className="settings-section">
+        <h2>Danger Zone</h2>
         <p className="description">For development and testing. Use at your own risk!</p>
-        <button 
+        <button
           onClick={() => reset()} 
-          className="reset-button"
+          className="button button-remove"
         >
-          reset store
+          Reset Store
         </button>
-      </div>
-    </>
+      </section>
+    </div>
   )
 }
