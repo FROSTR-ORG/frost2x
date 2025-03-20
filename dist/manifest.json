@@ -33,8 +33,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "nostr-provider.build.js",
-        "bitcoin-provider.build.js"
+        "nostr-provider.build.js"
       ],
       "matches": [
         "https://*/*",

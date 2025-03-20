@@ -9,9 +9,9 @@ export default function Permissions({ showMessage }: PermissionsProps) {
   return (
     <div>
       <EventPermissions showMessage={showMessage} />
-      <div className="section-separator"></div>
-      <WalletPermissions showMessage={showMessage} />
-      <div className="section-separator"></div>
+      {/* <div className="section-separator"></div> */}
+      {/* <WalletPermissions showMessage={showMessage} /> */}
+      {/* <div className="section-separator"></div> */}
     </div>
   )
 }

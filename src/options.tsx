@@ -112,7 +112,15 @@ function Options(): ReactElement {
           {/* Wallet Tab */}
           {activeTab === 'wallet' && (
             <div className="tab-panel">
-              <Wallet showMessage={showMessage} />
+              {/* <Wallet showMessage={showMessage} /> */}
+              <div className="tab-panel-placeholder">
+                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center' }}>coming soon</p>
+                <img
+                  src="static/welding.gif"
+                  alt="welding" 
+                  className="gif"
+                />
+              </div>
             </div>
           )}
         </div>
