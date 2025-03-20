@@ -1,7 +1,6 @@
-import { BifrostNode }  from '@frostr/bifrost'
-import { NodeStore }    from '@/stores/node.js'
-import { SettingStore } from '@/stores/settings.js'
-import { LogStore }     from '@/stores/logs.js'
+import { BifrostNode }         from '@frostr/bifrost'
+import { fetchExtensionStore } from '../stores/extension.js'
+import { addLog }              from '../stores/logs.js'
 
 import type { BifrostNodeConfig } from '@frostr/bifrost'
 
@@ -12,17 +11,17 @@ export async function keep_alive (
 }
 
 export async function init_node () : Promise<BifrostNode | null> {
-  const { group, peers, relays, share } = await NodeStore.fetch()
+  let store = await fetchExtensionStore()
 
-  const { node : { rate_limit } } = await SettingStore.fetch()
+  const { group, peers, relays, share } = store.node
 
   if (group === null || peers === null || share === null) {
+    console.error('extension store is missing required fields')
     return null
   }
 
   const opt : Partial<BifrostNodeConfig> = {
-    policies      : peers ?? [],
-    sign_interval : rate_limit
+    policies : peers ?? []
   }
 
   const relay_urls = relays
@@ -32,23 +31,31 @@ export async function init_node () : Promise<BifrostNode | null> {
   const node = new BifrostNode(group, share, relay_urls, opt)
 
   node.on('ready', async () => {
-    await LogStore.clear()
-    LogStore.add('bifrost node connected', 'success')
-    console.log('bifrost node connected')
+    console.log('background node connected')
+    log('background node connected', 'success')
   })
 
   const filter = [ 'ready', 'message', 'closed' ]
 
-  node.on('*', (...args : any[]) => {
-    const [ event, msg ] = args
+  node.on('*', (event : any) => {
     if (filter.includes(event)) return
-    LogStore.add(`[ ${event} ] ${msg}`, 'info')
+    log(`emitted event: ${event}`, 'info')
   })
 
   node.on('closed', () => {
-    LogStore.add('bifrost node disconnected', 'info')
-    console.log('bifrost node disconnected')
+    console.log('background node closed')
+    log('background node closed', 'info')
   })
 
   return node.connect()
+}
+
+async function log (
+  message : string,
+  type    : 'info' | 'error' | 'warning' | 'success'
+) : Promise<void> {
+  const timestamp = new Date().toISOString()
+  const entry     = { timestamp, message, type }
+
+  await addLog(entry)
 }

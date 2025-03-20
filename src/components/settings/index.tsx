@@ -13,50 +13,37 @@ export default function Settings(
 ) {
   // State management
   const { store, reset, update } = useExtensionStore()
-
   const [ settings, setSettings ] = useState<SettingStore>(store.settings)
 
   useEffect(() => {
     setSettings(store.settings)
   }, [ store.settings ])
 
-  const update_settings = (settings: Partial<SettingStore>) => {
-    setSettings((prev) => ({
-      ...prev,
-      ...settings
-    }))
-  }
-
-  // Event handlers for main settings
-  const save_settings = () => {
+  // Function to save all settings - will be passed to individual components
+  const saveSettings = (sectionSettings: Partial<SettingStore>) => {
     try {
-      update ({
-        settings : {
+      update({
+        settings: {
           ...store.settings,
-          ...settings
+          ...sectionSettings
         }
       })
       showMessage('settings saved')
+      return true
     } catch (error) {
       console.error('error saving settings:', error)
       showMessage('settings error')
+      return false
     }
   }
   
   return (
     <>
       <div className="container settings-form">
-        <GeneralSettings settings={settings} update={update_settings} />
-        <ExplorerSettings settings={settings} update={update_settings} />
-        <TransactionSettings settings={settings} update={update_settings} />
-        {/* <LinkSettings settings={settings} update={update_settings} /> */}
-
-        <button
-          className="button button-primary save-button"
-          onClick={save_settings}
-        >
-          Save
-        </button>
+        <GeneralSettings settings={store.settings} saveSettings={saveSettings} />
+        <ExplorerSettings settings={store.settings} saveSettings={saveSettings} />
+        <TransactionSettings settings={store.settings} saveSettings={saveSettings} />
+        {/* <LinkSettings settings={store.settings} saveSettings={saveSettings} /> */}
       </div>
       
       <div className="container">

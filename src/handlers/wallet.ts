@@ -1,8 +1,12 @@
+import { BifrostNode }         from '@frostr/bifrost'
 import { MESSAGE_TYPE }        from '../const.js'
 import { fetchExtensionStore } from '../stores/extension.js'
 
 import {
+  apply_psbt_sigs,
   filter_utxos,
+  get_psbt_sighashes,
+  get_sighash_messages,
   get_utxo_balance,
   select_utxos
 } from '../lib/wallet.js'
@@ -10,7 +14,8 @@ import {
 import type { ContentScriptMessage } from '../types/index.js'
 
 export async function handleWalletRequest (
-  msg : ContentScriptMessage
+  node : BifrostNode,
+  msg  : ContentScriptMessage
 ) {
   const { params, type } = msg
 
@@ -52,12 +57,35 @@ export async function handleWalletRequest (
         }
       }
       case MESSAGE_TYPE.SIGN_PSBT: {
-        return { error: { message: 'not implemented' } }
+        const { psbt, manifest } = params
+
+        // TODO: Schema validation for psbt and manifest.
+
+        const sighashes = get_psbt_sighashes(psbt, manifest)
+
+        if (!sighashes.ok) {
+          return { error: { message: sighashes.err } }
+        }
+
+        const messages = get_sighash_messages(sighashes.value)
+        const response = await node.req.sign(messages)
+
+        if (!response.ok) {
+          return { error: { message: response.err } }
+        }
+
+        const signed_psbt = apply_psbt_sigs(psbt, sighashes.value, response.data)
+
+        if (!signed_psbt.ok) {
+          return { error: { message: signed_psbt.err } }
+        }
+
+        return { psbt: signed_psbt.value }
       }
     }
   } catch (error: any) {
     console.error('background error:', error)
-    return { error: { message: error.message, stack: error.stack } }
+    return { error: { message: 'internal error' } }
   }
 }
 
