@@ -7,11 +7,11 @@ nostr_provider.setAttribute('type', 'text/javascript')
 nostr_provider.setAttribute('src', browser.runtime.getURL('nostr-provider.build.js'))
 document.head.appendChild(nostr_provider)
 
-let bitcoin_provider = document.createElement('script')
-bitcoin_provider.setAttribute('async', 'false')
-bitcoin_provider.setAttribute('type', 'text/javascript')
-bitcoin_provider.setAttribute('src', browser.runtime.getURL('bitcoin-provider.build.js'))
-document.head.appendChild(bitcoin_provider)
+// let bitcoin_provider = document.createElement('script')
+// bitcoin_provider.setAttribute('async', 'false')
+// bitcoin_provider.setAttribute('type', 'text/javascript')
+// bitcoin_provider.setAttribute('src', browser.runtime.getURL('bitcoin-provider.build.js'))
+// document.head.appendChild(bitcoin_provider)
 
 // listen for messages from that script
 window.addEventListener('message', async message => {
