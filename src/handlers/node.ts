@@ -1,4 +1,4 @@
-import { init_node } from '../lib/node.js'
+import { init_node } from '../services/node.js'
 
 import type { ContentScriptMessage, GlobalState } from '../types/index.js'
 

@@ -7,10 +7,7 @@ import type { BifrostNodeConfig } from '@frostr/bifrost'
 export async function keep_alive (
   node : BifrostNode | null
 ) : Promise<BifrostNode | null> {
-  if (node === null) {
-    return init_node()
-  }
-  return node
+  return (node === null) ? init_node() : node
 }
 
 export async function init_node () : Promise<BifrostNode | null> {
@@ -38,9 +35,11 @@ export async function init_node () : Promise<BifrostNode | null> {
     log('background node connected', 'success')
   })
 
-  node.on('message', (msg) => {
-    console.log('received message event:', msg.env.id)
-    log(`received message event: ${msg.env.id}`, 'info')
+  const filter = [ 'ready', 'message', 'closed' ]
+
+  node.on('*', (event : any) => {
+    if (filter.includes(event)) return
+    log(`emitted event: ${event}`, 'info')
   })
 
   node.on('closed', () => {

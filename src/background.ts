@@ -1,6 +1,6 @@
 import browser       from 'webextension-polyfill'
 import { Mutex }     from 'async-mutex'
-import { init_node } from './lib/node.js'
+import { init_node } from './services/node.js'
 
 import {
   fetchExtensionStore,

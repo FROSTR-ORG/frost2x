@@ -1,58 +1,122 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import type { SettingStore, ExtensionSettingsProps } from '../../types/index.js'
 
-import type { ExtensionSettingsProps } from '../../types/index.js'
+type Props = {
+  settings: SettingStore;
+  saveSettings: (settings: Partial<SettingStore>) => boolean;
+}
 
-export default function LinkSettings ({ settings, update }: ExtensionSettingsProps) {
+export default function LinkSettings({ settings, saveSettings }: Props) {
+  // Local state for this section
+  const [localSettings, setLocalSettings] = useState({
+    'links/is_active': settings['links/is_active'],
+    'links/resolver_url': settings['links/resolver_url'] || ''
+  })
   const [showInfoModal, setShowInfoModal] = useState(false);
   
+  // Update local state when main settings change
+  useEffect(() => {
+    setLocalSettings({
+      'links/is_active': settings['links/is_active'],
+      'links/resolver_url': settings['links/resolver_url'] || ''
+    })
+  }, [settings])
+  
+  // Check if there are unsaved changes
+  const hasChanges = () => {
+    return (
+      localSettings['links/is_active'] !== settings['links/is_active'] ||
+      localSettings['links/resolver_url'] !== (settings['links/resolver_url'] || '')
+    )
+  }
+  
+  // Save changes to extension store
+  const handleSave = () => {
+    saveSettings(localSettings)
+  }
+  
+  // Revert unsaved changes
+  const handleCancel = () => {
+    setLocalSettings({
+      'links/is_active': settings['links/is_active'],
+      'links/resolver_url': settings['links/resolver_url'] || ''
+    })
+  }
+
+  // Update local state for a specific field
+  const updateField = (field: string, value: any) => {
+    setLocalSettings({
+      ...localSettings,
+      [field]: value
+    })
+  }
+
   return (
-    <div className="settings-group">
-      <h2 className="section-header">Link Settings</h2>
+    <section className="settings-section">
+      <h2>Link Settings</h2>
       
-      <div className="setting-item">
+      <div className="form-row checkbox-container">
         <input
           type="checkbox"
           id="links-active"
-          className="checkbox"
-          checked={settings['links/is_active']}
-          onChange={() => update({ 'links/is_active': !settings['links/is_active'] })}
+          checked={localSettings['links/is_active']}
+          onChange={() => updateField('links/is_active', !localSettings['links/is_active'])}
         />
         <label htmlFor="links-active">
           Detect and highlight <code>nostr:</code> links in your browser.
         </label>
       </div>
       
-      <div className="input-group-vertical">
-        <p className="field-description">
-          Enter the URL that should be used to open nostr links when clicked.
-        </p>
-        
-        <input
-          id="resolver-url"
-          type="text"
-          className="text-input"
-          value={settings['links/resolver_url'] || ''}
-          onChange={(e) => update({ 'links/resolver_url': e.target.value })}
-          placeholder="https://example.com/{raw}"
-        />
-        
-        <button 
-          className="info-button" 
-          onClick={() => setShowInfoModal(!showInfoModal)}
-        >
-          {showInfoModal ? 'Hide Examples' : 'Show Examples'}
-        </button>
-        
-        {showInfoModal && (
-          <div className="info-modal">
-            <div className="info-modal-content">
-              <h4>Link Examples</h4>
-              <pre className="code-display">{nostr_link_help_txt}</pre>
+      <div className="form-row">
+        <label className="form-label">Resolver URL</label>
+        <div>
+          <input
+            type="text"
+            className="form-input"
+            value={localSettings['links/resolver_url']}
+            onChange={(e) => updateField('links/resolver_url', e.target.value)}
+            placeholder="https://example.com/{raw}"
+          />
+          <p className="field-description">
+            Enter the URL that should be used to open nostr links when clicked.
+          </p>
+          
+          <button 
+            className="info-button" 
+            onClick={() => setShowInfoModal(!showInfoModal)}
+          >
+            {showInfoModal ? 'Hide Examples' : 'Show Examples'}
+          </button>
+          
+          {showInfoModal && (
+            <div className="info-modal">
+              <div className="info-modal-content">
+                <h4>Link Examples</h4>
+                <pre className="code-display">{nostr_link_help_txt}</pre>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Section action buttons */}
+      <div className="settings-actions">
+        <button 
+          className="button button-secondary" 
+          onClick={handleCancel}
+          style={{ visibility: hasChanges() ? 'visible' : 'hidden' }}
+        >
+          Cancel
+        </button>
+        <button 
+          className="button button-primary" 
+          onClick={handleSave}
+          disabled={!hasChanges()}
+        >
+          Save
+        </button>
+      </div>
+    </section>
   )
 }
 

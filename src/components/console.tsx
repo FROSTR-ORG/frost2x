@@ -70,7 +70,7 @@ export default function Console() {
   }
 
   return (
-    <div className="container console-container">
+    <div className="container">
       <h2 className="section-header">Event Console</h2>
       <p className="description">Monitor events from your bifrost node.</p>
       

@@ -7,7 +7,7 @@
 /* Layout - Options Page Specific */
 body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; overflow-x: hidden; }
 
-.container { width: 100%; max-width: 700px; padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 1.5rem; }
+.container { width: 100%; max-width: 700px; padding: 12px 0; margin-bottom: 1.5rem; }
 .content-container { width: 100%; margin-top: 10px; }
 
 .page-header {
@@ -30,7 +30,6 @@ body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; o
 /* Forms - Settings Specific */
 .settings-form { margin-bottom: 30px; }
 .settings-section { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-.settings-section:last-child { border-bottom: none; }
 .settings-section h2 { font-size: 22px; color: #fff; margin-bottom: 20px; }
 
 .form-row { display: flex; flex-direction: column; margin-bottom: 20px; }
@@ -43,6 +42,21 @@ body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; o
 .settings-group { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
 .setting-item { display: flex; align-items: flex-start; margin-bottom: 15px; }
 .setting-item input[type="checkbox"] { margin: 3px 10px 0 0; }
+
+/* Add special styling for checkbox containers */
+.checkbox-container {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin-right: 10px;
+  margin-top: 3px; /* Align with first line of text */
+}
+
+.checkbox-container label {
+  margin-bottom: 0;
+}
 
 /* ========================================================================= */
 /* Tabs - Navigation for Options */
@@ -60,7 +74,15 @@ body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; o
   margin: 0 auto;
 }
 
-.tab-panel { background: transparent; padding: 15px 0; border-radius: 0 0 8px 8px; }
+.tab-panel { 
+  background: transparent; 
+  padding: 15px 2rem; 
+  border-radius: 0 0 8px 8px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
 .tx-navigation { display: flex; max-width: 100%; }
 .tx-navigation .tab-button { padding: 0.5rem 1rem; border-bottom: 2px solid transparent; transition: all 0.2s ease; }
@@ -187,11 +209,6 @@ body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; o
 
 /* ========================================================================= */
 /* Console - Terminal Style Output */
-.console-container {
-  width: 100%;
-  margin-bottom: 30px;
-}
-
 .console-output {
   background: rgba(13, 25, 45, 0.7);
   border: 1px solid rgba(100, 140, 210, 0.3);
@@ -211,6 +228,7 @@ body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; o
   line-height: 1.5;
   margin-bottom: 4px;
   padding: 4px 0;
+  text-align: left;
 }
 
 .console-timestamp {
@@ -218,10 +236,12 @@ body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; o
   display: inline-block;
   margin-right: 10px;
   user-select: none;
+  text-align: left;
 }
 
 .console-message {
   color: #e6e6e6;
+  text-align: left;
 }
 
 .console-info {
@@ -251,6 +271,7 @@ body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; o
   display: flex;
   gap: 10px;
   margin-top: 15px;
+  align-self: center;
 }
 
 /* Add scrollbar styling for the console */
@@ -337,4 +358,76 @@ body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; o
 .utxo-section table td.checkbox-cell input[type="checkbox"] {
   margin: 0;
   vertical-align: middle;
+}
+
+/* Settings action buttons */
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 15px;
+}
+
+.settings-actions .button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-primary {
+  background: rgba(74, 144, 226, 0.8);
+  color: white;
+  border: none;
+}
+
+.button-primary:hover {
+  background: rgba(74, 144, 226, 1);
+}
+
+.button-primary:disabled {
+  background: rgba(74, 144, 226, 0.3);
+  cursor: not-allowed;
+}
+
+.button-secondary {
+  background: transparent;
+  color: #e6e6e6;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.button-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Make the console output and its elements left-aligned */
+.tab-panel .console-output {
+  align-self: stretch; /* Makes the console output take full width */
+  width: 100%;
+}
+
+/* Ensure console text content is left-aligned */
+.console-entry {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  line-height: 1.5;
+  margin-bottom: 4px;
+  padding: 4px 0;
+  text-align: left; /* Explicitly set text alignment */
+}
+
+/* Make the console timestamp and message left-aligned */
+.console-timestamp,
+.console-message {
+  text-align: left;
+}
+
+/* Make console controls container take full width but keep buttons centered */
+.console-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  align-self: center; /* Center the buttons container */
 }

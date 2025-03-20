@@ -1,19 +1,45 @@
+import { useState, useEffect } from 'react'
 import type { SettingStore } from '../../types/index.js'
-
 import browser from 'webextension-polyfill'
 
 type Props = {
   settings: SettingStore;
-  update: (s: Partial<SettingStore>) => void;
+  saveSettings: (settings: Partial<SettingStore>) => boolean;
 }
 
-export default function GeneralSettings({ settings, update }: Props) {
+export default function GeneralSettings({ settings, saveSettings }: Props) {
+  // Local state for this section
+  const [localSettings, setLocalSettings] = useState({
+    'general/notifications': settings['general/notifications']
+  })
+  
+  // Update local state when main settings change
+  useEffect(() => {
+    setLocalSettings({
+      'general/notifications': settings['general/notifications']
+    })
+  }, [settings])
+  
+  // Check if there are unsaved changes
+  const hasChanges = () => {
+    return localSettings['general/notifications'] !== settings['general/notifications']
+  }
+  
+  // Save changes to extension store
+  const handleSave = () => {
+    saveSettings(localSettings)
+  }
+  
+  // Revert unsaved changes
+  const handleCancel = () => {
+    setLocalSettings({
+      'general/notifications': settings['general/notifications']
+    })
+  }
 
   const toggleNotifications = async () => {
-    const newValue = !settings['general/notifications']
-
-    console.log('toggleNotifications', newValue)
-      
+    const newValue = !localSettings['general/notifications']
+    
     // Request permissions if turning on notifications
     if (newValue) {
       console.log('requesting permissions')
@@ -36,7 +62,10 @@ export default function GeneralSettings({ settings, update }: Props) {
       console.log('removed', removed)
     }
 
-    update({ 'general/notifications': newValue })
+    setLocalSettings({
+      ...localSettings,
+      'general/notifications': newValue
+    })
   }
 
   return (
@@ -47,12 +76,30 @@ export default function GeneralSettings({ settings, update }: Props) {
         <input 
           type="checkbox" 
           id="showNotifications" 
-          checked={settings['general/notifications']}
+          checked={localSettings['general/notifications']}
           onChange={toggleNotifications}
         />
         <label htmlFor="showNotifications">
           Show notifications when the extension uses browser permissions.
         </label>
+      </div>
+
+      {/* Section action buttons */}
+      <div className="settings-actions">
+        <button 
+          className="button button-secondary" 
+          onClick={handleCancel}
+          style={{ visibility: hasChanges() ? 'visible' : 'hidden' }}
+        >
+          Cancel
+        </button>
+        <button 
+          className="button button-primary" 
+          onClick={handleSave}
+          disabled={!hasChanges()}
+        >
+          Save
+        </button>
       </div>
     </section>
   )

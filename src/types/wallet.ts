@@ -1,23 +1,31 @@
-import type { FrostrWallet }     from '../lib/wallet.js'
-import type { ExplorerUtxoData } from './explorer.js'
+export type WalletSignMainifest = Record<string, (number | SighashConfig)[]>
+export type SighashEntry        = [ string, string, number ]
 
-export type WalletSignMainifest = Record<string, number[]>
+export interface SighashConfig {
+  index     : number,
+  code_sep? : number,
+  annex?    : string
+}
+
+export interface SighashData {
+  index   : number
+  type    : 'script' | 'key'
+  hash    : string
+  sigtype : number
+  tweak   : string | null
+  version : number
+}
+
+export interface SignedSighashData extends SighashData {
+  pubkey : string
+  sig    : string
+}
 
 export interface WalletUtxo {
   txid   : string
   vout   : number
   value  : number
   script : string
-}
-
-export interface WalletAccount {
-  payment : { address : string, pubkey : string }
-  change  : { address : string, pubkey : string }
-  meta    : { address : string, pubkey : string }
-}
-
-export interface WalletConnector {
-  signPsbt : (wallet : FrostrWallet) => (psbt : string, manifest : WalletSignMainifest) => Promise<string>
 }
 
 export interface WalletStore {
@@ -25,14 +33,7 @@ export interface WalletStore {
   utxo_set : WalletStoreUtxo[]
 }
 
-export interface WalletUtxo {
-  txid   : string
-  vout   : number
-  value  : number
-  script : string
-}
-
 export interface WalletStoreUtxo extends WalletUtxo {
   confirmed : boolean
-  selected : boolean
+  selected  : boolean
 }
