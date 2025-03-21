@@ -26,10 +26,3 @@ export interface Nip19Data {
   type : string
   data : string | ProfilePointer | EventPointer
 }
-
-export interface SignRequest {
-  id      : string
-  tmpl    : EventTemplate
-  resolve : (result: any) => void
-  reject  : (error: any) => void
-}
