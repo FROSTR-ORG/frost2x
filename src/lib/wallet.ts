@@ -3,7 +3,10 @@ import { Buff }    from '@cmdcode/buff'
 
 import type { PSBTInput } from '../util/psbt.js'
 
-import type { SignatureEntry } from '@frostr/bifrost'
+import type {
+  SighashVector,
+  SignatureEntry
+} from '@frostr/bifrost'
 
 import type {
   ChainNetwork,
@@ -17,7 +20,6 @@ import type {
 
 import * as CONST  from '../const.js'
 import * as PSBT   from '../util/psbt.js'
-import { TaprootControlBlock } from '@scure/btc-signer'
 
 const RANDOM_SORT = () => Math.random() > 0.5 ? 1 : -1
 
@@ -137,11 +139,11 @@ function get_input_sighashes (
 
 export function get_sighash_messages (
   sighashes : SighashData[]
-) : string[][] {
+) : SighashVector[] {
   return sighashes.map(({ hash, tweak }) => {
     const ret = [ hash ]
     if (tweak !== null) ret.push(tweak)
-    return ret
+    return ret as SighashVector
   })
 }
 
@@ -196,9 +198,8 @@ function get_taptweak (pubkey : string) {
 }
 
 function verify_cblock (
-  cblock : PSBT.PSBTCBlock,
+  cblock : any,
   script : Uint8Array
 ) {
-  
-  return key.subarray(0, 32)
+  return false
 }

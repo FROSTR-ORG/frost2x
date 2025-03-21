@@ -1,4 +1,7 @@
 import browser from 'webextension-polyfill'
+import React   from 'react'
+
+import { createRoot } from 'react-dom/client'
 
 import { createRoot } from 'react-dom/client'
 import { parse_json } from '@/lib/utils.js'

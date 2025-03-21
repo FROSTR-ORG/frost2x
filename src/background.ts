@@ -4,7 +4,6 @@ import { init_node } from './services/node.js'
 
 import {
   fetchExtensionStore,
-  onExtensionStoreUpdate
 } from './stores/extension.js'
 
 import {
@@ -124,7 +123,7 @@ async function handleContentScriptMessage(msg : ContentScriptMessage) {
       case 'nostr':
         return handleSignerRequest(global, msg)
       case 'wallet':
-        return handleWalletRequest(msg)
+        return handleWalletRequest(global, msg)
     }
   }
 }
