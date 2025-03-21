@@ -2,7 +2,7 @@
 
 import esbuild from 'esbuild'
 
-const prod = process.argv.indexOf('prod') !== -1
+const prod = process.argv.indexOf('--prod') !== -1
 
 esbuild
   .build({
@@ -20,7 +20,7 @@ esbuild
       'popup.styles.build'     : './src/styles/popup.css',
       'prompt.styles.build'    : './src/styles/prompt.css'
     },
-    outdir: './extension',
+    outdir: './dist',
     sourcemap: prod ? false : 'inline',
     define: {
       window: 'self',

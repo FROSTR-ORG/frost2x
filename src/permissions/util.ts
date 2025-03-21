@@ -2,8 +2,11 @@ import * as CONST from '../const.js'
 
 import type { BasePermission } from '../types/index.js'
 
-export function is_permission_required (type: string): boolean {
-  return !(type in CONST.PERMISSION_BYPASS && CONST.PERMISSION_BYPASS[type as keyof typeof CONST.PERMISSION_BYPASS])
+export function is_permission_required (key: string): boolean {
+  return !(
+    key in CONST.PERMISSION_BYPASS &&
+    CONST.PERMISSION_BYPASS[key]
+  )
 }
 
 export function remove_reverse_policy (

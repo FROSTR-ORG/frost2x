@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill'
+import React   from 'react'
+
 import { createRoot } from 'react-dom/client'
-import React from 'react'
 
 import * as CONST from './const.js'
 

@@ -1,4 +1,3 @@
-import { BifrostNode }         from '@frostr/bifrost'
 import { MESSAGE_TYPE }        from '../const.js'
 import { fetchExtensionStore } from '../stores/extension.js'
 
@@ -11,13 +10,17 @@ import {
   select_utxos
 } from '../lib/wallet.js'
 
-import type { ContentScriptMessage } from '../types/index.js'
+import type { ContentScriptMessage, GlobalState } from '../types/index.js'
 
 export async function handleWalletRequest (
-  node : BifrostNode,
-  msg  : ContentScriptMessage
+  ctx : GlobalState,
+  msg : ContentScriptMessage
 ) {
   const { params, type } = msg
+
+  if (ctx.node === null) {
+    return { error: { message: 'bifrost node disconnected' } }
+  }
 
   const store = await fetchExtensionStore()
   const utxos = filter_utxos(store.wallet.utxo_set)
@@ -68,7 +71,7 @@ export async function handleWalletRequest (
         }
 
         const messages = get_sighash_messages(sighashes.value)
-        const response = await node.req.sign(messages)
+        const response = await ctx.node.req.sign(messages)
 
         if (!response.ok) {
           return { error: { message: response.err } }

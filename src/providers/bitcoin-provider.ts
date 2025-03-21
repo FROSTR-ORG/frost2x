@@ -1,5 +1,9 @@
 import { MESSAGE_TYPE } from '../const.js';
-import type { WalletUtxo, WalletSignMainifest } from '../types/index.js'
+
+import type {
+  WalletUtxo,
+  WalletSignMainifest
+} from '../types/index.js'
 
 // First declare the window btc property type
 declare global {

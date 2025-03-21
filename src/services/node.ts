@@ -1,6 +1,6 @@
 import { BifrostNode }         from '@frostr/bifrost'
 import { fetchExtensionStore } from '../stores/extension.js'
-import { addLog }              from '../stores/logs.js'
+import { addLog, clearLogs }   from '../stores/logs.js'
 
 import type { BifrostNodeConfig } from '@frostr/bifrost'
 
@@ -31,20 +31,22 @@ export async function init_node () : Promise<BifrostNode | null> {
   const node = new BifrostNode(group, share, relay_urls, opt)
 
   node.on('ready', async () => {
-    console.log('background node connected')
+    await clearLogs()
     log('background node connected', 'success')
+    console.log('background node connected')
   })
 
   const filter = [ 'ready', 'message', 'closed' ]
 
-  node.on('*', (event : any) => {
+  node.on('*', (...args : any[]) => {
+    const [ event, msg ] = args
     if (filter.includes(event)) return
-    log(`emitted event: ${event}`, 'info')
+    log(`[ ${event} ] ${msg}`, 'info')
   })
 
   node.on('closed', () => {
-    console.log('background node closed')
     log('background node closed', 'info')
+    console.log('background node closed')
   })
 
   return node.connect()
