@@ -8,24 +8,12 @@ import {
 
 import type { GroupPackage } from '@frostr/bifrost'
 
-export default function () {
-  const [ group, setGroup ] = useState<GroupPackage | null>(null)
+
+export default function ({ store } : { store : NodeStore.Type }) {
   const [ input, setInput ] = useState<string>('')
   const [ error, setError ] = useState<string | null>(null)
   const [ show, setShow   ] = useState<boolean>(false)
-  const [ toast, setToast ] = useState<string | null>(null)
-
-  const init = (group : GroupPackage | null) => {
-    if (group === null) return
-    try {
-      const group_str = encode_group_pkg(group)
-      setGroup(group)
-      setInput(group_str)
-      setError(null)
-    } catch (err) {
-      setError('failed to initialize group input')
-    }
-  }
+  const [ saved, setSaved ] = useState<boolean>(false)
 
   // Update the group in the store.
   const update = () => {
@@ -41,15 +29,9 @@ export default function () {
       if (group === null) return
       NodeStore.update({ group })
     }
-    setToast('group package updated')
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1500)
   }
-
-  // Fetch the group from the store and subscribe to changes.
-  useEffect(() => {
-    NodeStore.fetch().then(store => init(store.group))
-    const unsub = NodeStore.subscribe(store => init(store.group))
-    return () => unsub()
-  }, [])
 
   // Validate the group input when it changes.
   useEffect(() => {
@@ -60,8 +42,8 @@ export default function () {
     } else if (!is_group_string(input)) {
       setError('input contains invalid characters')
     } else {
-      const group = get_group_pkg(input)
-      if (group !== null) {
+      const pkg = get_group_pkg(input)
+      if (pkg !== null) {
         setError(null)
       } else {
         setError('failed to decode package data')
@@ -70,10 +52,19 @@ export default function () {
   }, [ input ])
 
   useEffect(() => {
-    if (toast !== null) {
-      setTimeout(() => setToast(null), 3000)
+    try {
+      if (store.group === null) {
+        setInput('')
+        setError(null)
+      } else {
+        const str = encode_group_pkg(store.group)
+        setInput(str)
+        setError(null)
+      }
+    } catch (err) {
+      setError('failed to decode package data')
     }
-  }, [ toast ])
+  }, [ store.group ])
 
   return (
     <div className="container">
@@ -95,11 +86,11 @@ export default function () {
               {show ? 'hide' : 'show'}
             </button>
             <button
-              className="button action-button" 
+              className={`button action-button ${saved ? 'saved-button' : ''}`} 
               onClick={update}
-              disabled={!is_group_changed(input, group) || error !== null}
+              disabled={!is_group_changed(input, store.group) || error !== null}
             >
-              save
+              {saved ? 'Saved' : 'Save'}
             </button>
           </div>
         </div>
@@ -109,8 +100,9 @@ export default function () {
             {get_group_json(input) ?? 'invalid group package'}
           </pre>
         )}
-        {error && <p className="error-text">{error}</p>}
-        {toast && <p className="toast-text">{toast}</p>}
+        <div className="notification-container">
+          {error && <p className="error-text">{error}</p>}
+        </div>
       </div>
     </div>
   )

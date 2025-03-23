@@ -32,8 +32,8 @@ export async function init_node () : Promise<BifrostNode | null> {
 
   node.on('ready', async () => {
     await LogStore.clear()
-    LogStore.add('background node connected', 'success')
-    console.log('background node connected')
+    LogStore.add('bifrost node connected', 'success')
+    console.log('bifrost node connected')
   })
 
   const filter = [ 'ready', 'message', 'closed' ]
@@ -45,8 +45,8 @@ export async function init_node () : Promise<BifrostNode | null> {
   })
 
   node.on('closed', () => {
-    LogStore.add('background node closed', 'info')
-    console.log('background node closed')
+    LogStore.add('bifrost node disconnected', 'info')
+    console.log('bifrost node disconnected')
   })
 
   return node.connect()

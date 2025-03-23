@@ -48,6 +48,29 @@ body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; o
   align-items: flex-start;
 }
 
+/* Add styling for peer table */
+.pubkey-cell {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+/* Ensure the cell maintains these properties even when highlighted */
+tr:hover .pubkey-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Style for checkbox cells in the peer table */
+.checkbox-cell {
+  width: 80px;
+  text-align: center;
+}
+
 .checkbox-container input[type="checkbox"] {
   margin-right: 10px;
   margin-top: 3px; /* Align with first line of text */
@@ -429,4 +452,68 @@ body { padding: 20px 40px; max-width: 800px; margin: 0 auto; overflow-y: auto; o
   gap: 10px;
   margin-top: 15px;
   align-self: center; /* Center the buttons container */
+}
+
+/* Updated styling for action buttons (save buttons) */
+.action-button {
+  background: rgba(74, 144, 226, 0.8);
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover:not(:disabled) {
+  background: rgba(74, 144, 226, 1);
+}
+
+.action-button:disabled {
+  background: rgba(74, 144, 226, 0.3);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Style for input action containers */
+.input-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Style specifically for action buttons (save buttons) in input sections */
+.input-with-button .action-button {
+  background: rgba(74, 144, 226, 0.8);
+  color: white;
+}
+
+.input-with-button .action-button:hover:not(:disabled) {
+  background: rgba(74, 144, 226, 1);
+}
+
+.input-with-button .action-button:disabled {
+  background: rgba(74, 144, 226, 0.3);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Style for input action containers - keep this */
+.input-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* New notification container class for settings */
+.notification-container {
+  margin-right: auto;
+  text-align: left;
+  flex-shrink: 0;
+  flex-basis: auto;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  min-height: 36px; /* Match button height */
+}
+
+.notification-container p {
+  margin: 0;
+  padding: 0;
 }

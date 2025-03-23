@@ -4,23 +4,24 @@ import { useEffect, useState } from 'react'
 
 import type { RelayPolicy } from '@/types/index.js'
 
-export default function () {
-  const [ relays, setRelays ]   = useState<RelayPolicy[]>([])
+export default function ({ store } : { store : NodeStore.Type }) {
+  const [ relays, setRelays ]   = useState<RelayPolicy[]>(store.relays)
   const [ relayUrl, setUrl ]    = useState('')
   const [ changes, setChanges ] = useState<boolean>(false)
   const [ error, setError ]     = useState<string | null>(null)
-  const [ toast, setToast ]     = useState<string | null>(null)
+  const [ saved, setSaved ]     = useState<boolean>(false)
 
   // Update the peer policies in the store.
   const update = () => {
     NodeStore.update({ relays })
     setChanges(false)
-    setToast('relay policy updated')
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1500)
   }
 
   // Discard changes by resetting local state from store
   const cancel = () => {
-    NodeStore.fetch().then(store => setRelays(store.relays))
+    setRelays(store.relays)
     setChanges(false)
   }
   
@@ -57,25 +58,18 @@ export default function () {
     setChanges(true)
   }
 
-  // Fetch the peer policies from the store and subscribe to changes.
   useEffect(() => {
-    NodeStore.fetch().then(store => setRelays(store.relays))
-    const unsub = NodeStore.subscribe(store => setRelays(store.relays))
-    return () => unsub()
-  }, [])
+    setRelays(store.relays)
+  }, [ store.relays ])
 
   useEffect(() => {
     if (error !== null) setError(null)
   }, [ relayUrl ])
   
-  useEffect(() => {
-    if (toast !== null) setTimeout(() => setToast(null), 3000)
-  }, [ toast ])
-  
   return (
     <div className="container">
       <h2 className="section-header">Relay Connections</h2>
-      <p className="description">Configure which relays your node will use to communicate.</p>
+      <p className="description">Configure which relays your node will use to communicate. "Read" will enable listening for inbound requests, and "Write" will enable publishing outbound requests.</p>
       
       <table>
         <thead>
@@ -136,7 +130,7 @@ export default function () {
         <button 
           onClick={update}
           disabled={!changes}
-          className="button button-primary save-button"
+          className={`button button-primary action-button ${saved ? 'saved-button' : ''}`}
         >
           {saved ? 'Saved' : 'Save'}
         </button>
@@ -149,7 +143,9 @@ export default function () {
             Cancel
           </button>
         )}
-        {toast && <p className="toast-text">{toast}</p>}
+        <div className="notification-container">
+          {error && <p className="error-text">{error}</p>}
+        </div>
       </div>
     </div>
   )
