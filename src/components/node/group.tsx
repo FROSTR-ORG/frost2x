@@ -15,42 +15,58 @@ export default function ({ store } : { store : NodeStore.Type }) {
   const [ show, setShow   ] = useState<boolean>(false)
   const [ saved, setSaved ] = useState<boolean>(false)
 
-  // Update the group in the store.
+  /**
+   * Handle the update of the store.
+   */
   const update = () => {
-    // If there is an error, do not update the group.
+    // If an error exists, do not update the group.
     if (error !== null) return
     // If the input is empty,
     if (input === '') {
       // Set the group to null.
       NodeStore.update({ group : null })
     } else {
-      // Parse the input and update the group.
+      // Parse the input into a group package.
       const group = get_group_pkg(input)
+      // If the group package is invalid, return.
       if (group === null) return
+      // Update the group in the store.
       NodeStore.update({ group })
     }
+    // Set the saved state, and reset it after a short delay.
     setSaved(true)
     setTimeout(() => setSaved(false), 1500)
   }
 
-  // Validate the group input when it changes.
+  /**
+   * Handle the validation of the input when it changes.
+   */
   useEffect(() => {
+    // If the input is empty, clear the error.
     if (input === '') {
       setError(null)
     } else if (!input.startsWith('bfgroup')) {
+      // If the input does not start with "bfgroup", set an error.
       setError('input must start with "bfgroup1"')
     } else if (!is_group_string(input)) {
+      // If the input contains invalid characters, set an error.
       setError('input contains invalid characters')
     } else {
+      // Parse the input into a group package.
       const pkg = get_group_pkg(input)
+      // If the group package is valid, clear the error.
       if (pkg !== null) {
         setError(null)
       } else {
+        // If the group package is invalid, set an error.
         setError('failed to decode package data')
       }
     }
   }, [ input ])
 
+  /**
+   * Handle the update of the input when the store changes.
+   */
   useEffect(() => {
     try {
       if (store.group === null) {
@@ -108,10 +124,16 @@ export default function ({ store } : { store : NodeStore.Type }) {
   )
 }
 
+/**
+ * Check if the input is a valid group string.
+ */
 function is_group_string(input : string) {
   return /^bfgroup1[023456789acdefghjklmnpqrstuvwxyz]+$/.test(input)
 }
 
+/**
+ * Check if the input has changed and is valid.
+ */
 function is_group_changed (
   input : string,
   group : GroupPackage | null
@@ -122,6 +144,9 @@ function is_group_changed (
   return input !== group_str
 }
 
+/**
+ * Get the group string from the group package.
+ */
 function get_group_str (group : GroupPackage | null) {
   try {
     return (group !== null) ? encode_group_pkg(group) : ''
@@ -130,6 +155,9 @@ function get_group_str (group : GroupPackage | null) {
   }
 }
 
+/**
+ * Get the group package from the input.
+ */
 function get_group_pkg (input : string) {
   try {
     return (input !== '') ? decode_group_pkg(input) : null
@@ -138,6 +166,9 @@ function get_group_pkg (input : string) {
   }
 }
 
+/**
+ * Get the group package from the input.
+ */
 function get_group_json(input : string) {
   try {
     const group = get_group_pkg(input)
