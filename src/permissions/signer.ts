@@ -17,27 +17,20 @@ export async function get_signer_permission (
   type    : string,
   params? : { event?: NostrEvent }
 ): Promise<boolean | null> {
-  console.log('get signer permission status params:', host, type, params)
   const perms = await PermStore.fetch().then(store => store.signer)
-  console.log('perms', perms)
   // Iterate over the permissions.
   for (const policy of perms) {
-    console.log('policy', policy)
     // If the policy matches the host and type,
     if (policy.host === host && policy.type === type) {
-      console.log('policy matches')
       // If the type is signEvent,
       if (type === 'nostr.signEvent' && params?.event) {
-        console.log('sign event matches')
         // If the event matches the conditions,
         if (params.event && policy.conditions && match_event_conditions(policy.conditions, params.event)) {
           // Return the accept value.
-          console.log('returning condition: ', policy.accept === 'true' ? true : false)
           return policy.accept === 'true' ? true : false
         }
       } else {
         // Return the accept value.
-        console.log('returning other: ', policy.accept === 'true' ? true : false)
         return policy.accept === 'true' ? true : false
       }
     }
@@ -51,7 +44,6 @@ export async function update_signer_permission (
   accept      : boolean,
   conditions? : SignerPolicyConditions
 ) : Promise<void> {
-  console.log('update signer permission params:', host, type, accept, conditions)
   // Create a new array to avoid mutating the original
   const perms = await PermStore.fetch().then(store => store.signer)
   // Check if we already have a matching policy
@@ -84,14 +76,11 @@ function match_event_conditions (
   event      : NostrEvent
 ): boolean {
   // If there are kind conditions,
-  console.log('match event params:', conditions, event)
   if (conditions?.kinds) {
-    console.log('conditions.kinds', conditions.kinds)
     // If the event kind is in the kinds object,
     const kind_policy = conditions.kinds[event.kind]
     if (kind_policy !== undefined) {
       // Return the value of the event kind in the kinds object.
-      console.log('conditions.kinds[event.kind]', conditions.kinds[event.kind])
       return kind_policy
     }
   }

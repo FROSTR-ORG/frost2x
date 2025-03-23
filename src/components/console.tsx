@@ -1,6 +1,6 @@
 import browser          from 'webextension-polyfill'
-import { LogStore }     from '../stores/logs.js'
-import { MESSAGE_TYPE } from '../const.js'
+import { LogStore }     from '@/stores/logs.js'
+import { MESSAGE_TYPE } from '@/const.js'
 
 import {
   useEffect,
@@ -8,7 +8,7 @@ import {
   useRef
 } from 'react'
 
-import type { LogEntry } from '../types/index.js'
+import type { LogEntry } from '@/types/index.js'
 
 export default function Console() {
   // State for logs

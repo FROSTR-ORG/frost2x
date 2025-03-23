@@ -111,8 +111,9 @@ async function handleContentScriptMessage(msg : ContentScriptMessage) {
   } else {
     // Get the permission response.
     const res = await handlePermissionRequest(msg)
+    console.log('permission response:', res)
     // If the response is not null, return it.
-    if (res !== null) return { error: res }
+    if (res !== null) return { error: { message: res } }
     // Handle the permissioned request.
     switch (domain) { 
       case 'nostr':
@@ -128,7 +129,6 @@ async function handlePromptMessage (
   sender  : browser.Runtime.MessageSender | null
 ) {
   try {
-    console.log('handlePromptMessage message:', message)
     const msg = parse_prompt_message(message)
     if (msg === null) throw new Error('received prompt response with null message')
     const { host, type, accept, conditions } = msg
@@ -147,6 +147,7 @@ async function handlePromptMessage (
       }
     }
   } catch (err: any) {
+    console.error('failed to handle prompt message')
     console.error(err)
   } finally {
     // Cleanup the prompt resolver.
@@ -162,15 +163,12 @@ async function handlePromptMessage (
 
 export async function handlePermissionRequest (
   message : ContentScriptMessage
-) : Promise<Record<string, string> | null> {
+) : Promise<string | null> {
   // Parse the incoming message.
-  console.log('handlePermissionRequest message:', message)
   const msg = parse_content_message(message)
   // If the message is null, return an error.
-  if (msg === null) {
-    return { message: 'invalid prompt message' }
-  }
-  // Unpack the message details.
+  if (msg === null) return 'invalid prompt message'
+  // Unpack the message details.: a: anyny
   const { host, type, params } = msg
   // Get the extension store.
   const store = await SettingStore.fetch()
@@ -180,7 +178,9 @@ export async function handlePermissionRequest (
   global.mutex.release = await global.mutex.lock.acquire()
   // Get the permission status for the request.
   let allowed = await getPermissionStatus(host, type, params)
-  console.log('handlePermissionRequest allowed:', allowed)
+
+  console.log('permission status:', { host, type, allowed })
+
   if (allowed === null) {
     try {
       // Disable notifications.
@@ -211,7 +211,8 @@ export async function handlePermissionRequest (
     } catch (err: any) {
       global.mutex.release()
       // Return an error.
-      return { message: err.message }
+      console.log('error handling permission request:', err)
+      return err.message
     }
   }
 
@@ -225,8 +226,8 @@ export async function handlePermissionRequest (
 
   // Handle the permission response.
   if (allowed === true)  return null
-  if (allowed === false) return { message: 'denied' }
-  return { message: 'failed to get permission' }
+  if (allowed === false) return 'denied'
+  return 'failed to get permission'
 }
 
 function parse_content_message (

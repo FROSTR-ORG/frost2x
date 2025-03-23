@@ -6,7 +6,6 @@ import type { SignerPolicy } from '@/types/perm.js'
 
 export default function SignerPermissions() {
   const [ table, setTable ] = useState<SignerPolicy[]>([])
-  const [ toast, setToast ] = useState<string | null>(null)
 
   useEffect(() => {
     PermStore.fetch().then(store => setTable(store.signer))
@@ -22,7 +21,6 @@ export default function SignerPermissions() {
       const new_perms = filter_policy(table, host!, type!, accept!)
       PermStore.update({ signer: new_perms })
       setTable(new_perms)
-      setToast('removed policies')
     }
   }
 
