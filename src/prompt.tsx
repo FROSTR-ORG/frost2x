@@ -43,9 +43,7 @@ function Prompt() {
 
   const perm_type   = msg.type as keyof typeof CONST.PERMISSION_LABELS
   const perm_label  = CONST.PERMISSION_LABELS[perm_type]
-  const perm_method = (perm_type.includes('.')
-    ? perm_type.split('.').slice(1).join('')
-    : perm_type)
+  const perm_method = parse_method(perm_type)
 
   return (
     <div className="prompt-container">
@@ -135,6 +133,12 @@ function parse_message (
   const type   = url_params.get('type')
   if (id === null || host === null || type === null) return null
   return { id, host, type }
+}
+
+function parse_method (type: string) {
+  return type.includes('.')
+    ? type.split('.').slice(1).join('.')
+    : type
 }
 
 function parse_params (url_params: URLSearchParams) {
