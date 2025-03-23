@@ -1,7 +1,5 @@
-import { NodeStore }  from '@/stores/node.js'
-import { get_pubkey } from '@frostr/bifrost/lib'
-
 import { useEffect, useState } from 'react'
+import { NodeStore }           from '@/stores/node.js'
 
 import type { PeerPolicy } from '@frostr/bifrost'
 

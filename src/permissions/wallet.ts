@@ -1,7 +1,7 @@
-import { updateExtensionStore }  from '../stores/extension.js'
+import { updateExtensionStore }  from '@/stores/extension.js'
 import { remove_reverse_policy } from '@/lib/perms.js'
 
-import type { ExtensionStore } from '../types/index.js'
+import type { ExtensionStore } from '@/types/index.js'
 
 export function getWalletPermissionStatus (
   store  : ExtensionStore,

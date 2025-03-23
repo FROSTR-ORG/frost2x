@@ -1,8 +1,11 @@
-import { init_node } from '../services/node.js'
+import { init_node } from '@/services/node.js'
 
-import type { ContentScriptMessage, GlobalState } from '../types/index.js'
+import type {
+  ContentScriptMessage,
+  GlobalState
+} from '@/types/index.js'
 
-import { MESSAGE_TYPE } from '../const.js'
+import { MESSAGE_TYPE } from '@/const.js'
 
 export async function handleNodeRequest (
   ctx : GlobalState,

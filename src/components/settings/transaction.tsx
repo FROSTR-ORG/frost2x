@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import type { SettingStore, TxPriority } from '../../types/index.js'
+
+import type { SettingStore, TxPriority } from '@/types/index.js'
 
 type Props = {
   settings: SettingStore;

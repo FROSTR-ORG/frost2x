@@ -1,6 +1,6 @@
 import type { BasePolicy } from '@/types/perm.js'
 
-import * as CONST from '../const.js'
+import * as CONST from '@/const.js'
 
 export function is_permission_required (
   key: string

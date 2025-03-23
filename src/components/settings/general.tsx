@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-
-import { SettingStore } from '@/stores/settings.js'
+import { SettingStore }        from '@/stores/settings.js'
 
 import browser from 'webextension-polyfill'
 

@@ -1,7 +1,7 @@
 import browser      from 'webextension-polyfill'
-import { MAX_LOGS } from '../const.js'
+import { MAX_LOGS } from '@/const.js'
 
-import type { LogEntry } from '../types/index.js'
+import type { LogEntry } from '@/types/index.js'
 
 export namespace LogStore {
 

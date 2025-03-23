@@ -1,5 +1,5 @@
-import type { BifrostNode }         from '@frostr/bifrost'
-import type { Mutex }               from 'async-mutex'
+import type { BifrostNode } from '@frostr/bifrost'
+import type { Mutex }       from 'async-mutex'
 
 import type { PolicyMethod, SignerPolicyConditions } from './perm.js'
 

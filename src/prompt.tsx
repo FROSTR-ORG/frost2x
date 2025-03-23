@@ -1,18 +1,18 @@
 import browser from 'webextension-polyfill'
 
 import { createRoot } from 'react-dom/client'
-import { parse_json } from './lib/utils.js'
+import { parse_json } from '@/lib/utils.js'
 
 import type { MouseEvent } from 'react'
 
 import type {
   PromptMessage,
   SignedEvent
-} from './types/index.js'
+} from '@/types/index.js'
 
-import * as CONST from './const.js'
+import * as CONST from '@/const.js'
 
-import './styles/prompt.css'
+import '@/styles/prompt.css'
 
 function Prompt() {
   // Parse the query string from the window location url.

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-
-import { SettingStore } from '@/stores/settings.js'
+import { SettingStore }        from '@/stores/settings.js'
 
 import ExplorerSettings    from './explorer.js'
 import GeneralSettings     from './general.js'
