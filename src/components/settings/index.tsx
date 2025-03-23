@@ -12,15 +12,8 @@ export default function Settings() {
   const [ store, setStore ] = useState<SettingStore.Type>(SettingStore.DEFAULT)
   
   useEffect(() => {
-    SettingStore.fetch().then(store => {
-      console.log('internal store', store)
-      setStore(store)
-      console.log('external store', store)
-    })
-    const unsub = SettingStore.subscribe(store => {
-      console.log('updated settings', store)
-      setStore(store)
-    })
+    SettingStore.fetch().then(store => setStore(store))
+    const unsub = SettingStore.subscribe(store => setStore(store))
     return () => unsub()
   }, [])
 
