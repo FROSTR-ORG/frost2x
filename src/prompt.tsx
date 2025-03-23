@@ -1,7 +1,14 @@
 import browser from 'webextension-polyfill'
-import React   from 'react'
 
 import { createRoot } from 'react-dom/client'
+import { parse_json } from './lib/utils.js'
+
+import type { MouseEvent } from 'react'
+
+import type {
+  PromptMessage,
+  SignedEvent
+} from './types/index.js'
 
 import { createRoot } from 'react-dom/client'
 import { parse_json } from '@/lib/utils.js'
@@ -16,6 +23,8 @@ import type {
 import * as CONST from '@/const.js'
 
 import '@/styles/prompt.css'
+
+import './styles/prompt.css'
 
 function Prompt() {
   // Parse the query string from the window location url.
@@ -35,85 +44,17 @@ function Prompt() {
     return JSON.stringify(json, null, 2);
   }
 
-  return (
-    <>
-      <div>
-        <b style={{display: 'block', textAlign: 'center', fontSize: '200%'}}>
-          {host}
-        </b>{' '}
-        <p>
-          is requesting your permission to <b>{type && CONST.PERMISSION_LABELS[type]}:</b>
-        </p>
-      </div>
-      {params && (
-        <>
-          <p>now acting on</p>
-          <pre style={{overflow: 'auto', maxHeight: '120px'}}>
-            <code>{JSON.stringify(event || params, null, 2)}</code>
-          </pre>
-        </>
-      )}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'space-around'
-        }}
-      >
-        <button
-          style={{marginTop: '5px'}}
-          onClick={authorizeHandler(
-            true,
-            {} // store this and answer true forever
-          )}
-        >
-          authorize forever
-        </button>
-        {event?.kind !== undefined && (
-          <button
-            style={{marginTop: '5px'}}
-            onClick={authorizeHandler(
-              true,
-              {kinds: {[event.kind]: true}} // store and always answer true for all events that match this condition
-            )}
-          >
-            authorize kind {event.kind} forever
-          </button>
-        )}
-        <button style={{marginTop: '5px'}} onClick={authorizeHandler(true, undefined)}>
-          authorize just this
-        </button>
-        {event?.kind !== undefined ? (
-          <button
-            style={{marginTop: '5px'}}
-            onClick={authorizeHandler(
-              false,
-              {kinds: {[event.kind]: true}} // idem
-            )}
-          >
-            reject kind {event.kind} forever
-          </button>
-        ) : (
-          <button
-            style={{marginTop: '5px'}}
-            onClick={authorizeHandler(
-              false,
-              {} // idem
-            )}
-          >
-            reject forever
-          </button>
-        )}
-        <button style={{marginTop: '5px'}} onClick={authorizeHandler(false, undefined)}>
-          reject
-        </button>
-      </div>
-    </>
-  )
+  // Apply basic syntax highlighting for JSON
+  const renderHighlightedJSON = (jsonString: string) => {
+    return jsonString
+      .replace(/"(\w+)":/g, '<span class="json-key">"$1":</span>')
+      .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+      .replace(/: (\d+)/g, ': <span class="json-number">$1</span>')
+      .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
+  }
 
-  const perm_type   = msg.type as keyof typeof CONST.PERMISSION_LABELS
-  const perm_label  = CONST.PERMISSION_LABELS[perm_type]
-  const perm_method = parse_method(perm_type)
+  const perm_method = msg.type as keyof typeof CONST.PERMISSION_LABELS
+  const perm_label  = CONST.PERMISSION_LABELS[perm_method]
 
   return (
     <div className="prompt-container">
@@ -124,6 +65,7 @@ function Prompt() {
       
       {params && (
         <div className="prompt-content">
+          <p>now acting on</p>
           <div className="json-container">
             <pre className="json-content" 
                  dangerouslySetInnerHTML={{ 
@@ -157,13 +99,13 @@ function Prompt() {
               className="prompt-button authorize-button button-half-width"
               onClick={send_response(msg, true, {kinds: {[event.kind]: true}})}
             >
-              allow kind {event.kind} events
+              allow all {event.kind} events
             </button>
             <button
               className="prompt-button reject-button button-half-width"
               onClick={send_response(msg, false, {kinds: {[event.kind]: true}})}
             >
-              reject kind {event.kind} events
+              reject all {event.kind} events
             </button>
           </div>
         )}
@@ -203,12 +145,6 @@ function parse_message (
   const type   = url_params.get('type')
   if (id === null || host === null || type === null) return null
   return { id, host, type }
-}
-
-function parse_method (type: string) {
-  return type.includes('.')
-    ? type.split('.').slice(1).join('.')
-    : type
 }
 
 function parse_params (url_params: URLSearchParams) {

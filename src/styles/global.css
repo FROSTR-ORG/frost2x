@@ -66,6 +66,7 @@ pre.code-display {
   border: 1px solid rgba(100, 140, 210, 0.3);
 }
 .error-text { color: #e74c3c; margin-top: 5px; }
+.toast-text { color: #5ce24a; margin-top: 5px; }
 
 .input-group { display: flex; align-items: center; margin-bottom: 15px; }
 .input-group input { flex: 1; margin-right: 10px; }

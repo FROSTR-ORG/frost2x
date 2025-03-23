@@ -1,7 +1,9 @@
-import type { BifrostNode } from '@frostr/bifrost'
-import type { Mutex }       from 'async-mutex'
+import type { BifrostNode }         from '@frostr/bifrost'
+import type { Mutex }               from 'async-mutex'
 
-export type PermissionType = 'replaceURL' | 'getPublicKey' | 'getRelays' | 'signEvent' | 'nip04.encrypt' | 'nip04.decrypt'
+import type { PolicyMethod, SignerPolicyConditions } from './perm.js'
+
+// export type PermissionType = 'replaceURL' | 'getPublicKey' | 'getRelays' | 'signEvent' | 'nip04.encrypt' | 'nip04.decrypt'
 
 export interface GlobalState {
   mutex  : PromptMutex
@@ -19,14 +21,21 @@ export interface PromptResolver {
   reject  : (reason?: any) => void
 }
 
-export interface Message {
+export interface GlobalMessage {
   openSignUp ?: boolean
   prompt     ?: boolean
-  type       ?: string
+  type       ?: PolicyMethod
   params     ?: any
   host       ?: string
   accept     ?: boolean
-  conditions ?: any
+  conditions ?: SignerPolicyConditions
+}
+
+export interface PromptMessage {
+  id     : string
+  host   : string
+  type   : string
+  params ?: any
 }
 
 export interface ContentScriptMessage {

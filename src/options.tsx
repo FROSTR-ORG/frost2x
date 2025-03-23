@@ -11,8 +11,6 @@ import Permissions from './components/permissions/index.js'
 import Settings    from './components/settings/index.js'
 import Wallet      from './components/wallet/index.js'
 
-import { ExtensionStoreProvider } from './stores/extension.js'
-
 function Options(): ReactElement {
   const [ activeTab, setActiveTab ] = useState('console')
 
@@ -91,21 +89,21 @@ function Options(): ReactElement {
           {/* Node Tab */}
           {activeTab === 'node' && (
             <div className="tab-panel">
-              <Node showMessage={showMessage}/>
+              <Node />
             </div>
           )}
 
           {/* Permissions Tab */}
           {activeTab === 'permissions' && (
             <div className="tab-panel">
-              <Permissions showMessage={showMessage} />
+              <Permissions />
             </div>
           )}
 
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div className="tab-panel">
-              <Settings showMessage={showMessage} />
+              <Settings />
             </div>
           )}
 
@@ -132,11 +130,5 @@ function Options(): ReactElement {
 const container = document.getElementById('main')
 if (container) {
   const root = createRoot(container)
-  root.render(
-    <>
-      <ExtensionStoreProvider>
-        <Options />
-      </ExtensionStoreProvider>
-    </>
-  )
+  root.render(<Options />)
 }

@@ -1,6 +1,5 @@
-import { get_pubkey }     from '@frostr/bifrost/lib'
-import { DEFAULT_RELAYS } from '@/const.js'
-import { create_store }   from './store.js'
+import { get_pubkey }   from '@frostr/bifrost/lib'
+import { create_store } from './store.js'
 
 import type { RelayPolicy } from '@/types/index.js'
 
@@ -20,7 +19,7 @@ interface Store {
 const DEFAULT_STORE : Store = {
   group: null,
   peers: null,
-  relays: DEFAULT_RELAYS,
+  relays: [],
   share: null,
 }
 
