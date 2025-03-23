@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE } from '../const.js'
+import { MESSAGE_TYPE } from '@/const.js'
 
 // First declare the window nostr property type
 declare global {

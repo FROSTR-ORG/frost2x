@@ -1,5 +1,5 @@
 import { Buff, Bytes } from '@cmdcode/buff'
-import { z } from 'zod'
+import { z }           from 'zod'
 
 export namespace Check {
   

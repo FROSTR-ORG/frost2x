@@ -1,7 +1,7 @@
 import { bech32m } from '@scure/base'
 import { Buff }    from '@cmdcode/buff'
 
-import type { PSBTInput } from '../util/psbt.js'
+import type { PSBTInput } from '@/util/psbt.js'
 
 import type {
   SighashVector,
@@ -16,10 +16,10 @@ import type {
   WalletSignMainifest,
   WalletStoreUtxo,
   WalletUtxo
-} from '../types/index.js'
+} from '@/types/index.js'
 
-import * as CONST  from '../const.js'
-import * as PSBT   from '../util/psbt.js'
+import * as CONST  from '@/const.js'
+import * as PSBT   from '@/util/psbt.js'
 
 const RANDOM_SORT = () => Math.random() > 0.5 ? 1 : -1
 

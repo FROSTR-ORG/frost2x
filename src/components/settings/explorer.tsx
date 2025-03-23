@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import type { ChainNetwork, SettingStore } from '../../types/index.js'
+
+import type { ChainNetwork, SettingStore } from '@/types/index.js'
 
 type Props = {
   settings: SettingStore;
