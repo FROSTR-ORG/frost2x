@@ -24,17 +24,27 @@ export async function get_signer_permission (
     if (policy.host === host && policy.type === type) {
       // If the type is signEvent,
       if (type === 'nostr.signEvent' && params?.event) {
-        // If the event matches the conditions,
-        if (params.event && policy.conditions && match_event_conditions(policy.conditions, params.event)) {
-          // Return the accept value.
-          return policy.accept === 'true' ? true : false
+        // If the event has conditions set,
+        if (policy.conditions) {
+          // If the conditions have a kinds object,
+          if (policy.conditions.kinds) {
+            // If the event matches the conditions,
+            if (match_event_conditions(policy.conditions, params.event)) {
+              // Return the accept value.
+              return policy.accept === 'true' ? true : false
+            }
+          } else {
+            // Accept all is set for events.
+            return policy.accept === 'true' ? true : false
+          }
         }
       } else {
-        // Return the accept value.
+        // Accept all is set for non-signEvent requests.
         return policy.accept === 'true' ? true : false
       }
     }
   }
+  // Return null if no policy matches the host and type.
   return null
 }
 
@@ -92,17 +102,29 @@ function update_policy (
   policy      : SignerPolicy,
   conditions? : SignerPolicyConditions
 ): SignerPolicy {
+  // Define the new conditions variable.
   let new_conditions : SignerPolicyConditions | undefined
+  // If both the policy and the new conditions are defined,
   if (policy?.conditions !== undefined && conditions !== undefined) {
-    // Make a deep copy of the conditions.
-    const copied = copy_conditions(policy?.conditions)
-    // Merge conditions properly.
-    new_conditions = merge_event_conditions(copied, conditions)
+    // If the new conditions are empty,
+    if (Object.keys(conditions).length === 0) {
+      // Return the new conditions.
+      new_conditions = conditions
+    } else {  
+      // Make a deep copy of the conditions.
+      const copied = copy_conditions(policy?.conditions)
+      // Merge conditions properly.
+      new_conditions = merge_event_conditions(copied, conditions)
+    }
+    // Else, if only the policy has conditions,
   } else if (policy?.conditions !== undefined) {
+    // Return the policy conditions.
     new_conditions = policy?.conditions
   } else {
+    // Return undefined.
     new_conditions = undefined
   }
+  // Return the updated policy.
   return {
     ...policy,
     conditions : new_conditions,
@@ -114,18 +136,15 @@ function merge_event_conditions (
   curr : SignerPolicyConditions,
   next : SignerPolicyConditions
 ): SignerPolicyConditions {
-  // Create a deep copy to avoid mutating the original
-  const result = copy_conditions(curr)
-  // Merge kinds
-  if (next.kinds) {
-    if (!result.kinds) {
-      result.kinds = {}
+  if (next.kinds !== undefined) {
+    if (!curr.kinds) {
+      curr.kinds = {}
     }
     Object.keys(next.kinds).forEach(kind => {
-      result.kinds![Number(kind)] = true
+      curr.kinds![Number(kind)] = true
     })
   }
-  return result
+  return curr
 }
 
 function copy_conditions (
