@@ -41,8 +41,11 @@ function Prompt() {
       .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
   }
 
-  const perm_method = msg.type as keyof typeof CONST.PERMISSION_LABELS
-  const perm_label  = CONST.PERMISSION_LABELS[perm_method]
+  const perm_type   = msg.type as keyof typeof CONST.PERMISSION_LABELS
+  const perm_label  = CONST.PERMISSION_LABELS[perm_type]
+  const perm_method = (perm_type.includes('.')
+    ? perm_type.split('.').slice(1).join('')
+    : perm_type)
 
   return (
     <div className="prompt-container">
@@ -53,7 +56,6 @@ function Prompt() {
       
       {params && (
         <div className="prompt-content">
-          <p>now acting on</p>
           <div className="json-container">
             <pre className="json-content" 
                  dangerouslySetInnerHTML={{ 
@@ -87,13 +89,13 @@ function Prompt() {
               className="prompt-button authorize-button button-half-width"
               onClick={send_response(msg, true, {kinds: {[event.kind]: true}})}
             >
-              allow all {event.kind} events
+              allow kind {event.kind} events
             </button>
             <button
               className="prompt-button reject-button button-half-width"
               onClick={send_response(msg, false, {kinds: {[event.kind]: true}})}
             >
-              reject all {event.kind} events
+              reject kind {event.kind} events
             </button>
           </div>
         )}
