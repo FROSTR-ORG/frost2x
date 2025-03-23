@@ -1,72 +1,60 @@
 import { useState, useEffect } from 'react'
-import type { SettingStore } from '../../types/index.js'
+
+import { SettingStore } from '@/stores/settings.js'
+
 import browser from 'webextension-polyfill'
 
 type Props = {
-  settings: SettingStore;
-  saveSettings: (settings: Partial<SettingStore>) => boolean;
+  store: SettingStore.Type
 }
 
-export default function GeneralSettings({ settings, saveSettings }: Props) {
-  // Local state for this section
-  const [localSettings, setLocalSettings] = useState({
-    'general/notifications': settings['general/notifications']
-  })
-  
-  // Update local state when main settings change
-  useEffect(() => {
-    setLocalSettings({
-      'general/notifications': settings['general/notifications']
-    })
-  }, [settings])
-  
-  // Check if there are unsaved changes
-  const hasChanges = () => {
-    return localSettings['general/notifications'] !== settings['general/notifications']
+export default function GeneralSettings({ store } : Props) {
+  const [ settings, setSettings ] = useState<SettingStore.Type['general']>(store.general)
+  const [ changes, setChanges ]   = useState<boolean>(false)
+  const [ error, setError ]       = useState<string | null>(null)
+  const [ toast, setToast ]       = useState<string | null>(null)
+
+  // Discard changes by resetting local state from store
+  const cancel = () => {
+    setSettings(store.general)
+    setChanges(false)
   }
-  
-  // Save changes to extension store
-  const handleSave = () => {
-    saveSettings(localSettings)
-  }
-  
-  // Revert unsaved changes
-  const handleCancel = () => {
-    setLocalSettings({
-      'general/notifications': settings['general/notifications']
-    })
+
+  // Update the peer policies in the store.
+  const save = () => {
+    SettingStore.update({ general: settings })
+    setChanges(false)
+    setToast('settings saved')
   }
 
   const toggleNotifications = async () => {
-    const newValue = !localSettings['general/notifications']
+    const newValue = !settings.notifications
     
     // Request permissions if turning on notifications
     if (newValue) {
-      console.log('requesting permissions')
-      const granted = await browser.permissions.request({
-        permissions: ['notifications']
-      })
-
-      console.log('granted', granted)
-
-      if (!granted) {
-        // If permission denied, don't update state
-        return
-      }
+      const granted = await browser.permissions.request({ permissions: ['notifications'] })
+      if (!granted) setError('Failed to request notifications permission')
     } else {
-      console.log('revoking permissions')
-      const removed = await browser.permissions.remove({
-        permissions: ['notifications']
-      })
-
-      console.log('removed', removed)
+      const removed = await browser.permissions.remove({ permissions: ['notifications'] })  
+      if (!removed) setError('Failed to remove notifications permission')
     }
-
-    setLocalSettings({
-      ...localSettings,
-      'general/notifications': newValue
-    })
+    
+    setSettings({...settings, notifications: newValue })
+    setChanges(true)
   }
+
+  useEffect(() => {
+    setSettings(store.general)
+    setChanges(false)
+  }, [ store.general ])
+
+  useEffect(() => {
+    if (toast !== null) setTimeout(() => setToast(null), 3000)
+  }, [ toast ])
+
+  useEffect(() => {
+    if (error !== null) setTimeout(() => setError(null), 3000)
+  }, [ error ])
 
   return (
     <section className="settings-section">
@@ -76,7 +64,7 @@ export default function GeneralSettings({ settings, saveSettings }: Props) {
         <input 
           type="checkbox" 
           id="showNotifications" 
-          checked={localSettings['general/notifications']}
+          checked={settings.notifications}
           onChange={toggleNotifications}
         />
         <label htmlFor="showNotifications">
@@ -88,18 +76,20 @@ export default function GeneralSettings({ settings, saveSettings }: Props) {
       <div className="settings-actions">
         <button 
           className="button button-primary" 
-          onClick={handleSave}
-          disabled={!hasChanges()}
+          onClick={save}
+          disabled={!changes}
         >
           Save
         </button>
-        <button 
+        <button
           className="button button-secondary" 
-          onClick={handleCancel}
-          style={{ visibility: hasChanges() ? 'visible' : 'hidden' }}
+          onClick={cancel}
+          style={{ visibility: changes ? 'visible' : 'hidden' }}
         >
           Cancel
         </button>
+        {error && <p className="error-text">{error}</p>}
+        {toast && <p className="toast-text">{toast}</p>}
       </div>
     </section>
   )

@@ -1,116 +1,150 @@
 import browser from 'webextension-polyfill'
-import React   from 'react'
 
 import { createRoot } from 'react-dom/client'
+import { parse_json } from './lib/utils.js'
+
+import type { MouseEvent } from 'react'
+
+import type {
+  PromptMessage,
+  SignedEvent
+} from './types/index.js'
 
 import * as CONST from './const.js'
 
+import './styles/prompt.css'
+
 function Prompt() {
-  let qs = new URLSearchParams(location.search)
-  let id = qs.get('id')
-  let host = qs.get('host')
-  let type = qs.get('type')
-  let params: any = null
-  let event: any = null
-  try {
-    const paramString = qs.get('params')
-    if (paramString) {
-      params = JSON.parse(paramString)
-      if (Object.keys(params).length === 0) params = null
-      else if (params.event) event = params.event
-    }
-  } catch (err) {
-    params = null
+  // Parse the query string from the window location url.
+  const query_str = new URLSearchParams(location.search)
+
+  console.log('query_str:', query_str)
+
+  // Extract the id, host, and type from the query string.
+  const msg = parse_message(query_str)
+
+  if (msg === null) return <p>Invalid Prompt Message</p>
+
+  const params = parse_params(query_str)
+  const event  = (params?.event ?? null) as SignedEvent | null
+
+  const formatJSON = (json: any): string => {
+    return JSON.stringify(json, null, 2);
   }
 
-  return (
-    <>
-      <div>
-        <b style={{display: 'block', textAlign: 'center', fontSize: '200%'}}>
-          {host}
-        </b>{' '}
-        <p>
-          is requesting your permission to <b>{type && CONST.PERMISSION_LABELS[type]}:</b>
-        </p>
-      </div>
-      {params && (
-        <>
-          <p>now acting on</p>
-          <pre style={{overflow: 'auto', maxHeight: '120px'}}>
-            <code>{JSON.stringify(event || params, null, 2)}</code>
-          </pre>
-        </>
-      )}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'space-around'
-        }}
-      >
-        <button
-          style={{marginTop: '5px'}}
-          onClick={authorizeHandler(
-            true,
-            {} // store this and answer true forever
-          )}
-        >
-          authorize forever
-        </button>
-        {event?.kind !== undefined && (
-          <button
-            style={{marginTop: '5px'}}
-            onClick={authorizeHandler(
-              true,
-              {kinds: {[event.kind]: true}} // store and always answer true for all events that match this condition
-            )}
-          >
-            authorize kind {event.kind} forever
-          </button>
-        )}
-        <button style={{marginTop: '5px'}} onClick={authorizeHandler(true, undefined)}>
-          authorize just this
-        </button>
-        {event?.kind !== undefined ? (
-          <button
-            style={{marginTop: '5px'}}
-            onClick={authorizeHandler(
-              false,
-              {kinds: {[event.kind]: true}} // idem
-            )}
-          >
-            reject kind {event.kind} forever
-          </button>
-        ) : (
-          <button
-            style={{marginTop: '5px'}}
-            onClick={authorizeHandler(
-              false,
-              {} // idem
-            )}
-          >
-            reject forever
-          </button>
-        )}
-        <button style={{marginTop: '5px'}} onClick={authorizeHandler(false, undefined)}>
-          reject
-        </button>
-      </div>
-    </>
-  )
+  // Apply basic syntax highlighting for JSON
+  const renderHighlightedJSON = (jsonString: string) => {
+    return jsonString
+      .replace(/"(\w+)":/g, '<span class="json-key">"$1":</span>')
+      .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+      .replace(/: (\d+)/g, ': <span class="json-number">$1</span>')
+      .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
+  }
 
-  function authorizeHandler(accept: boolean, conditions?: Record<string, any>) {
-    return function (ev: React.MouseEvent<HTMLButtonElement>) {
-      ev.preventDefault()
-      browser.runtime.sendMessage({
-        prompt: true,
-        id,
-        host,
-        type,
-        accept,
-        conditions
-      })
-    }
+  const perm_method = msg.type as keyof typeof CONST.PERMISSION_LABELS
+  const perm_label  = CONST.PERMISSION_LABELS[perm_method]
+
+  return (
+    <div className="prompt-container">
+      <div className="prompt-header">
+        <div className="prompt-hostname">{msg.host}</div>
+        <p>is requesting your permission to <b>{perm_label}:</b></p>
+      </div>
+      
+      {params && (
+        <div className="prompt-content">
+          <p>now acting on</p>
+          <div className="json-container">
+            <pre className="json-content" 
+                 dangerouslySetInnerHTML={{ 
+                   __html: renderHighlightedJSON(formatJSON(event || params)) 
+                 }}>
+            </pre>
+          </div>
+        </div>
+      )}
+      
+      <div className="buttons-container">
+
+        {/* Single-use buttons row */}
+        <div className="button-row">
+          <button 
+            className="prompt-button authorize-button button-half-width"
+            onClick={send_response(msg, true, undefined)}>
+            allow this request
+          </button>
+          <button 
+            className="prompt-button reject-button button-half-width"
+            onClick={send_response(msg, false, undefined)}>
+            reject this request
+          </button>
+        </div>
+
+        {/* Kind-specific buttons row */}
+        {event?.kind !== undefined && (
+          <div className="button-row">
+            <button
+              className="prompt-button authorize-button button-half-width"
+              onClick={send_response(msg, true, {kinds: {[event.kind]: true}})}
+            >
+              allow all {event.kind} events
+            </button>
+            <button
+              className="prompt-button reject-button button-half-width"
+              onClick={send_response(msg, false, {kinds: {[event.kind]: true}})}
+            >
+              reject all {event.kind} events
+            </button>
+          </div>
+        )}
+
+        {/* Full-width authorize forever button */}
+        <div className="button-row">
+          <button
+            className="prompt-button authorize-button button-full-width"
+            onClick={send_response(msg, true, {})}
+          >
+            allow all {perm_method} requests
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function send_response (
+  template    : Partial<PromptMessage>,
+  accept      : boolean,
+  conditions ?: Record<string, any>
+) {
+  return function (event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault()
+    const msg = { prompt: true, ...template, accept, conditions }
+    console.log('send_response msg:', msg)
+    browser.runtime.sendMessage(msg)
+  }
+}
+
+function parse_message (
+  url_params: URLSearchParams
+) : PromptMessage | null {
+  const id     = url_params.get('id')
+  const host   = url_params.get('host')
+  const type   = url_params.get('type')
+  if (id === null || host === null || type === null) return null
+  return { id, host, type }
+}
+
+function parse_params (url_params: URLSearchParams) {
+  try {
+    const params = url_params.get('params')
+    if (params === null) return null
+    const parsed = parse_json<Record<string, any>>(params)
+    if (parsed === null) return null
+    if (Object.keys(parsed).length === 0) return null
+    return parsed
+  } catch (err) {
+    return null
   }
 }
 

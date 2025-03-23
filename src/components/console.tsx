@@ -1,5 +1,5 @@
-import browser from 'webextension-polyfill'
-
+import browser          from 'webextension-polyfill'
+import { LogStore }     from '../stores/logs.js'
 import { MESSAGE_TYPE } from '../const.js'
 
 import {
@@ -7,12 +7,6 @@ import {
   useState,
   useRef
 } from 'react'
-
-import {
-  getLogs,
-  clearLogs,
-  subscribeToLogs
-} from '../stores/logs.js'
 
 import type { LogEntry } from '../types/index.js'
 
@@ -23,27 +17,12 @@ export default function Console() {
   // Create a ref for the console output element
   const consoleOutputRef = useRef<HTMLDivElement>(null)
 
-  // Load logs on mount and set up subscription
+  // Load logs on mount and set up subscription.
   useEffect(() => {
-    // Initially fetch logs
-    fetchLogs()
-    
-    // Subscribe to log changes
-    const unsubscribe = subscribeToLogs((updatedLogs) => {
-      setLogs(updatedLogs)
-    })
-    
-    // Unsubscribe on unmount
-    return () => {
-      unsubscribe()
-    }
+    LogStore.fetch().then(logs => setLogs(logs))
+    const unsub = LogStore.subscribe(logs => setLogs(logs))
+    return () => unsub()
   }, [])
-  
-  // Function to fetch logs from storage
-  const fetchLogs = async () => {
-    const storedLogs = await getLogs()
-    setLogs(storedLogs)
-  }
 
   // Auto-scroll to bottom when logs change
   useEffect(() => {
@@ -51,16 +30,15 @@ export default function Console() {
       const element = consoleOutputRef.current
       element.scrollTop = element.scrollHeight
     }
-  }, [logs])
+  }, [ logs ])
 
   // Clear logs handler
-  const handleClear = async () => {
-    await clearLogs()
-    setLogs([])
+  const clear_handler = async () => {
+    LogStore.clear().then(() => setLogs([]))
   }
 
   // Reset node handler
-  const reset = async () => {
+  const reset_handler = async () => {
     try {
       // Still send message to reset the node
       await browser.runtime.sendMessage({ type: MESSAGE_TYPE.NODE_RESET })
@@ -93,8 +71,8 @@ export default function Console() {
       </div>
       
       <div className="console-controls">
-        <button className="button" onClick={handleClear}>Clear Console</button>
-        <button className="button button-reset" onClick={reset}>Reset Node</button>
+        <button className="button" onClick={clear_handler}>Clear Console</button>
+        <button className="button button-reset" onClick={reset_handler}>Reset Node</button>
       </div>
     </div>
   );

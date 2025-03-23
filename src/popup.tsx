@@ -1,30 +1,28 @@
 import browser from 'webextension-polyfill'
 
-import * as nip19     from 'nostr-tools/nip19'
-import { createRoot } from 'react-dom/client'
+import * as nip19       from 'nostr-tools/nip19'
+import { createRoot }   from 'react-dom/client'
+import { NodeStore }    from '@/stores/node.js'
+import { MESSAGE_TYPE } from '@/const.js'
 
 import {
   useState,
   useRef,
-  useEffect,
-  ReactElement
+  useEffect
 } from 'react'
 
-import { ExtensionStoreProvider, useExtensionStore } from './stores/extension.js'
-
-import { MESSAGE_TYPE } from './const.js'
+import type { ReactElement } from 'react'
 
 function Popup() : ReactElement {
-  const { store } = useExtensionStore()
+  const [ store, setStore ]           = useState<NodeStore.Type>(NodeStore.DEFAULT)
+  const [ pubKey, setPubKey ]         = useState<string | null>(null)
+  const [ nodeStatus, setNodeStatus ] = useState<string>('stopped')
 
-  let [ pubKey, setPubKey ]         = useState<string | null>(null)
-  let [ nodeStatus, setNodeStatus ] = useState<string>('stopped')
-
-  let keys = useRef<string[]>([])
+  const keys = useRef<string[]>([])
 
   useEffect(() => {
-    if (store.node.group !== null) {
-      const group = store.node.group
+    if (store.group !== null) {
+      const group = store.group
       let hexKey  = group.group_pk.slice(2)
       let npubKey = nip19.npubEncode(hexKey)
 
@@ -33,22 +31,6 @@ function Popup() : ReactElement {
       keys.current.push(npubKey)
       keys.current.push(hexKey)
 
-      if (store.node.relays) {
-        let relaysList: string[] = []
-        for (let url in store.node.relays) {
-          if (store.node.relays[url].write) {
-            relaysList.push(url)
-            if (relaysList.length >= 3) break
-          }
-        }
-        if (relaysList.length) {
-          let nprofileKey = nip19.nprofileEncode({
-            pubkey: hexKey,
-            relays: relaysList
-          })
-          keys.current.push(nprofileKey)
-        }
-      }
     } else {
       setPubKey(null)
     }
@@ -58,7 +40,13 @@ function Popup() : ReactElement {
     const interval = setInterval(checkNodeStatus, 2500)
     
     return () => clearInterval(interval)
-  }, [ store.node.group ])
+  }, [ store.group ])
+
+  useEffect(() => {
+    NodeStore.fetch().then(store => setStore(store))
+    const unsub = NodeStore.subscribe(store => setStore(store))
+    return () => unsub()
+  }, [])
 
   return (
     <div className="popup-container">
@@ -156,11 +144,5 @@ const container = document.getElementById('main')
 
 if (container) {
   const root = createRoot(container)
-  root.render(
-    <>
-      <ExtensionStoreProvider>
-        <Popup />
-      </ExtensionStoreProvider>
-    </>
-  )
+  root.render(<Popup />)
 }

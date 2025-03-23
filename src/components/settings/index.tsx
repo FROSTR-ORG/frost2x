@@ -1,58 +1,36 @@
 import { useEffect, useState } from 'react'
-import { useExtensionStore }   from '../../stores/extension.js'
+
+import { SettingStore } from '@/stores/settings.js'
 
 import ExplorerSettings    from './explorer.js'
 import GeneralSettings     from './general.js'
 import TransactionSettings from './transaction.js'
 import LinkSettings        from './links.js'
+import DevSettings         from './dev.js'
 
-import type { SettingStore } from '../../types/index.js'
-
-export default function Settings(
-  { showMessage }: { showMessage: (msg: string) => void }
-) {
-  // State management
-  const { store, reset, update } = useExtensionStore()
-  const [ settings, setSettings ] = useState<SettingStore>(store.settings)
-
-  useEffect(() => {
-    setSettings(store.settings)
-  }, [ store.settings ])
-
-  // Function to save all settings - will be passed to individual components
-  const saveSettings = (sectionSettings: Partial<SettingStore>) => {
-    try {
-      update({
-        settings: {
-          ...store.settings,
-          ...sectionSettings
-        }
-      })
-      showMessage('settings saved')
-      return true
-    } catch (error) {
-      console.error('error saving settings:', error)
-      showMessage('settings error')
-      return false
-    }
-  }
+export default function Settings() {
+  const [ store, setStore ] = useState<SettingStore.Type>(SettingStore.DEFAULT)
   
+  useEffect(() => {
+    SettingStore.fetch().then(store => {
+      console.log('internal store', store)
+      setStore(store)
+      console.log('external store', store)
+    })
+    const unsub = SettingStore.subscribe(store => {
+      console.log('updated settings', store)
+      setStore(store)
+    })
+    return () => unsub()
+  }, [])
+
   return (
     <div className="container">
-      <GeneralSettings settings={store.settings} saveSettings={saveSettings} />
-      {/* <ExplorerSettings settings={store.settings} saveSettings={saveSettings} /> */}
-      {/* <TransactionSettings settings={store.settings} saveSettings={saveSettings} /> */}
-      {/* <LinkSettings settings={store.settings} saveSettings={saveSettings} /> */}
-      <section className="settings-section">
-        <h2>Danger Zone</h2>
-        <p className="description">For development and testing. Use at your own risk!</p>
-        <button
-          onClick={() => reset()} 
-          className="button button-remove"
-        >
-          Reset Store
-        </button>
-      </section>
+      <GeneralSettings store={store} />
+      {/* <ExplorerSettings    /> */}
+      {/* <TransactionSettings /> */}
+      {/* <LinkSettings        /> */}
+      <DevSettings />
     </div>
   )
 }

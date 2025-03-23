@@ -1,77 +1,79 @@
 import { useEffect, useState } from 'react'
-import { decode_group_pkg, encode_group_pkg }    from '@frostr/bifrost/lib'
-import { useExtensionStore }   from '../../stores/extension.js'
+import { NodeStore }           from '@/stores/node.js'
 
-import type { NodeStore }      from '../../types/index.js'
+import {
+  decode_group_pkg,
+  encode_group_pkg,
+} from '@frostr/bifrost/lib'
 
-export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
-  const { store }                       = useExtensionStore()
-  const [ input, setInput ]             = useState<string>('')
-  const [ error, setError ]             = useState<string | null>(null)
-  const [ show, setShow ]               = useState<boolean>(false)
-  const [ isValid, setIsValid ]         = useState<boolean>(false)
-  const [ decodedData, setDecodedData ] = useState<any>(null)
+import type { GroupPackage } from '@frostr/bifrost'
 
-  const group_str = (store.node.group !== null)
-    ? encode_group_pkg(store.node.group)
-    : ''
+export default function () {
+  const [ group, setGroup ] = useState<GroupPackage | null>(null)
+  const [ input, setInput ] = useState<string>('')
+  const [ error, setError ] = useState<string | null>(null)
+  const [ show, setShow   ] = useState<boolean>(false)
+  const [ toast, setToast ] = useState<string | null>(null)
 
-  const parseData = (pkg : string) => {
+  const init = (group : GroupPackage | null) => {
+    if (group === null) return
     try {
-      const data = decode_group_pkg(pkg)
-      setDecodedData(data)
-      return data
-    } catch (err) {
-      setDecodedData(null)
-      return null
-    }
-  }
-
-  const updateStore = () => {
-    try {
-      if (input === '') {
-        update({ group : null })
-        setDecodedData(null)
-      } else {
-        parseData(input)
-        update({ group : decodedData })
-        setError(null)
-      }
+      const group_str = encode_group_pkg(group)
+      setGroup(group)
+      setInput(group_str)
       setError(null)
     } catch (err) {
-      console.error(err)
-      setError('failed to decode package data')
+      setError('failed to initialize group input')
     }
   }
 
-  // Check if input is valid whenever it changes
+  // Update the group in the store.
+  const update = () => {
+    // If there is an error, do not update the group.
+    if (error !== null) return
+    // If the input is empty,
+    if (input === '') {
+      // Set the group to null.
+      NodeStore.update({ group : null })
+    } else {
+      // Parse the input and update the group.
+      const group = get_group_pkg(input)
+      if (group === null) return
+      NodeStore.update({ group })
+    }
+    setToast('group package updated')
+  }
+
+  // Fetch the group from the store and subscribe to changes.
+  useEffect(() => {
+    NodeStore.fetch().then(store => init(store.group))
+    const unsub = NodeStore.subscribe(store => init(store.group))
+    return () => unsub()
+  }, [])
+
+  // Validate the group input when it changes.
   useEffect(() => {
     if (input === '') {
-      setIsValid(true) // Empty input is considered valid
-      setDecodedData(null)
+      setError(null)
+    } else if (!input.startsWith('bfgroup')) {
+      setError('input must start with "bfgroup1"')
+    } else if (!is_group_string(input)) {
+      setError('input contains invalid characters')
     } else {
-      try {
-        const data = decode_group_pkg(input)
-        setDecodedData(data)
-        setIsValid(true)
+      const group = get_group_pkg(input)
+      if (group !== null) {
         setError(null)
-      } catch (err) {
-        setIsValid(false)
-        setDecodedData(null)
+      } else {
         setError('failed to decode package data')
       }
     }
-  }, [input])
+  }, [ input ])
 
   useEffect(() => {
-    if (store.node.group !== null) {
-      setInput(encode_group_pkg(store.node.group))
-      setDecodedData(store.node.group)
+    if (toast !== null) {
+      setTimeout(() => setToast(null), 3000)
     }
-  }, [ store.node.group ])
-
-  // Determine if the save button should be active
-  const isSaveActive = isValid && (input !== group_str);
+  }, [ toast ])
 
   return (
     <div className="container">
@@ -90,25 +92,66 @@ export default function ({ update } : { update: (data: Partial<NodeStore>) => vo
               className="button"
               onClick={() => setShow(!show)}
             >
-              show
+              {show ? 'hide' : 'show'}
             </button>
-            <button 
-              className="button save-button" 
-              onClick={() => isSaveActive && updateStore()}
-              disabled={!isSaveActive}
+            <button
+              className="button action-button" 
+              onClick={update}
+              disabled={!is_group_changed(input, group) || error !== null}
             >
               save
             </button>
           </div>
         </div>
         
-        {input !== '' && error === null && show && decodedData && (
+        {input !== '' && error === null && show && (
           <pre className="code-display">
-            {JSON.stringify(decodedData, null, 2)}
+            {get_group_json(input) ?? 'invalid group package'}
           </pre>
         )}
         {error && <p className="error-text">{error}</p>}
+        {toast && <p className="toast-text">{toast}</p>}
       </div>
     </div>
   )
-} 
+}
+
+function is_group_string(input : string) {
+  return /^bfgroup1[023456789acdefghjklmnpqrstuvwxyz]+$/.test(input)
+}
+
+function is_group_changed (
+  input : string,
+  group : GroupPackage | null
+) {
+  // Encode the existing group package to a string.
+  const group_str = get_group_str(group)
+  // Determine if the group input has changed and is valid.
+  return input !== group_str
+}
+
+function get_group_str (group : GroupPackage | null) {
+  try {
+    return (group !== null) ? encode_group_pkg(group) : ''
+  } catch {
+    return ''
+  }
+}
+
+function get_group_pkg (input : string) {
+  try {
+    return (input !== '') ? decode_group_pkg(input) : null
+  } catch {
+    return null
+  }
+}
+
+function get_group_json(input : string) {
+  try {
+    const group = get_group_pkg(input)
+    if (group === null) return null
+    return JSON.stringify(group, null, 2)
+  } catch (err) {
+    return null
+  }
+}

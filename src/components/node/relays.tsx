@@ -1,83 +1,81 @@
+import { NodeStore } from '@/stores/node.js'
+
 import { useEffect, useState } from 'react'
-import { useExtensionStore }   from '../../stores/extension.js'
 
-import type { NodeStore, RelayPolicy }   from '../../types/index.js'
+import type { RelayPolicy } from '@/types/index.js'
 
-export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
-  const { store } = useExtensionStore()
-  const { node  } = store
-  
-  // Update to use the correct type
-  const [ localState, setLocalState ] = useState<RelayPolicy[]>([])
-  const [ hasChanges, setHasChanges ] = useState(false)
-  const [ relayUrl, setRelayUrl ]     = useState('')
-  const [ error, setError ]           = useState('')
-  
-  // Initialize local relays from store
-  useEffect(() => {
-    setLocalState(node.relays)
-  }, [ node.relays ])
+export default function () {
+  const [ relays, setRelays ]   = useState<RelayPolicy[]>([])
+  const [ relayUrl, setUrl ]    = useState('')
+  const [ changes, setChanges ] = useState<boolean>(false)
+  const [ error, setError ]     = useState<string | null>(null)
+  const [ toast, setToast ]     = useState<string | null>(null)
+
+  // Update the peer policies in the store.
+  const update = () => {
+    NodeStore.update({ relays })
+    setChanges(false)
+    setToast('relay policy updated')
+  }
+
+  // Discard changes by resetting local state from store
+  const cancel = () => {
+    NodeStore.fetch().then(store => setRelays(store.relays))
+    setChanges(false)
+  }
   
   // Update relay enabled status locally
   const update_relay = (idx: number, key: 'read' | 'write') => {
-    setLocalState(prev => {
+    setRelays(prev => {
       const updated = [...prev]
       updated[idx][key] = !updated[idx][key]
       return updated
     })
-    setHasChanges(true)
+    setChanges(true)
   }
   
   // Add a new relay to local state
   const add_relay = () => {  
-    if (!relayUrl.trim()) {
-      return
-    }
-
+    if (!relayUrl.trim()) return
+    
     if (!(relayUrl.startsWith('wss://') || relayUrl.startsWith('ws://'))) {
       setError('Relay URL must start with wss:// or ws://')
-      return
-    }
-    
-    if (!validateUrl(relayUrl)) {
+    } else if (!validateUrl(relayUrl)) {
       setError('Invalid URL format')
-      return
-    }
-    
-    // Check if relay already exists
-    if (localState.some(relay => relay.url === relayUrl)) {
+    } else if (relays.some(relay => relay.url === relayUrl)) {
       setError('Relay already exists')
-      return
+    } else {
+      setRelays(prev => [...prev, { url: relayUrl, read: true, write: true }])
+      setUrl('')
+      setChanges(true)
     }
-    
-    setLocalState(prev => [...prev, { url: relayUrl, read: true, write: true }])
-    setRelayUrl('')
-    setHasChanges(true)
   }
   
   // Remove a relay from local state
   const remove_relay = (idx: number) => {
-    setLocalState(prev => prev.filter((_, i) => i !== idx))
-    setHasChanges(true)
+    setRelays(prev => prev.filter((_, i) => i !== idx))
+    setChanges(true)
   }
+
+  // Fetch the peer policies from the store and subscribe to changes.
+  useEffect(() => {
+    NodeStore.fetch().then(store => setRelays(store.relays))
+    const unsub = NodeStore.subscribe(store => setRelays(store.relays))
+    return () => unsub()
+  }, [])
+
+  useEffect(() => {
+    if (error !== null) setError(null)
+  }, [ relayUrl ])
   
-  // Save changes to the store
-  const save = () => {
-    update({ relays: localState })
-    setHasChanges(false)
-  }
-  
-  // Discard changes by resetting local state from store
-  const cancel = () => {
-    // Create a new array to ensure React detects the change
-    setLocalState(node.relays)
-    setHasChanges(false)
-  }
+  useEffect(() => {
+    if (toast !== null) setTimeout(() => setToast(null), 3000)
+  }, [ toast ])
   
   return (
     <div className="container">
-      <h2 className="section-header">Relay Configuration</h2>
-      <p className="description">Configure which relays to connect to for key management.</p>
+      <h2 className="section-header">Relay Connections</h2>
+      <p className="description">Configure which relays your node will use to communicate.</p>
       
       <table>
         <thead>
@@ -89,7 +87,7 @@ export default function ({ update } : { update: (data: Partial<NodeStore>) => vo
           </tr>
         </thead>
         <tbody>
-          {localState.map((relay, idx) => (
+          {relays.map((relay, idx) => (
             <tr key={idx}>
               <td>{relay.url}</td>
               <td className="checkbox-cell">
@@ -125,7 +123,7 @@ export default function ({ update } : { update: (data: Partial<NodeStore>) => vo
         <input
           type="text"
           value={relayUrl}
-          onChange={(e) => setRelayUrl(e.target.value)}
+          onChange={(e) => setUrl(e.target.value)}
           placeholder="wss://relay.example.com"
           className="relay-input"
         />
@@ -138,14 +136,14 @@ export default function ({ update } : { update: (data: Partial<NodeStore>) => vo
       
       <div className="action-buttons">
         <button 
-          onClick={save}
-          disabled={!hasChanges}
+          onClick={update}
+          disabled={!changes}
           className="button button-primary save-button"
         >
           Save
         </button>
         
-        {hasChanges && (
+        {changes && (
           <button 
             onClick={cancel}
             className="button"
@@ -153,6 +151,7 @@ export default function ({ update } : { update: (data: Partial<NodeStore>) => vo
             Cancel
           </button>
         )}
+        {toast && <p className="toast-text">{toast}</p>}
       </div>
     </div>
   )

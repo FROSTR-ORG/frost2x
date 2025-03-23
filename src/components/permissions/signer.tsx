@@ -1,24 +1,28 @@
-import { useExtensionStore } from '../../stores/extension.js';
+import { useEffect, useState } from 'react'
+import { filter_policy }       from '@/lib/perms.js'
+import { PermStore }           from '@/stores/perms.js'
 
-interface EventPermissionsProps {
-  showMessage: (msg: string) => void;
-}
+import type { SignerPolicy } from '@/types/perm.js'
 
-export default function EventPermissions({ showMessage } : EventPermissionsProps) {
-  const { store, update } = useExtensionStore()
+export default function SignerPermissions() {
+  const [ table, setTable ] = useState<SignerPolicy[]>([])
+  const [ toast, setToast ] = useState<string | null>(null)
 
-  const permissions = store.permissions.signer
+  useEffect(() => {
+    PermStore.fetch().then(store => setTable(store.signer))
+    const unsub = PermStore.subscribe(store => setTable(store.signer))
+    return () => unsub()
+  }, [])
 
   async function handleRevoke(e: React.MouseEvent<HTMLButtonElement>): Promise<void> {
     const target = e.target as HTMLButtonElement
     const { host, accept, type } = target.dataset
     const message = `revoke all ${accept === 'true' ? 'accept' : 'deny'} ${type} policies from ${host}?`
     if (window.confirm(message)) {
-      const new_perms = permissions.filter(perm => (
-        !(perm.host === host && perm.accept === accept && perm.type === type)
-      ))
-      update({ permissions: { ...store.permissions, signer: new_perms } })
-      showMessage('removed policies')
+      const new_perms = filter_policy(table, host!, type!, accept!)
+      PermStore.update({ signer: new_perms })
+      setTable(new_perms)
+      setToast('removed policies')
     }
   }
 
@@ -26,12 +30,12 @@ export default function EventPermissions({ showMessage } : EventPermissionsProps
     <div className="container">
       <h2 className="section-header">Event Permissions</h2>
       <p className="description">Manage the event signing permissions granted to other websites.</p>
-      {!!permissions.length && (
+      {!!table.length && (
         <table>
           <thead>
             <tr>
-              <th>domain</th>
-              <th>action</th>
+              <th>host</th>
+              <th>type</th>
               <th>policy</th>
               <th>conditions</th>
               <th>since</th>
@@ -39,15 +43,16 @@ export default function EventPermissions({ showMessage } : EventPermissionsProps
             </tr>
           </thead>
           <tbody>
-            {permissions.map(({ host, type, accept, conditions, created_at }) => (
+            {table.map(({ host, type, accept, conditions, created_at }) => (
               <tr key={host + type + accept + JSON.stringify(conditions)}>
                 <td>{host}</td>
                 <td>{type}</td>
                 <td>{accept === 'true' ? 'allow' : 'deny'}</td>
                 <td>
-                  {conditions.kinds
+                  {conditions?.kinds
                     ? `kinds: ${Object.keys(conditions.kinds).join(', ')}`
-                    : 'always'}
+                    : 'always'
+                  }
                 </td>
                 <td>
                   {new Date(created_at * 1000)
@@ -72,7 +77,7 @@ export default function EventPermissions({ showMessage } : EventPermissionsProps
           </tbody>
         </table>
       )}
-      {!permissions.length && (
+      {!table.length && (
         <div className="description">
           no event permissions have been granted yet
         </div>

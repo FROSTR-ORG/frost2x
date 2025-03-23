@@ -12,6 +12,17 @@ export interface NostrEvent {
   [key: string]: any
 }
 
+export interface SignedEvent {
+  id         : string
+  pubkey     : string
+  created_at : number
+  kind       : number
+  content    : string
+  tags       : string[][]
+  sig        : string
+}
+
+
 export interface ProfilePointer {
   pubkey  : string
   relays? : string[]

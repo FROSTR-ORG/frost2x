@@ -1,6 +1,6 @@
-import { BifrostNode }         from '@frostr/bifrost'
-import { fetchExtensionStore } from '../stores/extension.js'
-import { addLog, clearLogs }   from '../stores/logs.js'
+import { BifrostNode } from '@frostr/bifrost'
+import { NodeStore }   from '@/stores/node.js'
+import { LogStore }    from '@/stores/logs.js'
 
 import type { BifrostNodeConfig } from '@frostr/bifrost'
 
@@ -11,9 +11,9 @@ export async function keep_alive (
 }
 
 export async function init_node () : Promise<BifrostNode | null> {
-  let store = await fetchExtensionStore()
+  let store = await NodeStore.fetch()
 
-  const { group, peers, relays, share } = store.node
+  const { group, peers, relays, share } = store
 
   if (group === null || peers === null || share === null) {
     console.error('extension store is missing required fields')
@@ -31,8 +31,8 @@ export async function init_node () : Promise<BifrostNode | null> {
   const node = new BifrostNode(group, share, relay_urls, opt)
 
   node.on('ready', async () => {
-    await clearLogs()
-    log('background node connected', 'success')
+    await LogStore.clear()
+    LogStore.add('background node connected', 'success')
     console.log('background node connected')
   })
 
@@ -41,23 +41,13 @@ export async function init_node () : Promise<BifrostNode | null> {
   node.on('*', (...args : any[]) => {
     const [ event, msg ] = args
     if (filter.includes(event)) return
-    log(`[ ${event} ] ${msg}`, 'info')
+    LogStore.add(`[ ${event} ] ${msg}`, 'info')
   })
 
   node.on('closed', () => {
-    log('background node closed', 'info')
+    LogStore.add('background node closed', 'info')
     console.log('background node closed')
   })
 
   return node.connect()
-}
-
-async function log (
-  message : string,
-  type    : 'info' | 'error' | 'warning' | 'success'
-) : Promise<void> {
-  const timestamp = new Date().toISOString()
-  const entry     = { timestamp, message, type }
-
-  await addLog(entry)
 }

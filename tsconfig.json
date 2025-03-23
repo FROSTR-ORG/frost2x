@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*" : [ "src/*" ]
+    },
     "target": "ESNext",                           // Target ECMAScript 6 for compatibility
     "lib": ["dom", "dom.iterable", "esnext"],  // Include the DOM and ESNext libraries
     "allowJs": true,                           // Allow JavaScript files in the project

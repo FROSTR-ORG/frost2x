@@ -16,34 +16,11 @@ import Permissions from './components/permissions/index.js'
 import Settings    from './components/settings/index.js'
 import Wallet      from './components/wallet/index.js'
 
-import { ExtensionStoreProvider } from './stores/extension.js'
-
 function Options(): ReactElement {
-  let [ messages, setMessages ]           = useState<string[]>([])
-  let [warningMessage, setWarningMessage] = useState('')
-  let [activeTab, setActiveTab]           = useState('console')
-  
-  const showMessage = useCallback((msg: string) => {
-    const newMessages = [...messages, msg ]
-    setMessages(newMessages)
-    setTimeout(() => setMessages([]), 3000)
-  }, [ messages ])
-
-  useEffect(() => {
-    setTimeout(() => setWarningMessage(''), 5000)
-  }, [warningMessage])
+  const [ activeTab, setActiveTab ] = useState('console')
 
   return (
     <>
-      {/* Toast notifications container - fixed at the top */}
-      <div className="toast-container">
-        {messages.map((message, i) => (
-          <div key={i} className="toast-message">
-            {message}
-          </div>
-        ))}
-      </div>
-
       <div className="page-header">
         <img 
           src="icons/icon.png"
@@ -117,21 +94,21 @@ function Options(): ReactElement {
           {/* Node Tab */}
           {activeTab === 'node' && (
             <div className="tab-panel">
-              <Node showMessage={showMessage}/>
+              <Node />
             </div>
           )}
 
           {/* Permissions Tab */}
           {activeTab === 'permissions' && (
             <div className="tab-panel">
-              <Permissions showMessage={showMessage} />
+              <Permissions />
             </div>
           )}
 
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div className="tab-panel">
-              <Settings showMessage={showMessage} />
+              <Settings />
             </div>
           )}
 
@@ -158,11 +135,5 @@ function Options(): ReactElement {
 const container = document.getElementById('main')
 if (container) {
   const root = createRoot(container)
-  root.render(
-    <>
-      <ExtensionStoreProvider>
-        <Options />
-      </ExtensionStoreProvider>
-    </>
-  )
+  root.render(<Options />)
 }

@@ -1,87 +1,79 @@
 import { useEffect, useState } from 'react'
-import { decode_share_pkg, encode_share_pkg }    from '@frostr/bifrost/lib'
-import { useExtensionStore }   from '../../stores/extension.js'
+import { NodeStore }           from '@/stores/node.js'
 
-import type { NodeStore } from '../../types/index.js'
+import {
+  decode_share_pkg,
+  encode_share_pkg
+} from '@frostr/bifrost/lib'
 
-export default function ({ update } : { update: (data: Partial<NodeStore>) => void }) {
-  const { store } = useExtensionStore()
-  const [ input, setInput ]             = useState<string>('')
-  const [ error, setError ]             = useState<string | null>(null)
-  const [ show, setShow ]               = useState<boolean>(false)
-  const [ isValid, setIsValid ]         = useState<boolean>(false)
-  const [ decodedData, setDecodedData ] = useState<any>(null)
+import type { SharePackage } from '@frostr/bifrost'
 
-  const share_str = (store.node.share !== null)
-    ? encode_share_pkg(store.node.share) 
-    : ''
+export default function () {
+  const [ share, setShare ] = useState<SharePackage | null>(null)
+  const [ input, setInput ] = useState<string>('')
+  const [ error, setError ] = useState<string | null>(null)
+  const [ show, setShow   ] = useState<boolean>(false)
+  const [ toast, setToast ] = useState<string | null>(null)
 
-  const parseData = (pkg: string) => {
+  const init = (share : SharePackage | null) => {
+    if (share === null) return
     try {
-      const data = decode_share_pkg(pkg)
-      setDecodedData(data)
-      return data
-    } catch (err) {
-      setDecodedData(null)
-      return null
-    }
-  }
-
-  const updateStore = () => {
-    try {
-      if (input === '') {
-        update({ share: null })
-        setDecodedData(null)
-      } else {
-        parseData(input)
-        update({ share: decodedData })
-        setError(null)
-      }
+      const share_str = encode_share_pkg(share)
+      setShare(share)
+      setInput(share_str)
       setError(null)
     } catch (err) {
-      console.error(err)
-      setError('failed to decode package data')
+      setError('failed to initialize share input')
     }
   }
 
-  // Check if input is valid whenever it changes
+  // Update the group in the store.
+  const update = () => {
+    // If there is an error, do not update the group.
+    if (error !== null) return
+    // If the input is empty,
+    if (input === '') {
+      // Set the group to null.
+      NodeStore.update({ share : null })
+    } else {
+      // Parse the input and update the group.
+      const share = get_share_pkg(input)
+      if (share === null) return
+      NodeStore.update({ share })
+    }
+    setToast('share package updated')
+  }
+
+  // Fetch the share from the store and subscribe to changes.
+  useEffect(() => {
+    NodeStore.fetch().then(store => init(store.share))
+    const unsub = NodeStore.subscribe(store => init(store.share))
+    return () => unsub()
+  }, [])
+
+  // Validate the share input when it changes.
   useEffect(() => {
     if (input === '') {
-      setIsValid(true) // Empty input is considered valid
-      setDecodedData(null)
+      setError(null)
+    } else if (!input.startsWith('bfshare')) {
+      setError('input must start with "bfshare1"')
+    } else if (!is_share_string(input)) {
+      setError('input contains invalid characters')
     } else {
-      try {
-        const data = decode_share_pkg(input)
-        setDecodedData(data)
-        setIsValid(true)
+      const share = get_share_pkg(input)
+      if (share !== null) {
         setError(null)
-      } catch (err) {
-        setIsValid(false)
-        setDecodedData(null)
+      } else {
         setError('failed to decode package data')
       }
     }
-  }, [input])
+  }, [ input ])
 
   useEffect(() => {
-    if (store.node.share !== null) {
-      setInput(encode_share_pkg(store.node.share))
-      setDecodedData(store.node.share)
+    if (toast !== null) {
+      setTimeout(() => setToast(null), 3000)
     }
-  }, [ store.node.share ])
-
-  // Determine if the save button should be active
-  const isSaveActive = isValid && (input !== share_str);
-
-  const toggleShow = () => {
-    setShow(!show)
-  }
-
-  const saveData = () => {
-    if (isSaveActive) {
-      updateStore()
-    }
-  }
+  }, [ toast ])
 
   return (
     <div className="container">
@@ -98,27 +90,68 @@ export default function ({ update } : { update: (data: Partial<NodeStore>) => vo
           <div className="input-actions">
             <button 
               className="button"
-              onClick={toggleShow}
+              onClick={() => setShow(!show)}
             >
-              show
+              {show ? 'hide' : 'show'}
             </button>
-            <button 
-              className="button save-button" 
-              onClick={saveData}
-              disabled={!isSaveActive}
+            <button
+              className="button action-button"
+              onClick={update}
+              disabled={!is_share_changed(input, share) || error !== null}
             >
               save
             </button>
           </div>
         </div>
         
-        { input !== '' && error === null && show && decodedData && (
+        { input !== '' && error === null && show && (
           <pre className="code-display">
-            {JSON.stringify(decodedData, null, 2)}
+            {get_share_json(input) ?? 'invalid share package'}
           </pre>
         )}
         {error && <p className="error-text">{error}</p>}
+        {toast && <p className="toast-text">{toast}</p>}
       </div>
     </div>
   )
+}
+
+function is_share_string(input : string) {
+  return /^bfshare1[023456789acdefghjklmnpqrstuvwxyz]+$/.test(input)
+}
+
+function is_share_changed (
+  input : string,
+  share : SharePackage | null
+) {
+  // Encode the existing share package to a string.
+  const share_str = get_share_str(share)
+  // Determine if the share input has changed and is valid.
+  return input !== share_str
+}
+
+function get_share_str (share : SharePackage | null) {
+  try {
+    return (share !== null) ? encode_share_pkg(share) : ''
+  } catch {
+    return ''
+  }
+}
+
+function get_share_pkg (input : string) {
+  try {
+    return (input !== '') ? decode_share_pkg(input) : null
+  } catch {
+    return null
+  }
+}
+
+function get_share_json(input : string) {
+  try {
+    const share = get_share_pkg(input)
+    if (share === null) return null
+    return JSON.stringify(share, null, 2)
+  } catch (err) {
+    return null
+  }
 }
