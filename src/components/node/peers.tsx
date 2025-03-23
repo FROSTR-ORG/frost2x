@@ -5,21 +5,22 @@ import { useEffect, useState } from 'react'
 
 import type { PeerPolicy } from '@frostr/bifrost'
 
-export default function () {
-  const [ peers, setPeers ]     = useState<PeerPolicy[] | null>(null)
+export default function ({ store } : { store : NodeStore.Type }) {
+  const [ peers, setPeers ]     = useState<PeerPolicy[] | null>(store.peers)
   const [ changes, setChanges ] = useState<boolean>(false)
-  const [ toast, setToast ]     = useState<string | null>(null)
+  const [ saved, setSaved ]     = useState<boolean>(false)
 
   // Update the peer policies in the store.
   const update = () => {
     NodeStore.update({ peers })
     setChanges(false)
-    setToast('peering policy updated')
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1500)
   }
 
   // Discard changes by resetting local state from store
   const cancel = () => {
-    NodeStore.fetch().then(store => setPeers(store.peers))
+    setPeers(store.peers)
     setChanges(false)
   }
 
@@ -33,24 +34,17 @@ export default function () {
     setChanges(true)
   }
 
-  // Fetch the peer policies from the store and subscribe to changes.
   useEffect(() => {
-    NodeStore.fetch().then(store => setPeers(store.peers))
-    const unsub = NodeStore.subscribe(store => setPeers(store.peers))
-    return () => unsub()
-  }, [])
-  
-  useEffect(() => {
-    if (toast !== null) setTimeout(() => setToast(null), 3000)
-  }, [ toast ])
+    setPeers(store.peers)
+  }, [ store.peers ])
 
   return (
     <div className="container">
       <h2 className="section-header">Peer Connections</h2>
-      <p className="description">Configure your connection to other nodes in your signing group.</p>
+      <p className="description">Configure how you communicate with other peers in your signing group. "Request" will send signature requests to that peer, and "Respond" will co-sign requests from that peer.</p>
 
-      {!has_creds &&
-        <p className="description">You must configure your node's credentials.</p>
+      {peers === null &&
+        <p className="description">You must configure your node's credentials first.</p>
       }
       
       {peers !== null &&
@@ -58,7 +52,7 @@ export default function () {
           <table>
             <thead>
               <tr>
-                <th>Pubkey</th>
+                <th>Peer Public Key</th>
                 <th className="checkbox-cell">Request</th>
                 <th className="checkbox-cell">Respond</th>
               </tr>
@@ -91,10 +85,10 @@ export default function () {
           <div className="action-buttons">
             <button 
               onClick={update}
-              disabled={!changes || !has_creds}
-              className="button button-primary save-button"
+              disabled={!changes}
+              className={`button button-primary action-button ${saved ? 'saved-button' : ''}`}
             >
-              Save
+              {saved ? 'Saved' : 'Save'}
             </button>
             
             {changes && (
@@ -105,29 +99,9 @@ export default function () {
                 Cancel
               </button>
             )}
-            {toast && <p className="toast-text">{toast}</p>}
           </div>
         </div>
       }
     </div>
   )
-}
-
-function has_creds (store : NodeStore.Type) {
-  return (store.group !== null && store.share !== null)
-}
-
-function has_peers (store : NodeStore.Type) {
-  return (
-    store.group !== null &&
-    store.peers !== null &&
-    store.peers.length === store.group.commits.length - 1
-  )
-}
-
-function is_diff (
-  peers : PeerPolicy[] | null,
-  store : PeerPolicy[] | null
-) {
-  return JSON.stringify(peers ?? {}) !== JSON.stringify(store ?? {})
 }

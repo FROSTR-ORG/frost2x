@@ -30,7 +30,7 @@ function Options(): ReactElement {
         <div className="title-container">
           <h1>frost2x</h1>
         </div>
-        <p>frost signer extension</p>
+        <p>Frostr Signer Extension</p>
         <a 
           href="https://frostr.org" 
           target="_blank" 

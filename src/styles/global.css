@@ -39,6 +39,7 @@ h1, h2, h3, h4, h5, h6 { color: #d8d8d8; margin-top: 0; }
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
 }
+
 .button:hover { background: #234383; border-color: rgba(255, 255, 255, 0.2); }
 .button-primary { background: #4a90e2; color: #fff; border: none; font-weight: 500; }
 .button-primary:hover { background: #3a80d2; }
@@ -46,6 +47,8 @@ h1, h2, h3, h4, h5, h6 { color: #d8d8d8; margin-top: 0; }
 .button-danger:hover { background: #d44333; }
 .button-remove { background: #7f1d2f; color: #fff; border: none; padding: 6px 12px; font-size: 13px; }
 .button-remove:hover { background: #9c2539; }
+.saved-button { background: #4CAF50 !important; color: #fff; border-color: #4CAF50 !important; opacity: 1 !important; color: #fff !important; }
+.saved-button:hover { background: #45a049 !important; border-color: #45a049 !important; opacity: 1 !important; color: #fff !important; }
 
 .pill { display: inline-block; background: rgba(74, 144, 226, 0.2); color: #4a90e2; border-radius: 30px; padding: 3px 10px; font-size: 12px; margin-left: 6px; vertical-align: middle; }
 .alpha-pill { background: rgba(227, 92, 92, 0.2); color: #e84545; border-radius: 12px; padding: 3px 10px; font-size: 10px; margin-left: 8px; }
@@ -65,8 +68,9 @@ pre.code-display {
   color: #e6e6e6;
   border: 1px solid rgba(100, 140, 210, 0.3);
 }
-.error-text { color: #e74c3c; margin-top: 5px; }
-.toast-text { color: #5ce24a; margin-top: 5px; }
+
+.error-text { color: #e74c3c; }
+.toast-text { color: #5ce24a; }
 
 .input-group { display: flex; align-items: center; margin-bottom: 15px; }
 .input-group input { flex: 1; margin-right: 10px; }

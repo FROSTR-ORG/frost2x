@@ -8,24 +8,11 @@ import {
 
 import type { SharePackage } from '@frostr/bifrost'
 
-export default function () {
-  const [ share, setShare ] = useState<SharePackage | null>(null)
+export default function ({ store } : { store : NodeStore.Type }) {
   const [ input, setInput ] = useState<string>('')
   const [ error, setError ] = useState<string | null>(null)
   const [ show, setShow   ] = useState<boolean>(false)
-  const [ toast, setToast ] = useState<string | null>(null)
-
-  const init = (share : SharePackage | null) => {
-    if (share === null) return
-    try {
-      const share_str = encode_share_pkg(share)
-      setShare(share)
-      setInput(share_str)
-      setError(null)
-    } catch (err) {
-      setError('failed to initialize share input')
-    }
-  }
+  const [ saved, setSaved ] = useState<boolean>(false)
 
   // Update the group in the store.
   const update = () => {
@@ -41,15 +28,9 @@ export default function () {
       if (share === null) return
       NodeStore.update({ share })
     }
-    setToast('share package updated')
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1500)
   }
-
-  // Fetch the share from the store and subscribe to changes.
-  useEffect(() => {
-    NodeStore.fetch().then(store => init(store.share))
-    const unsub = NodeStore.subscribe(store => init(store.share))
-    return () => unsub()
-  }, [])
 
   // Validate the share input when it changes.
   useEffect(() => {
@@ -70,10 +51,19 @@ export default function () {
   }, [ input ])
 
   useEffect(() => {
-    if (toast !== null) {
-      setTimeout(() => setToast(null), 3000)
+    try {
+      if (store.share === null) {
+        setInput('')
+        setError(null)
+      } else {
+        const str = encode_share_pkg(store.share)
+        setInput(str)
+        setError(null)
+      }
+    } catch (err) {
+      setError('failed to decode package data')
     }
-  }, [ toast ])
+  }, [ store.share ])
 
   return (
     <div className="container">
@@ -95,11 +85,11 @@ export default function () {
               {show ? 'hide' : 'show'}
             </button>
             <button
-              className="button action-button"
+              className={`button action-button ${saved ? 'saved-button' : ''}`}
               onClick={update}
-              disabled={!is_share_changed(input, share) || error !== null}
+              disabled={!is_share_changed(input, store.share) || error !== null}
             >
-              save
+              {saved ? 'Saved' : 'Save'}
             </button>
           </div>
         </div>
@@ -109,8 +99,9 @@ export default function () {
             {get_share_json(input) ?? 'invalid share package'}
           </pre>
         )}
-        {error && <p className="error-text">{error}</p>}
-        {toast && <p className="toast-text">{toast}</p>}
+        <div className="notification-container">
+          {error && <p className="error-text">{error}</p>}
+        </div>
       </div>
     </div>
   )
