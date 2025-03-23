@@ -1,7 +1,7 @@
 export const DUST_LIMIT    = 546
 export const MAX_LOGS      = 100
-export const PROMPT_WIDTH  = 550
-export const PROMPT_HEIGHT = 600
+export const PROMPT_WIDTH  = 500
+export const PROMPT_HEIGHT = 700
 
 export const NETWORK_PREFIX = {
   mainnet : 'bc',
