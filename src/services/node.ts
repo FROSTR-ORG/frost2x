@@ -11,9 +11,7 @@ export async function keep_alive (
 }
 
 export async function init_node () : Promise<BifrostNode | null> {
-  let store = await NodeStore.fetch()
-
-  const { group, peers, relays, share } = store
+  const { group, peers, relays, share } = await NodeStore.fetch()
 
   if (group === null || peers === null || share === null) {
     console.error('extension store is missing required fields')
