@@ -12,7 +12,7 @@ import type { LogEntry } from '@/types/index.js'
 
 export default function Console() {
   // State for logs
-  const [logs, setLogs] = useState<LogEntry[]>([])
+  const [ logs, setLogs ] = useState<LogEntry[]>([])
   
   // Create a ref for the console output element
   const consoleOutputRef = useRef<HTMLDivElement>(null)
@@ -27,7 +27,7 @@ export default function Console() {
   // Auto-scroll to bottom when logs change
   useEffect(() => {
     if (consoleOutputRef.current) {
-      const element = consoleOutputRef.current
+      const element     = consoleOutputRef.current
       element.scrollTop = element.scrollHeight
     }
   }, [ logs ])

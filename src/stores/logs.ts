@@ -15,7 +15,8 @@ export namespace LogStore {
     // Get current logs
     const logs = await fetch()
     // Add new log and limit to MAX_LOGS entries
-    const updatedLogs = [ entry, ...logs ].slice(0, MAX_LOGS)
+    const slice_index = logs.length - MAX_LOGS
+    const updatedLogs = [ ...logs, entry ].slice(slice_index)
     // Store updated logs
     return browser.storage.local.set({ logs: updatedLogs })
   }
