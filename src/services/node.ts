@@ -17,7 +17,6 @@ export async function init_node () : Promise<BifrostNode | null> {
   const { node : { rate_limit } } = await SettingStore.fetch()
 
   if (group === null || peers === null || share === null) {
-    console.error('extension store is missing required fields')
     return null
   }
 
