@@ -16,6 +16,9 @@ interface Store {
     is_active       : boolean
     resolver_url    : string
   }
+  node : {
+    rate_limit : number
+  }
   tx : {
     default_priority   : TxPriority
     max_fee_rate       : number
@@ -36,6 +39,9 @@ const DEFAULT_STORE : Store = {
   links : {
     is_active       : false,
     resolver_url    : 'https://njump.me/{raw}',
+  },
+  node : {
+    rate_limit : 200,
   },
   tx : {
     default_priority   : 'medium',

@@ -1,6 +1,7 @@
-import { BifrostNode } from '@frostr/bifrost'
-import { NodeStore }   from '@/stores/node.js'
-import { LogStore }    from '@/stores/logs.js'
+import { BifrostNode }  from '@frostr/bifrost'
+import { NodeStore }    from '@/stores/node.js'
+import { SettingStore } from '@/stores/settings.js'
+import { LogStore }     from '@/stores/logs.js'
 
 import type { BifrostNodeConfig } from '@frostr/bifrost'
 
@@ -13,13 +14,16 @@ export async function keep_alive (
 export async function init_node () : Promise<BifrostNode | null> {
   const { group, peers, relays, share } = await NodeStore.fetch()
 
+  const { node : { rate_limit } } = await SettingStore.fetch()
+
   if (group === null || peers === null || share === null) {
     console.error('extension store is missing required fields')
     return null
   }
 
   const opt : Partial<BifrostNodeConfig> = {
-    policies : peers ?? []
+    policies      : peers ?? [],
+    sign_interval : rate_limit
   }
 
   const relay_urls = relays
