@@ -1,10 +1,12 @@
 name: Build and Release Extension
 
-# Trigger the workflow when a tag starting with 'v' is pushed (e.g., v1.1.0)
 on:
   push:
     tags:
       - "v*"
+
+permissions:
+  contents: write
 
 jobs:
   build-and-release:
@@ -16,20 +18,29 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "21"
+          node-version: "21" # Adjust to your Node.js version
 
       - name: Install dependencies
         run: npm install
 
       - name: Build the extension
-        run: npm run build
+        run: npm run build # Replace with your build command
 
       - name: Create ZIP
-        run: zip -r frost2x-${{ github.ref_name }}.zip dist/
+        run: zip -r frost2x-${{ github.ref_name }}.zip dist/ # Adjust 'dist/' to your output folder
+
+      - name: Pack extension into CRX
+        uses: cardinalby/webext-buildtools-chrome-crx-action@v2
+        with:
+          zipFilePath: frost2x-${{ github.ref_name }}.zip
+          crxFilePath: frost2x-${{ github.ref_name }}.crx
+          privateKey: ${{ secrets.CHROME_CRX_PRIVATE_KEY }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: frost2x-${{ github.ref_name }}.zip
-          draft: true      # Set to true if you want drafts.
-          prerelease: true # Set to true for beta releases.
+          files: |
+            frost2x-${{ github.ref_name }}.zip
+            frost2x-${{ github.ref_name }}.crx
+          draft: true
+          prerelease: true
