@@ -4,9 +4,10 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "./build.js",
+    "build": "./script/build.js",
     "loader": "tsx --tsconfig ./test/tsconfig.json",
     "keygen": "npm run loader test/scripts/keygen.ts",
+    "package": "./script/package.sh",
     "start": "npm run loader test/scripts/start.ts"
   },
   "dependencies": {
