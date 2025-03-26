@@ -1,70 +1,56 @@
 import browser from 'webextension-polyfill'
-import QRCode  from 'react-qr-code'
 
-import * as nip19           from 'nostr-tools/nip19'
-import { createRoot }       from 'react-dom/client'
-import { decode_group_pkg } from '@frostr/bifrost/lib'
+import * as nip19       from 'nostr-tools/nip19'
+import { createRoot }   from 'react-dom/client'
+import { NodeStore }    from '@/stores/node.js'
+import { MESSAGE_TYPE } from '@/const.js'
 
 import {
   useState,
   useRef,
-  useEffect,
-  ReactElement
+  useEffect
 } from 'react'
 
-import type { ExtensionStore } from './types.js'
+import type { ReactElement } from 'react'
 
 function Popup() : ReactElement {
-  let [ pubKey, setPubKey ]         = useState<string | null>('')
-  let [ nodeStatus, setNodeStatus ] = useState<string>('stopped')
+  const [ store, setStore ]           = useState<NodeStore.Type>(NodeStore.DEFAULT)
+  const [ pubKey, setPubKey ]         = useState<string | null>(null)
+  const [ nodeStatus, setNodeStatus ] = useState<string>('stopped')
 
-  let keys = useRef<string[]>([])
+  const keys = useRef<string[]>([])
 
   useEffect(() => {
-    browser.storage.sync.get(['store']).then((results: {
-      store? : ExtensionStore
-    }) => {
-      if (typeof results.store?.group === 'string') {
-        const group = decode_group_pkg(results.store.group)
-        let hexKey  = group.group_pk.slice(2)
-        let npubKey = nip19.npubEncode(hexKey)
+    if (store.group !== null) {
+      const group = store.group
+      let hexKey  = group.group_pk.slice(2)
+      let npubKey = nip19.npubEncode(hexKey)
 
-        setPubKey(npubKey)
+      setPubKey(npubKey)
 
-        keys.current.push(npubKey)
-        keys.current.push(hexKey)
+      keys.current.push(npubKey)
+      keys.current.push(hexKey)
 
-        if (results.store?.relays) {
-          let relaysList: string[] = []
-          for (let url in results.store.relays) {
-            if (results.store.relays[url].write) {
-              relaysList.push(url)
-              if (relaysList.length >= 3) break
-            }
-          }
-          if (relaysList.length) {
-            let nprofileKey = nip19.nprofileEncode({
-              pubkey: hexKey,
-              relays: relaysList
-            })
-            keys.current.push(nprofileKey)
-          }
-        }
-      } else {
-        setPubKey(null)
-      }
-    })
+    } else {
+      setPubKey(null)
+    }
 
     checkNodeStatus()
     
     const interval = setInterval(checkNodeStatus, 2500)
     
     return () => clearInterval(interval)
+  }, [ store.group ])
+
+  useEffect(() => {
+    NodeStore.fetch().then(store => setStore(store))
+    const unsub = NodeStore.subscribe(store => setStore(store))
+    return () => unsub()
   }, [])
 
   return (
     <div className="popup-container">
-      {/* Header similar to options.tsx but smaller */}
+      {/* Header with smaller logo */}
       <div className="popup-header">
         <img 
           src="icons/icon.png"
@@ -131,7 +117,7 @@ function Popup() : ReactElement {
 
   async function checkNodeStatus() {
     try {
-      const res = await browser.runtime.sendMessage({ type: 'get_node_status' }) as { status: string }
+      const res = await browser.runtime.sendMessage({ type: MESSAGE_TYPE.NODE_STATUS }) as { status: string }
       setNodeStatus(res.status)
     } catch (error) {
       console.error('Error checking node status:', error)
@@ -145,7 +131,7 @@ function Popup() : ReactElement {
       setNodeStatus('restarting');
       
       // Send the reset message to the background script
-      browser.runtime.sendMessage({ type: 'node_reset' });
+      browser.runtime.sendMessage({ type: MESSAGE_TYPE.NODE_RESET });
     } catch (error) {
       console.error('error resetting node:', error);
       // If there's an error, revert to 'unknown'

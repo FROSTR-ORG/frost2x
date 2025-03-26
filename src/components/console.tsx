@@ -1,63 +1,54 @@
-import { useEffect, useState, useRef } from 'react'
+import browser          from 'webextension-polyfill'
+import { LogStore }     from '@/stores/logs.js'
+import { MESSAGE_TYPE } from '@/const.js'
 
-import browser from 'webextension-polyfill'
+import {
+  useEffect,
+  useState,
+  useRef
+} from 'react'
 
-import type { LogEntry } from '../types.js'
+import type { LogEntry } from '@/types/index.js'
 
 export default function Console() {
-
-  const [ logs, setLogs ]     = useState<LogEntry[]>([])
-  const [ isInit, setIsInit ] = useState(false)
+  // State for logs
+  const [ logs, setLogs ] = useState<LogEntry[]>([])
   
   // Create a ref for the console output element
   const consoleOutputRef = useRef<HTMLDivElement>(null)
 
+  // Load logs on mount and set up subscription.
   useEffect(() => {
-    if (!isInit) {
-      browser.storage.sync.get(['logs']).then((result) => {
-        setLogs(result.logs as LogEntry[] || [])
-        setIsInit(true)
-      })
-    }
-  }, [ isInit ])
-
-  useEffect(() => {
-    const listener = (changes: any) => {
-      const new_logs = changes.logs?.newValue
-      if (is_logs_changed(logs, new_logs)) {
-        setLogs(new_logs as LogEntry[] || [])
-      }
-    }
-    
-    browser.storage.sync.onChanged.addListener(listener)
-    return () => browser.storage.sync.onChanged.removeListener(listener)
-  }, [ logs ])
+    LogStore.fetch().then(logs => setLogs(logs))
+    const unsub = LogStore.subscribe(logs => setLogs(logs))
+    return () => unsub()
+  }, [])
 
   // Auto-scroll to bottom when logs change
   useEffect(() => {
     if (consoleOutputRef.current) {
-      const element = consoleOutputRef.current
+      const element     = consoleOutputRef.current
       element.scrollTop = element.scrollHeight
     }
-  }, [logs])
+  }, [ logs ])
 
-  const clear = () => {
-    browser.storage.sync.set({ logs: [] })
+  // Clear logs handler
+  const clear_handler = async () => {
+    LogStore.clear().then(() => setLogs([]))
   }
 
-  // Add resetNode function
-  const reset = () => {
+  // Reset node handler
+  const reset_handler = async () => {
     try {
-      clear()
-      browser.runtime.sendMessage({ type: 'node_reset' })
+      // Still send message to reset the node
+      await browser.runtime.sendMessage({ type: MESSAGE_TYPE.NODE_RESET })
     } catch (error) {
-      console.error('error resetting node:')
-      console.error(error)
+      console.error('error resetting node:', error)
     }
   }
 
   return (
-    <div className="container console-container">
+    <div className="container">
       <h2 className="section-header">Event Console</h2>
       <p className="description">Monitor events from your bifrost node.</p>
       
@@ -80,16 +71,9 @@ export default function Console() {
       </div>
       
       <div className="console-controls">
-        <button className="button" onClick={clear}>Clear Console</button>
-        <button className="button button-warning" onClick={reset}>Reset Node</button>
+        <button className="button" onClick={clear_handler}>Clear Console</button>
+        <button className="button button-reset" onClick={reset_handler}>Reset Node</button>
       </div>
     </div>
   );
-}
-
-function is_logs_changed (
-  curr: LogEntry[],
-  next: LogEntry[]
-) {
-  return JSON.stringify(curr) !== JSON.stringify(next)
 }
