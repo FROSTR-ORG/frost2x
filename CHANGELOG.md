@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file. Uses [Keep 
 
 ### Added
 - Added default relays to the extension.
+- Added package script to create a zip and crx file of the extension.
+- Added changelog.
 
 ### Fixed
 - Fixed issue with prompt window.
