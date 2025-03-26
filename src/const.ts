@@ -3,6 +3,12 @@ export const MAX_LOGS      = 100
 export const PROMPT_WIDTH  = 500
 export const PROMPT_HEIGHT = 700
 
+export const DEFAULT_RELAYS = [{
+  url   : 'https://relay.primal.net',
+  read  : true,
+  write : true
+}]
+
 export const NETWORK_PREFIX = {
   mainnet : 'bc',
   testnet : 'tb',
