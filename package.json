@@ -1,6 +1,5 @@
 {
   "name": "@frostr/frost2x",
-  "version": "0.1.0",
   "license": "MIT",
   "type": "module",
   "scripts": {
