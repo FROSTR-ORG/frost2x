@@ -13,15 +13,18 @@ body {
   color: #e2e8f0;
   height: 100vh;
   width: 100vw;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 #main {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100vh; /* Fixed height to contain everything */
   padding: 10px;
   box-sizing: border-box;
+  position: relative; /* For absolute positioning of children */
+  overflow: hidden; /* Prevent main from scrolling */
 }
 
 /* ========================================================================= */
@@ -29,10 +32,13 @@ body {
 .prompt-container {
   display: flex;
   flex-direction: column;
-  flex: 1;
   width: 100%;
   padding: 5px;
   margin: 0 auto;
+  padding-bottom: 160px; /* Space for buttons at bottom */
+  overflow-y: auto; /* This container scrolls */
+  height: 100%; /* Fill the main container */
+  box-sizing: border-box;
 }
 
 .prompt-header {
@@ -47,10 +53,12 @@ body {
 }
 
 .prompt-content {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* JSON display */
@@ -59,9 +67,10 @@ body {
   border-radius: 4px;
   padding: 8px;
   margin: 5px 0;
-  flex: 1;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   border: 1px solid #334155;
+  max-height: calc(100vh - 300px); /* Dynamic max height based on viewport */
 }
 
 pre.json-content {
@@ -70,6 +79,9 @@ pre.json-content {
   font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
   font-size: 14px;
   line-height: 1.5;
+  white-space: pre-wrap; /* Allow wrapping */
+  word-wrap: break-word; /* Break long words */
+  word-break: break-word; /* Break words at arbitrary points */
 }
 
 /* JSON syntax highlighting */
@@ -92,17 +104,26 @@ pre.json-content {
 /* ========================================================================= */
 /* Buttons */
 .buttons-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  padding: 15px;
+  background-color: #1e293b;
+  z-index: 100;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 10px; /* Add consistent gap between button rows */
 }
 
 .button-row {
   display: flex;
   width: 100%;
-  gap: 8px;
+  gap: 10px; /* Increase gap between buttons in the same row */
+  min-height: 42px; /* Ensure consistent button height */
 }
 
 .button-full-width {
@@ -118,7 +139,7 @@ pre.json-content {
   color: #e2e8f0;
   border: none;
   border-radius: 5px;
-  padding: 10px 15px;
+  padding: 12px 15px; /* Increase padding for better button size */
   cursor: pointer;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
   font-weight: 600;
@@ -127,6 +148,10 @@ pre.json-content {
   font-size: 12px;
   letter-spacing: 0.7px;
   text-transform: uppercase;
+  height: 100%; /* Make button fill the row height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .prompt-button:hover {
@@ -182,3 +207,23 @@ table input { width: 100%; box-sizing: border-box; }
 table .checkbox-cell { text-align: center; width: 80px; }
 table .checkbox-cell input[type="checkbox"] { margin: 0 auto; display: block; }
 table .action-cell { text-align: center; width: 100px; }
+
+/* Add styling for scrollbars to make them more visible */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 0; /* Hide horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.8);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.9);
+}
