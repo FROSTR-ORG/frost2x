@@ -21,7 +21,7 @@ This extension is not yet available in the Chrome Web Store, so you will need to
 
 1. Go to `chrome://extensions`.
 2. Enable "Developer mode" if it is not already enabled.
-3. Click on "Load unpacked" and select the `extension/` folder of this repository.
+3. Click on "Load unpacked" and select the `dist/` folder of this repository.
 
 In the options menu for the extension, you can input the credentials for your signing group, and the individual share that you want to use.
 
