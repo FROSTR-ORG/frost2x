@@ -2,6 +2,8 @@
 
 Notes and other stuff signed by an extension, using the powers of FROST.
 
+> Now available in the [chrome web store](https://chromewebstore.google.com/detail/frost2x/gpbndcgoaehgeckcfmmbmaaaeljnaiof)!
+
 * Fork of the popular [nos2x](https://github.com/fiatjaf/nos2x) extension.
 * Uses the [Bifrost](https://github.com/frostr-org/bifrost) library for encryption and signing of events.
 * Allows FROST-based signing for any website that supports NIP-07.
