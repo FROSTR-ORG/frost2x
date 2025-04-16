@@ -19,7 +19,7 @@ The standard NIP-07 signing interface remains unchanged.
 
 ## Installation
 
-This extension is not yet available in the Chrome Web Store, so you will need to install it manually. Before you load the unpacked Chrome extension, you will need to follow the steps for running the [Test Node / Relay](#running-a-test-node--relay) first.
+This extension available in the [Chrome Web Store](https://chromewebstore.google.com/detail/frost2x/gpbndcgoaehgeckcfmmbmaaaeljnaiof),but you can also build and install it manually as an unpacked extension:
 
 1. Go to `chrome://extensions`.
 2. Enable "Developer mode" if it is not already enabled.
