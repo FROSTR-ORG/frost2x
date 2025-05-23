@@ -2,7 +2,7 @@ import { create_store } from './store.js'
 
 import type { ChainNetwork, TxPriority } from '@/types/index.js'
 
-interface Store {
+export interface Store {
   explorer : {
     api_url      : string
     link_url     : string

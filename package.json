@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@cmdcode/buff": "^2.2.5",
-    "@frostr/bifrost": "^0.3.1",
+    "@frostr/bifrost": "^1.0.7",
     "@noble/ciphers": "^1.2.1",
     "@scure/base": "^1.2.4",
     "@scure/btc-signer": "^1.7.0",

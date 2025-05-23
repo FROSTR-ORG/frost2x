@@ -1,4 +1,4 @@
-import { get_pubkey }     from '@frostr/bifrost/lib'
+import { get_pubkey }     from '@frostr/bifrost/util'
 import { DEFAULT_RELAYS } from '@/const.js'
 import { create_store }   from './store.js'
 
@@ -6,13 +6,13 @@ import type { RelayPolicy } from '@/types/index.js'
 
 import type {
   GroupPackage,
-  PeerPolicy,
+  PeerConfig,
   SharePackage,
 } from '@frostr/bifrost'
 
 interface Store {
   group   : GroupPackage | null
-  peers   : PeerPolicy[] | null
+  peers   : PeerConfig[] | null
   relays  : RelayPolicy[]
   share   : SharePackage | null
 }
@@ -40,7 +40,7 @@ NodeStore.use((store) => {
     const pubkey = get_pubkey(store.share.seckey, 'ecdsa')
     const peers  = store.group.commits.filter(commit => commit.pubkey !== pubkey)
     store.peers = peers.map((peer, idx) => 
-      [ peer.pubkey.slice(2), idx === 0, true ] as PeerPolicy
+      ({ pubkey: peer.pubkey.slice(2), policy: { send: idx === 0, recv: true } })
     )
   }
 })

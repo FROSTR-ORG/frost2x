@@ -21,7 +21,10 @@
   "content_scripts": [
     {
       "run_at": "document_end",
-      "matches": ["<all_urls>"],
+      "matches":  [
+        "https://*/*",
+        "http://*/*"
+      ],
       "js": ["content-script.build.js"],
       "all_frames": true
     }
