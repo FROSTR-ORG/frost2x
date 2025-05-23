@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { NodeStore }           from '@/stores/node.js'
 
-import type { PeerPolicy } from '@frostr/bifrost'
+import type { PeerConfig } from '@frostr/bifrost'
 
 export default function ({ store } : { store : NodeStore.Type }) {
-  const [ peers, setPeers ]     = useState<PeerPolicy[] | null>(store.peers)
+  const [ peers, setPeers ]     = useState<PeerConfig[] | null>(store.peers)
   const [ changes, setChanges ] = useState<boolean>(false)
   const [ saved, setSaved ]     = useState<boolean>(false)
 
@@ -23,10 +23,10 @@ export default function ({ store } : { store : NodeStore.Type }) {
   }
 
   // Update peer connectivity status locally
-  const update_peer = (idx: number, key: number, value: boolean) => {
+  const update_peer = (idx: number, key: 'send' | 'recv', value: boolean) => {
     setPeers(prev => {
       const updated = [ ...prev ?? [] ]
-      updated[idx][key] = value
+      updated[idx].policy[key] = value as boolean
       return updated
     })
     setChanges(true)
@@ -58,21 +58,21 @@ export default function ({ store } : { store : NodeStore.Type }) {
             <tbody>
               {peers.map((peer, idx) => (
                 <tr key={idx}>
-                  <td className="pubkey-cell">{peer[0]}</td>
+                  <td className="pubkey-cell">{peer.pubkey}</td>
                   <td className="checkbox-cell">
                     <input
                       type="checkbox"
                       className="peer-checkbox"
-                      checked={peer[1]}
-                      onChange={() => update_peer(idx, 1, !peer[1])}
+                      checked={peer.policy.send}
+                      onChange={() => update_peer(idx, 'send', !peer.policy.send)}
                     />
                   </td>
                   <td className="checkbox-cell">
                     <input
                       type="checkbox"
                       className="peer-checkbox"
-                      checked={peer[2]}
-                      onChange={() => update_peer(idx, 2, !peer[2])}
+                      checked={peer.policy.recv}
+                      onChange={() => update_peer(idx, 'recv', !peer.policy.recv)}
                     />
                   </td>
                 </tr>
