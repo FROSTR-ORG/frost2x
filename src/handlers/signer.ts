@@ -25,8 +25,12 @@ export async function handleSignerRequest (
   const node = await keep_alive(ctx.node)
   // If the node is not initialized, return an error.
   if (node === null) return { error: { message: 'bifrost node not initialized' } }
-  // Get the public key.
-  const pubkey = node.group.group_pk.slice(2)
+  // If the group is not available in the store, return an error.
+  if (store.group === null) return { error: { message: 'group not initialized' } }
+  // If the node's req property is not available, return an error.
+  if (!node.req) return { error: { message: 'bifrost node not ready' } }
+  // Get the public key from the store's group.
+  const pubkey = store.group.group_pk.slice(2)
   // Handle the request.
   try {
     switch (type) {

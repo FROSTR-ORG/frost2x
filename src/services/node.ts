@@ -22,7 +22,7 @@ export async function init_node () : Promise<BifrostNode | null> {
 
   const opt : Partial<BifrostNodeConfig> = {
     policies      : peers ?? [],
-    sign_interval : rate_limit
+    sign_ival     : rate_limit
   }
 
   const relay_urls = relays
@@ -31,7 +31,7 @@ export async function init_node () : Promise<BifrostNode | null> {
 
   const node = new BifrostNode(group, share, relay_urls, opt)
 
-  node.on('ready', async () => {
+    node.on('ready', async () => {
     await LogStore.clear()
     LogStore.add('bifrost node connected', 'success')
     console.log('bifrost node connected')
@@ -42,7 +42,8 @@ export async function init_node () : Promise<BifrostNode | null> {
   node.on('*', (...args : any[]) => {
     const [ event, msg ] = args
     if (filter.includes(event)) return
-    LogStore.add(`[ ${event} ] ${msg}`, 'info')
+    const logMessage = typeof msg === 'string' ? msg : JSON.stringify(msg)
+    LogStore.add(`[ ${event} ] ${logMessage}`, 'info')
   })
 
   node.on('closed', () => {
@@ -50,5 +51,30 @@ export async function init_node () : Promise<BifrostNode | null> {
     console.log('bifrost node disconnected')
   })
 
-  return node.connect()
+  // Connect the node
+  await node.connect()
+  
+  // Wait for the node to be ready before returning
+  return new Promise((resolve, reject) => {
+    // If the node is already ready, resolve immediately
+    if (node.req) {
+      resolve(node)
+      return
+    }
+    
+    // Otherwise wait for the ready event
+    const timeout = setTimeout(() => {
+      reject(new Error('Node initialization timeout'))
+    }, 10000) // 10 second timeout
+    
+    node.once('ready', () => {
+      clearTimeout(timeout)
+      resolve(node)
+    })
+    
+    node.once('error', (error: any) => {
+      clearTimeout(timeout)
+      reject(error)
+    })
+  })
 }
