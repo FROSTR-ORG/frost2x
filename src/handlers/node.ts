@@ -20,5 +20,7 @@ export async function handleNodeRequest (
       return { status: node !== null ? 'running' : 'stopped' }
     case MESSAGE_TYPE.NODE_STATUS:
       return { status: node !== null ? 'running' : 'stopped' }
+    case MESSAGE_TYPE.PEER_STATUS:
+      return { status: node !== null ? node.peers : [] }
   }
 }

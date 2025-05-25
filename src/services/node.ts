@@ -21,8 +21,8 @@ export async function init_node () : Promise<BifrostNode | null> {
   }
 
   const opt : Partial<BifrostNodeConfig> = {
-    policies      : peers ?? [],
-    sign_interval : rate_limit
+    policies  : peers ?? [],
+    sign_ival : rate_limit
   }
 
   const relay_urls = relays
@@ -37,12 +37,21 @@ export async function init_node () : Promise<BifrostNode | null> {
     console.log('bifrost node connected')
   })
 
+  node.once('ready', () => {
+    node.peers.forEach((peer) => {
+      node.req.ping(peer.pubkey)
+    })
+    console.dir(node, { depth: null })
+  })
+
   const filter = [ 'ready', 'message', 'closed' ]
 
   node.on('*', (...args : any[]) => {
     const [ event, msg ] = args
     if (filter.includes(event)) return
     LogStore.add(`[ ${event} ] ${msg}`, 'info')
+    console.log(`[ ${event} ] payload:`)
+    console.dir(msg, { depth: null })
   })
 
   node.on('closed', () => {
@@ -50,5 +59,5 @@ export async function init_node () : Promise<BifrostNode | null> {
     console.log('bifrost node disconnected')
   })
 
-  return node.connect()
+  return node.connect().then(() => node)
 }

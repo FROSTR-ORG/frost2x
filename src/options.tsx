@@ -5,11 +5,12 @@ import type { ReactElement } from 'react'
 
 import * as Icons from './components/icons.js'
 
-import Console     from './components/console.js'
-import Node        from './components/node/index.js'
-import Permissions from './components/permissions/index.js'
-import Settings    from './components/settings/index.js'
-import Wallet      from './components/wallet/index.js'
+import Console      from './components/console.js'
+import Node         from './components/node/index.js'
+import Permissions  from './components/permissions/index.js'
+import Settings     from './components/settings/index.js'
+import Wallet       from './components/wallet/index.js'
+import { PeerInfo } from './components/peers.js'
 
 function Options(): ReactElement {
   const [ activeTab, setActiveTab ] = useState('console')
@@ -82,6 +83,7 @@ function Options(): ReactElement {
           {/* Console Tab */}
           {activeTab === 'console' && (
             <div className="tab-panel">
+              <PeerInfo />
               <Console />
             </div>
           )}
