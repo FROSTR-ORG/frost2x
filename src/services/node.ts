@@ -47,11 +47,12 @@ export async function init_node () : Promise<BifrostNode | null> {
   const filter = [ 'ready', 'message', 'closed' ]
 
   node.on('*', (...args : any[]) => {
-    const [ event, msg ] = args
-    if (filter.includes(event)) return
-    LogStore.add(`[ ${event} ] ${msg}`, 'info')
+    const [ event, ...data ] = args
+    if (event.startsWith('/ping')) return
+    if (filter.includes(event))    return
+    LogStore.add(`${event}`, 'info')
     console.log(`[ ${event} ] payload:`)
-    console.dir(msg, { depth: null })
+    console.dir(data, { depth: null })
   })
 
   node.on('closed', () => {
