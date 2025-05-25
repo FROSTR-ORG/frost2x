@@ -1,7 +1,7 @@
 import { usePeerStatus } from '@/hooks/usePeerStatus.js'
 
 export function PeerInfo() {
-  const { status, fetch_status } = usePeerStatus()
+  const { status, ping_peer } = usePeerStatus()
 
   return (
     <div className="container">
@@ -15,6 +15,7 @@ export function PeerInfo() {
               <tr>
                 <th>Pubkey</th>
                 <th>Status</th>
+                <th>Refresh</th>
               </tr>
             </thead>
             <tbody>
@@ -25,8 +26,16 @@ export function PeerInfo() {
                     <span
                       className={`status-indicator peer-status-badge ${peer.status === 'online' ? 'peer-online' : 'peer-offline'}`}
                     >
-                      {peer.status === 'online' ? 'Online' : 'Offline'}
+                      {peer.status === 'online' ? 'online' : 'offline'}
                     </span>
+                  </td>
+                  <td>
+                    <button 
+                      className="button peer-refresh-btn" 
+                      onClick={() => ping_peer(peer.pubkey)}
+                    >
+                      Refresh
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -34,12 +43,6 @@ export function PeerInfo() {
           </table>
         )}
       </div>
-      <button 
-        className="button peer-refresh-btn" 
-        onClick={fetch_status}
-      >
-        Refresh
-      </button>
     </div>
   )
 }
