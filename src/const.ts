@@ -6,7 +6,7 @@ export const PROMPT_HEIGHT = 700
 export const PING_IVAL = 10
 
 export const DEFAULT_RELAYS = [{
-  url   : 'https://relay.primal.net',
+  url   : 'wss://relay.primal.net',
   read  : true,
   write : true
 }]
