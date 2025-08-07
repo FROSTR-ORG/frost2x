@@ -104,6 +104,10 @@ body.popup-body { background: #0f172a; color: #fff; padding: 0; margin: 0; }
   background: #6b7280;
   color: #fff;
 }
+.peer-checking {
+  background: #f59e0b;
+  color: #fff;
+}
 
 .peer-refresh-btn {
   margin-top: 4px;

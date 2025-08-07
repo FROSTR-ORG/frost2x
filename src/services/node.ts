@@ -2,7 +2,6 @@ import { BifrostNode }  from '@frostr/bifrost'
 import { NodeStore }    from '@/stores/node.js'
 import { SettingStore } from '@/stores/settings.js'
 import { LogStore }     from '@/stores/logs.js'
-import { get_pubkey }    from '@frostr/bifrost/util'
 
 import type { BifrostNodeConfig } from '@frostr/bifrost'
 
@@ -46,8 +45,8 @@ export async function init_node () : Promise<BifrostNode | null> {
     
     // Send an echo to ourselves to confirm the share handoff
     try {
-      const myPubkey = get_pubkey(share.seckey, 'ecdsa').slice(2)
-      const result = await node.req.echo('echo', [ myPubkey ])
+      // Send echo to confirm share handoff (broadcasts to all peers including ourselves)
+      const result = await node.req.echo('echo')
       
       if (result.ok) {
         LogStore.add('Share handoff confirmed: Echo sent successfully', 'success')
@@ -61,7 +60,14 @@ export async function init_node () : Promise<BifrostNode | null> {
       console.error('Echo error:', err)
     }
     
-    console.dir(node, { depth: null })
+    // Avoid logging the full node instance to prevent leaking sensitive data (e.g., key shares)
+    const safeNodeInfo = {
+      peerPubkeys   : Array.isArray(node.peers) ? node.peers.map((peer) => peer.pubkey) : [],
+      relayUrlCount : relay_urls.length,
+      policyCount   : Array.isArray(opt.policies) ? opt.policies.length : undefined,
+      rateLimit     : opt.sign_ival
+    }
+    console.log('bifrost node summary:', safeNodeInfo)
   })
 
   const filter = [ 'ready', 'message', 'closed' ]
@@ -71,8 +77,9 @@ export async function init_node () : Promise<BifrostNode | null> {
     if (event.startsWith('/ping')) return
     if (filter.includes(event))    return
     
-    // Just log all events generically (including echo)
-    LogStore.add(`${event}`, 'info')
+    // Log events with their data payload for expandable viewing
+    const eventData = data.length > 0 ? data : undefined
+    LogStore.add(`${event}`, 'info', eventData)
     console.log(`[ ${event} ] payload:`)
     console.dir(data, { depth: null })
   })

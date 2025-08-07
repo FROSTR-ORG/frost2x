@@ -24,9 +24,9 @@ export function PeerInfo() {
                   <td className="pubkey-cell">{peer.pubkey}</td>
                   <td>
                     <span
-                      className={`status-indicator peer-status-badge ${peer.status === 'online' ? 'peer-online' : 'peer-offline'}`}
+                      className={`status-indicator peer-status-badge peer-${peer.status}`}
                     >
-                      {peer.status === 'online' ? 'online' : 'offline'}
+                      {peer.status}
                     </span>
                   </td>
                   <td>

@@ -17,9 +17,9 @@ export function usePeerStatus () {
   }
 
   const ping_peer = async (pubkey: string) => {
-    const res = await browser.runtime.sendMessage({ type: MESSAGE_TYPE.PEER_PING, params: [ pubkey ] }) as { status: PeerStatus[] }
-    if (res === null || !Array.isArray(res.status)) return
-    setStatus(res.status)
+    const res = await browser.runtime.sendMessage({ type: MESSAGE_TYPE.PEER_PING, params: [ pubkey ] }) as { result: PeerStatus[], error: string | null }
+    if (res === null || res.error || !Array.isArray(res.result)) return
+    setStatus(res.result)
   }
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export function usePeerStatus () {
         setInit(true)
       })()
     }
-  }, [ status ])
+  }, [ status, is_init ])
 
   useEffect(() => {
     const interval = setInterval(fetch_status, PING_IVAL * 1000)

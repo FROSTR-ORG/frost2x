@@ -24,26 +24,50 @@ export async function handleNodeRequest (
     case MESSAGE_TYPE.PEER_STATUS:
       return { status: node !== null ? node.peers : [] }
     case MESSAGE_TYPE.PEER_PING:
-      return { status: node !== null ? await ping_peer(node, msg.params[0]) : [] }
+      try {
+        if (!msg.params || msg.params.length < 1) {
+          return { result: [], error: 'Missing pubkey parameter' }
+        }
+        return { result: node !== null ? await ping_peer(node, msg.params[0]) : [], error: null }
+      } catch (error) {
+        return { result: [], error: error instanceof Error ? error.message : 'Unknown error' }
+      }
     case MESSAGE_TYPE.PEER_ECHO:
-      return { status: node !== null ? await echo_peer(node, msg.params[0], msg.params[1]) : null }
+      try {
+        if (!msg.params || msg.params.length < 1) {
+          return { result: null, error: 'Missing pubkey parameter' }
+        }
+        return { result: node !== null ? await echo_peer(node, msg.params[0], msg.params[1]) : null, error: null }
+      } catch (error) {
+        return { result: null, error: error instanceof Error ? error.message : 'Unknown error' }
+      }
   }
 }
 
 async function ping_peer (node: BifrostNode, pubkey: string) {
-  await node.req.ping(pubkey)
-  return node.peers
+  try {
+    await node.req.ping(pubkey)
+    return node.peers
+  } catch (error) {
+    console.error('Ping peer failed:', error)
+    return node.peers // Return current state even if ping failed
+  }
 }
 
 async function echo_peer (node: BifrostNode, pubkey: string, message?: string) {
   try {
     const content = message || `Echo test from frost2x at ${new Date().toISOString()}`
-    const result = await node.req.echo(content, [ pubkey ])
+    
+    // IMPORTANT: The Bifrost echo function broadcasts to ALL connected peers,
+    // not to a specific peer. The pubkey parameter is kept for API consistency
+    // but is not used for targeting. The response indicates if ANY peer responded.
+    const result = await node.req.echo(content)
     
     if (result.ok) {
       return {
         success: true,
-        peer: pubkey,
+        broadcast: true,  // Indicate this was a broadcast
+        target_peer: pubkey,  // The peer we intended to test (for UI purposes)
         message: content,
         response: result.data,
         timestamp: Date.now()
@@ -51,16 +75,18 @@ async function echo_peer (node: BifrostNode, pubkey: string, message?: string) {
     } else {
       return {
         success: false,
-        peer: pubkey,
+        broadcast: true,
+        target_peer: pubkey,
         message: content,
-        error: result.err || 'Echo request failed',
+        error: result.err || 'Echo broadcast failed',
         timestamp: Date.now()
       }
     }
   } catch (error) {
     return {
       success: false,
-      peer: pubkey,
+      broadcast: true,
+      target_peer: pubkey,
       message: message || '',
       error: error instanceof Error ? error.message : 'Unknown error',
       timestamp: Date.now()

@@ -10,37 +10,37 @@ type Props = {
 export default function LinkSettings({ settings, saveSettings }: Props) {
   // Local state for this section
   const [localSettings, setLocalSettings] = useState({
-    'links/is_active': settings['links/is_active'],
-    'links/resolver_url': settings['links/resolver_url'] || ''
+    is_active: settings.links.is_active,
+    resolver_url: settings.links.resolver_url || ''
   })
   const [showInfoModal, setShowInfoModal] = useState(false);
   
   // Update local state when main settings change
   useEffect(() => {
     setLocalSettings({
-      'links/is_active': settings['links/is_active'],
-      'links/resolver_url': settings['links/resolver_url'] || ''
+      is_active: settings.links.is_active,
+      resolver_url: settings.links.resolver_url || ''
     })
   }, [settings])
   
   // Check if there are unsaved changes
   const hasChanges = () => {
     return (
-      localSettings['links/is_active'] !== settings['links/is_active'] ||
-      localSettings['links/resolver_url'] !== (settings['links/resolver_url'] || '')
+      localSettings.is_active !== settings.links.is_active ||
+      localSettings.resolver_url !== (settings.links.resolver_url || '')
     )
   }
   
   // Save changes to extension store
   const handleSave = () => {
-    saveSettings(localSettings)
+    saveSettings({ links: localSettings })
   }
   
   // Revert unsaved changes
   const handleCancel = () => {
     setLocalSettings({
-      'links/is_active': settings['links/is_active'],
-      'links/resolver_url': settings['links/resolver_url'] || ''
+      is_active: settings.links.is_active,
+      resolver_url: settings.links.resolver_url || ''
     })
   }
 
@@ -60,8 +60,8 @@ export default function LinkSettings({ settings, saveSettings }: Props) {
         <input
           type="checkbox"
           id="links-active"
-          checked={localSettings['links/is_active']}
-          onChange={() => updateField('links/is_active', !localSettings['links/is_active'])}
+          checked={localSettings.is_active}
+          onChange={() => updateField('is_active', !localSettings.is_active)}
         />
         <label htmlFor="links-active">
           Detect and highlight <code>nostr:</code> links in your browser.
@@ -74,8 +74,8 @@ export default function LinkSettings({ settings, saveSettings }: Props) {
           <input
             type="text"
             className="form-input"
-            value={localSettings['links/resolver_url']}
-            onChange={(e) => updateField('links/resolver_url', e.target.value)}
+            value={localSettings.resolver_url}
+            onChange={(e) => updateField('resolver_url', e.target.value)}
             placeholder="https://example.com/{raw}"
           />
           <p className="field-description">

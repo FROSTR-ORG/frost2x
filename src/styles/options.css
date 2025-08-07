@@ -431,19 +431,85 @@ tr:hover .pubkey-cell {
   width: 100%;
 }
 
+/* Console entry wrapper for expandable entries */
+.console-entry-wrapper {
+  margin-bottom: 2px;
+}
+
 /* Ensure console text content is left-aligned */
 .console-entry {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   line-height: 1.5;
-  margin-bottom: 4px;
-  padding: 4px 0;
-  text-align: left; /* Explicitly set text alignment */
+  padding: 6px 8px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s ease;
+}
+
+/* Make clickable entries show hover state */
+.console-entry-clickable {
+  cursor: pointer;
+}
+
+.console-entry-clickable:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Expand/collapse icon */
+.console-expand-icon {
+  color: #4a90e2;
+  font-size: 10px;
+  width: 12px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
 /* Make the console timestamp and message left-aligned */
-.console-timestamp,
+.console-timestamp {
+  color: #888;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
 .console-message {
   text-align: left;
+  flex: 1;
+}
+
+/* Expanded data section */
+.console-data-wrapper {
+  padding: 0 8px 8px 28px;
+  animation: slideDown 0.2s ease;
+}
+
+.console-data {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #e6e6e6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+/* Animation for expanding data */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Make console controls container take full width but keep buttons centered */
@@ -612,6 +678,10 @@ tr:hover .pubkey-cell {
 }
 .peer-offline {
   background: #6b7280;
+  color: #fff;
+}
+.peer-checking {
+  background: #f59e0b;
   color: #fff;
 }
 

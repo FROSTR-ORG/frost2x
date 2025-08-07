@@ -10,40 +10,40 @@ type Props = {
 export default function TransactionSettings({ settings, saveSettings }: Props) {
   // Local state for this section
   const [localSettings, setLocalSettings] = useState({
-    'tx/default_priority': settings['tx/default_priority'],
-    'tx/max_fee_rate': settings['tx/max_fee_rate'],
-    'tx/max_spend_amount': settings['tx/max_spend_amount']
+    default_priority: settings.tx.default_priority,
+    max_fee_rate: settings.tx.max_fee_rate,
+    max_spend_amount: settings.tx.max_spend_amount
   })
   
   // Update local state when main settings change
   useEffect(() => {
     setLocalSettings({
-      'tx/default_priority': settings['tx/default_priority'],
-      'tx/max_fee_rate': settings['tx/max_fee_rate'],
-      'tx/max_spend_amount': settings['tx/max_spend_amount']
+      default_priority: settings.tx.default_priority,
+      max_fee_rate: settings.tx.max_fee_rate,
+      max_spend_amount: settings.tx.max_spend_amount
     })
   }, [settings])
   
   // Check if there are unsaved changes
   const hasChanges = () => {
     return (
-      localSettings['tx/default_priority'] !== settings['tx/default_priority'] ||
-      localSettings['tx/max_fee_rate'] !== settings['tx/max_fee_rate'] ||
-      localSettings['tx/max_spend_amount'] !== settings['tx/max_spend_amount']
+      localSettings.default_priority !== settings.tx.default_priority ||
+      localSettings.max_fee_rate !== settings.tx.max_fee_rate ||
+      localSettings.max_spend_amount !== settings.tx.max_spend_amount
     )
   }
   
   // Save changes to extension store
   const handleSave = () => {
-    saveSettings(localSettings)
+    saveSettings({ tx: localSettings })
   }
   
   // Revert unsaved changes
   const handleCancel = () => {
     setLocalSettings({
-      'tx/default_priority': settings['tx/default_priority'],
-      'tx/max_fee_rate': settings['tx/max_fee_rate'],
-      'tx/max_spend_amount': settings['tx/max_spend_amount']
+      default_priority: settings.tx.default_priority,
+      max_fee_rate: settings.tx.max_fee_rate,
+      max_spend_amount: settings.tx.max_spend_amount
     })
   }
 
@@ -64,8 +64,8 @@ export default function TransactionSettings({ settings, saveSettings }: Props) {
         <div>
           <select 
             className="form-select"
-            value={localSettings['tx/default_priority']}
-            onChange={e => updateField('tx/default_priority', e.target.value as TxPriority)}
+            value={localSettings.default_priority}
+            onChange={e => updateField('default_priority', e.target.value as TxPriority)}
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -83,8 +83,8 @@ export default function TransactionSettings({ settings, saveSettings }: Props) {
           <input 
             type="number"
             className="form-input"
-            value={localSettings['tx/max_fee_rate']}
-            onChange={e => updateField('tx/max_fee_rate', parseFloat(e.target.value))}
+            value={localSettings.max_fee_rate}
+            onChange={e => updateField('max_fee_rate', parseFloat(e.target.value))}
             placeholder="0.0001"
           />
           <p className="field-description">
@@ -99,8 +99,8 @@ export default function TransactionSettings({ settings, saveSettings }: Props) {
           <input 
             type="number"
             className="form-input"
-            value={localSettings['tx/max_spend_amount']}
-            onChange={e => updateField('tx/max_spend_amount', parseInt(e.target.value))}
+            value={localSettings.max_spend_amount}
+            onChange={e => updateField('max_spend_amount', parseInt(e.target.value))}
             placeholder="10000"
           />
           <p className="field-description">

@@ -8,10 +8,11 @@ export namespace LogStore {
   // Add a log to the store
   export async function add (
     message : string,
-    type    : 'info' | 'error' | 'warning' | 'success'
+    type    : 'info' | 'error' | 'warning' | 'success',
+    data?   : any
   ) : Promise<void> {
     const timestamp = new Date().toISOString()
-    const entry     = { timestamp, message, type }
+    const entry     = { timestamp, message, type, ...(data && { data }) }
     // Get current logs
     const logs = await fetch()
     // Add new log and limit to MAX_LOGS entries

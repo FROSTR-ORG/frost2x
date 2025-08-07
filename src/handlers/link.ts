@@ -12,7 +12,7 @@ import type {
 export async function handleLinkRequest (msg : ContentScriptMessage) {
   const store = await fetchExtensionStore()
   
-  const resolver_url = store.settings['links/resolver_url']
+  const resolver_url = store.settings.links.resolver_url
 
   if (!resolver_url) {
     return { error: { message: 'resolver URL not set' } }
