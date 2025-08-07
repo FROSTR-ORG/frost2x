@@ -637,3 +637,174 @@ tr:hover .pubkey-cell {
   font-size: 14px;
   padding: 10px 0;
 }
+
+/* ========================================================================= */
+/* Echo Testing Styles */
+.echo-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-group label {
+  font-size: 14px;
+  color: #b0bccc;
+  font-weight: 500;
+}
+
+.peer-select {
+  background: rgba(30, 45, 75, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: #e6e6e6;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.peer-select:focus {
+  border-color: rgba(74, 144, 226, 0.5);
+  outline: none;
+}
+
+.peer-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.message-input {
+  background: rgba(30, 45, 75, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: #e6e6e6;
+  font-size: 14px;
+  width: 100%;
+}
+
+.message-input:focus {
+  border-color: rgba(74, 144, 226, 0.5);
+  outline: none;
+}
+
+.message-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.message-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.echo-results {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.results-header {
+  font-size: 16px;
+  color: #e6e6e6;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.echo-result {
+  background: rgba(30, 45, 75, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.echo-result.result-success {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.echo-result.result-error {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.badge-error {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.result-time {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.result-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.detail-label {
+  color: #94a3b8;
+  font-weight: 500;
+  min-width: 80px;
+}
+
+.detail-value {
+  color: #e2e8f0;
+  flex: 1;
+  word-break: break-word;
+  font-family: monospace;
+}
+
+.error-text {
+  color: #ef4444;
+}
+
+.warning-message {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 6px;
+  padding: 12px;
+  color: #fbbf24;
+  margin-bottom: 15px;
+  font-size: 14px;
+}

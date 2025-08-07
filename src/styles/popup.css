@@ -127,3 +127,26 @@ body.popup-body { background: #0f172a; color: #fff; padding: 0; margin: 0; }
   font-size: 14px;
   padding: 10px 0;
 }
+
+/* Echo status styles */
+.echo-status {
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(74, 144, 226, 0.2);
+  color: #4a90e2;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

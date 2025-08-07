@@ -2,6 +2,7 @@ import { BifrostNode }  from '@frostr/bifrost'
 import { NodeStore }    from '@/stores/node.js'
 import { SettingStore } from '@/stores/settings.js'
 import { LogStore }     from '@/stores/logs.js'
+import { get_pubkey }    from '@frostr/bifrost/util'
 
 import type { BifrostNodeConfig } from '@frostr/bifrost'
 
@@ -37,10 +38,29 @@ export async function init_node () : Promise<BifrostNode | null> {
     console.log('bifrost node connected')
   })
 
-  node.once('ready', () => {
+  node.once('ready', async () => {
+    // Ping all peers
     node.peers.forEach((peer) => {
       node.req.ping(peer.pubkey)
     })
+    
+    // Send an echo to ourselves to confirm the share handoff
+    try {
+      const myPubkey = get_pubkey(share.seckey, 'ecdsa').slice(2)
+      const result = await node.req.echo('echo', [ myPubkey ])
+      
+      if (result.ok) {
+        LogStore.add('Share handoff confirmed: Echo sent successfully', 'success')
+        console.log('Share handoff echo successful:', result.data)
+      } else {
+        LogStore.add('Share handoff echo failed', 'warning')
+        console.log('Share handoff echo failed:', result.err)
+      }
+    } catch (err) {
+      LogStore.add('Share handoff echo error', 'warning')
+      console.error('Echo error:', err)
+    }
+    
     console.dir(node, { depth: null })
   })
 
@@ -50,6 +70,8 @@ export async function init_node () : Promise<BifrostNode | null> {
     const [ event, ...data ] = args
     if (event.startsWith('/ping')) return
     if (filter.includes(event))    return
+    
+    // Just log all events generically (including echo)
     LogStore.add(`${event}`, 'info')
     console.log(`[ ${event} ] payload:`)
     console.dir(data, { depth: null })
