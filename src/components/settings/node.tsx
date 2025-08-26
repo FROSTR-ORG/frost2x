@@ -26,7 +26,9 @@ export default function NodeSettings({ store } : Props) {
   }
 
   const update_rate_limit = async (rate_limit : number) => {
-    setSettings({...settings, rate_limit })
+    // Ensure rate_limit is finite and non-negative, default to 0
+    const safeRateLimit = Number.isFinite(rate_limit) && rate_limit >= 0 ? rate_limit : 0
+    setSettings({...settings, rate_limit: safeRateLimit })
     setError(null)
     setChanges(true)
   }
@@ -50,8 +52,14 @@ export default function NodeSettings({ store } : Props) {
         <input
           type="number" 
           id="signature-request-rate-limit"
-          value={settings.rate_limit}
-          onChange={(e) => update_rate_limit(parseInt(e.target.value))}
+          min={0}
+          step={100}
+          inputMode="numeric"
+          value={Number.isFinite(settings.rate_limit) ? settings.rate_limit : 0}
+          onChange={(e) => {
+            const n = Number(e.target.value)
+            update_rate_limit(n)
+          }}
         />
         <p className="field-description">
           Limits the rate of signature requests sent by your node. Any requests above this limit will be batched together. Useful for relays that have a rate limit.

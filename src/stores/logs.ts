@@ -12,11 +12,11 @@ export namespace LogStore {
     data?   : any
   ) : Promise<void> {
     const timestamp = new Date().toISOString()
-    const entry     = { timestamp, message, type, ...(data && { data }) }
+    const entry     = { timestamp, message, type, ...(data !== undefined && { data }) }
     // Get current logs
     const logs = await fetch()
     // Add new log and limit to MAX_LOGS entries
-    const slice_index = logs.length - MAX_LOGS
+    const slice_index = Math.max(0, logs.length + 1 - MAX_LOGS)
     const updatedLogs = [ ...logs, entry ].slice(slice_index)
     // Store updated logs
     return browser.storage.local.set({ logs: updatedLogs })

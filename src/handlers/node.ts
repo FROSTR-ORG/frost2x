@@ -22,7 +22,7 @@ export async function handleNodeRequest (
     case MESSAGE_TYPE.NODE_STATUS:
       return { status: node !== null ? 'running' : 'stopped' }
     case MESSAGE_TYPE.PEER_STATUS:
-      return { status: node !== null ? node.peers : [] }
+      return { peers: node !== null ? node.peers : [] }
     case MESSAGE_TYPE.PEER_PING:
       try {
         if (!msg.params || msg.params.length < 1) {

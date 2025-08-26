@@ -3,7 +3,7 @@ import { BifrostNode } from '@frostr/bifrost'
 import {
   decode_group_pkg,
   decode_share_pkg
-} from '@frostr/bifrost/lib'
+} from '@frostr/bifrost/encoder'
 
 interface NodeConfig {
   group  : string

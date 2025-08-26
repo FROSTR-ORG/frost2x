@@ -440,6 +440,7 @@ tr:hover .pubkey-cell {
 .console-entry {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   line-height: 1.5;
+  margin-bottom: 0;
   padding: 6px 8px;
   text-align: left;
   display: flex;
@@ -654,11 +655,14 @@ tr:hover .pubkey-cell {
 .peer-table tr:last-child td {
   border-bottom: none;
 }
-.pubkey-cell {
+.peer-table .pubkey-cell {
   font-family: monospace;
   font-size: 13px;
   color: #b0bccc;
-  word-break: break-all;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .peer-status-badge {

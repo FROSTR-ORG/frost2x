@@ -5,6 +5,35 @@ import { LogStore }     from '@/stores/logs.js'
 
 import type { BifrostNodeConfig } from '@frostr/bifrost'
 
+// Safe serialization helper to handle cyclic/large objects
+function safeSerialize(data: any, maxLength: number = 50000): any {
+  if (data === undefined) return undefined
+  
+  try {
+    const seen = new WeakSet()
+    const serialized = JSON.stringify(data, (_key, value) => {
+      // Drop functions
+      if (typeof value === 'function') return '[Function]'
+      // Handle circular references
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) return '[Circular]'
+        seen.add(value)
+      }
+      return value
+    })
+    
+    // Check size limit
+    if (serialized.length > maxLength) {
+      return '[Data too large to serialize]'
+    }
+    
+    // Parse back to ensure clean object
+    return JSON.parse(serialized)
+  } catch (err) {
+    return '[Non-serializable data]'
+  }
+}
+
 export async function keep_alive (
   node : BifrostNode | null
 ) : Promise<BifrostNode | null> {
@@ -78,10 +107,12 @@ export async function init_node () : Promise<BifrostNode | null> {
     if (filter.includes(event))    return
     
     // Log events with their data payload for expandable viewing
-    const eventData = data.length > 0 ? data : undefined
+    const eventData = safeSerialize(data.length > 0 ? data : undefined)
     LogStore.add(`${event}`, 'info', eventData)
     console.log(`[ ${event} ] payload:`)
-    console.dir(data, { depth: null })
+    if (eventData !== undefined) {
+      console.log(JSON.stringify(eventData, null, 2))
+    }
   })
 
   node.on('closed', () => {

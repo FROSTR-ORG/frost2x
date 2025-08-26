@@ -118,8 +118,14 @@ export default function ExplorerSettings({ settings, saveSettings }: Props) {
           <input 
             type="number"
             className="form-input"
-            value={localSettings.rate_limit}
-            onChange={e => updateField('rate_limit', parseInt(e.target.value))}
+            min={0}
+            step={100}
+            inputMode="numeric"
+            value={Number.isFinite(localSettings.rate_limit) ? localSettings.rate_limit : 0}
+            onChange={e => {
+              const n = Number(e.target.value)
+              updateField('rate_limit', Number.isFinite(n) && n >= 0 ? n : 0)
+            }}
             placeholder="1000"
           />
           <p className="field-description">

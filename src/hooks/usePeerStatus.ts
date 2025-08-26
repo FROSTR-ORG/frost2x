@@ -10,16 +10,32 @@ export function usePeerStatus () {
   const [ status, setStatus ] = useState<PeerStatus[]>([])
 
   const fetch_status = async () => {
-    // Get the peers from the node.
-    const res = await browser.runtime.sendMessage({ type: MESSAGE_TYPE.PEER_STATUS }) as { status: PeerStatus[] }
-    if (res === null || !Array.isArray(res.status)) return
-    setStatus(res.status)
+    try {
+      // Get the peers from the node.
+      const res = await browser.runtime.sendMessage({ type: MESSAGE_TYPE.PEER_STATUS }) as { peers: PeerStatus[] }
+      if (res === null || !Array.isArray(res.peers)) {
+        setStatus([])
+        return
+      }
+      setStatus(res.peers)
+    } catch (error) {
+      console.error('Failed to fetch peer status:', error)
+      setStatus([])
+    }
   }
 
   const ping_peer = async (pubkey: string) => {
-    const res = await browser.runtime.sendMessage({ type: MESSAGE_TYPE.PEER_PING, params: [ pubkey ] }) as { result: PeerStatus[], error: string | null }
-    if (res === null || res.error || !Array.isArray(res.result)) return
-    setStatus(res.result)
+    try {
+      const res = await browser.runtime.sendMessage({ type: MESSAGE_TYPE.PEER_PING, params: [ pubkey ] }) as { result: PeerStatus[], error: string | null }
+      if (res === null || res.error || !Array.isArray(res.result)) {
+        setStatus([])
+        return
+      }
+      setStatus(res.result)
+    } catch (error) {
+      console.error('Failed to ping peer:', error)
+      setStatus([])
+    }
   }
 
   useEffect(() => {

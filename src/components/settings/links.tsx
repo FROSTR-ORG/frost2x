@@ -10,24 +10,24 @@ type Props = {
 export default function LinkSettings({ settings, saveSettings }: Props) {
   // Local state for this section
   const [localSettings, setLocalSettings] = useState({
-    is_active: settings.links.is_active,
-    resolver_url: settings.links.resolver_url || ''
+    is_active: settings.links?.is_active ?? false,
+    resolver_url: settings.links?.resolver_url ?? ''
   })
   const [showInfoModal, setShowInfoModal] = useState(false);
   
   // Update local state when main settings change
   useEffect(() => {
     setLocalSettings({
-      is_active: settings.links.is_active,
-      resolver_url: settings.links.resolver_url || ''
+      is_active: settings.links?.is_active ?? false,
+      resolver_url: settings.links?.resolver_url ?? ''
     })
   }, [settings])
   
   // Check if there are unsaved changes
   const hasChanges = () => {
     return (
-      localSettings.is_active !== settings.links.is_active ||
-      localSettings.resolver_url !== (settings.links.resolver_url || '')
+      localSettings.is_active !== (settings.links?.is_active ?? false) ||
+      localSettings.resolver_url !== (settings.links?.resolver_url ?? '')
     )
   }
   
@@ -39,8 +39,8 @@ export default function LinkSettings({ settings, saveSettings }: Props) {
   // Revert unsaved changes
   const handleCancel = () => {
     setLocalSettings({
-      is_active: settings.links.is_active,
-      resolver_url: settings.links.resolver_url || ''
+      is_active: settings.links?.is_active ?? false,
+      resolver_url: settings.links?.resolver_url ?? ''
     })
   }
 

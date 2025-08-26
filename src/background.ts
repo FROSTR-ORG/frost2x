@@ -263,5 +263,4 @@ async function getPermissionStatus (
     default:
       throw new Error(`unknown permission domain: ${domain}`)
   }
-  return { ...msg, host, type }
 }

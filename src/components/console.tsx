@@ -14,7 +14,7 @@ import type { LogEntry } from '@/types/index.js'
 // Component for individual log entries with expandable data
 function LogEntryItem({ log, index }: { log: LogEntry, index: number }) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const hasData = log.data !== undefined
+  const hasData = log.data !== undefined && log.data !== null
 
   const toggleExpanded = useCallback(() => {
     if (hasData) {
@@ -22,16 +22,15 @@ function LogEntryItem({ log, index }: { log: LogEntry, index: number }) {
     }
   }, [hasData])
 
-  const formatData = useCallback(() => {
-    if (!log.data) return null
+  const formatData = useCallback((data: any) => {
     try {
-      return JSON.stringify(log.data, null, 2)
+      return JSON.stringify(data, null, 2)
     } catch (error) {
       // Handle circular references or non-serializable data
       try {
-        const dataType = typeof log.data
-        const isArray = Array.isArray(log.data)
-        const constructorName = log.data?.constructor?.name
+        const dataType = typeof data
+        const isArray = Array.isArray(data)
+        const constructorName = data?.constructor?.name
         
         return `Unable to serialize data
 Type: ${isArray ? 'Array' : dataType}${constructorName ? ` (${constructorName})` : ''}
@@ -40,7 +39,10 @@ Error: ${error instanceof Error ? error.message : 'Circular reference or non-ser
         return 'Error: Unable to format data'
       }
     }
-  }, [log.data])
+  }, [])
+
+  // Only compute formatted data when expanded and has data
+  const formattedData = isExpanded && hasData ? formatData(log.data) : undefined
 
   return (
     <div className="console-entry-wrapper">
@@ -58,10 +60,10 @@ Error: ${error instanceof Error ? error.message : 'Circular reference or non-ser
         </span>
         <span className="console-message">{log.message}</span>
       </div>
-      {hasData && isExpanded && (
+      {isExpanded && hasData && formattedData !== undefined && (
         <div className="console-data-wrapper">
           <pre className="console-data">
-            {formatData()}
+            {formattedData}
           </pre>
         </div>
       )}
