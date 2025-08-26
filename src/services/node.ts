@@ -118,120 +118,141 @@ export async function keep_alive (
 }
 
 export async function init_node () : Promise<BifrostNode | null> {
-  const { group, peers, relays, share } = await NodeStore.fetch()
-  const { node : { rate_limit } } = await SettingStore.fetch()
+  try {
+    const { group, peers, relays, share } = await NodeStore.fetch()
+    const { node : { rate_limit } } = await SettingStore.fetch()
 
-  if (group === null || peers === null || share === null) {
-    return null
-  }
+    if (group === null || peers === null || share === null) {
+      return null
+    }
 
-  const opt : Partial<BifrostNodeConfig> = {
-    policies  : peers ?? [],
-    sign_ival : rate_limit
-  }
+    const opt : Partial<BifrostNodeConfig> = {
+      policies  : peers ?? [],
+      sign_ival : rate_limit
+    }
 
-  const relay_urls = relays
-    .filter((relay) => relay.write)
-    .map((relay) => relay.url)
+    const relay_urls = relays
+      .filter((relay) => relay.write)
+      .map((relay) => relay.url)
 
-  const node = new BifrostNode(group, share, relay_urls, opt)
+    const node = new BifrostNode(group, share, relay_urls, opt)
 
-  node.on('ready', async () => {
-    await LogStore.clear()
-    LogStore.add('bifrost node connected', 'success')
-    console.log('bifrost node connected')
-  })
-
-  node.once('ready', async () => {
-    // Ping all peers
-    node.peers.forEach((peer) => {
-      node.req.ping(peer.pubkey)
+    node.on('ready', async () => {
+      await LogStore.clear()
+      LogStore.add('bifrost node connected', 'success')
+      console.log('bifrost node connected')
     })
-    
-    // Send an echo to ourselves to confirm the share handoff
-    try {
-      // Send echo to confirm share handoff (broadcasts to all peers including ourselves)
-      const result = await node.req.echo('echo')
+
+    node.once('ready', async () => {
+      // Ping all peers
+      node.peers.forEach((peer) => {
+        node.req.ping(peer.pubkey)
+      })
       
-      if (result.ok) {
-        LogStore.add('Share handoff confirmed: Echo sent successfully', 'success')
-        console.log('Share handoff echo successful:', result.data)
-      } else {
-        LogStore.add('Share handoff echo failed', 'warning')
-        console.log('Share handoff echo failed:', result.err)
+      // Send an echo to ourselves to confirm the share handoff
+      try {
+        // Send echo to confirm share handoff (broadcasts to all peers including ourselves)
+        const result = await node.req.echo('echo')
+        
+        if (result.ok) {
+          LogStore.add('Share handoff confirmed: Echo sent successfully', 'success')
+          console.log('Share handoff echo successful:', result.data)
+        } else {
+          LogStore.add('Share handoff echo failed', 'warning')
+          console.log('Share handoff echo failed:', result.err)
+        }
+      } catch (err) {
+        LogStore.add('Share handoff echo error', 'warning')
+        console.error('Echo error:', err)
       }
-    } catch (err) {
-      LogStore.add('Share handoff echo error', 'warning')
-      console.error('Echo error:', err)
-    }
-    
-    // Avoid logging the full node instance to prevent leaking sensitive data (e.g., key shares)
-    const safeNodeInfo = {
-      peerPubkeys   : Array.isArray(node.peers) ? node.peers.map((peer) => peer.pubkey) : [],
-      relayUrlCount : relay_urls.length,
-      policyCount   : Array.isArray(opt.policies) ? opt.policies.length : undefined,
-      rateLimit     : opt.sign_ival
-    }
-    console.log('bifrost node summary:', safeNodeInfo)
-  })
+      
+      // Avoid logging the full node instance to prevent leaking sensitive data (e.g., key shares)
+      const safeNodeInfo = {
+        peerPubkeys   : Array.isArray(node.peers) ? node.peers.map((peer) => peer.pubkey) : [],
+        relayUrlCount : relay_urls.length,
+        policyCount   : Array.isArray(opt.policies) ? opt.policies.length : undefined,
+        rateLimit     : opt.sign_ival
+      }
+      console.log('bifrost node summary:', safeNodeInfo)
+    })
 
-  const filter = [ 'ready', 'message', 'closed' ]
+    const filter = [ 'ready', 'message', 'closed' ]
 
-  node.on('*', (...args : any[]) => {
-    const [ event, ...data ] = args
-    if (event.startsWith('/ping')) return
-    if (filter.includes(event))    return
-    
-    // Redact sensitive data before logging
-    const redactedData = redactSecrets(data.length > 0 ? data : undefined)
-    // Serialize the already-redacted data
-    const eventData = safeSerialize(redactedData)
-    
-    // Log redacted events for safe debugging
-    LogStore.add(`${event}`, 'info', eventData)
-    
-    // Only log to console in development
-    let isDevelopment = false
-    
-    try {
-      // First check for explicit Node.js/test environment flags
-      if (typeof process !== 'undefined' && process.env) {
-        isDevelopment = process.env.NODE_ENV === 'development' || 
-                       process.env.DEBUG === 'true' || 
-                       process.env.EXT_DEV === 'true'
-      } 
-      // Then check browser environment
-      else if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getManifest) {
-        const manifest = browser.runtime.getManifest() as any
-        
-        // Don't treat Firefox as dev by default
-        const isFirefox = typeof navigator !== 'undefined' && 
-                         navigator.userAgent && 
-                         navigator.userAgent.includes('Firefox')
-        
-        // Chrome/Edge dev mode: no update_url in manifest
-        // Firefox: has update_url even in dev, so don't use this check
-        if (!isFirefox) {
-          isDevelopment = !manifest.update_url
+    node.on('*', (...args : any[]) => {
+      const [ event, ...data ] = args
+      if (event.startsWith('/ping')) return
+      if (filter.includes(event))    return
+      
+      // Redact sensitive data before logging
+      const redactedData = redactSecrets(data.length > 0 ? data : undefined)
+      // Serialize the already-redacted data
+      const eventData = safeSerialize(redactedData)
+      
+      // Log redacted events for safe debugging
+      LogStore.add(`${event}`, 'info', eventData)
+      
+      // Only log to console in development
+      let isDevelopment = false
+      
+      try {
+        // First check for explicit Node.js/test environment flags
+        if (typeof process !== 'undefined' && process.env) {
+          isDevelopment = process.env.NODE_ENV === 'development' || 
+                         process.env.DEBUG === 'true' || 
+                         process.env.EXT_DEV === 'true'
+        } 
+        // Then check browser environment
+        else if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getManifest) {
+          const manifest = browser.runtime.getManifest() as any
+          
+          // Don't treat Firefox as dev by default
+          const isFirefox = typeof navigator !== 'undefined' && 
+                           navigator.userAgent && 
+                           navigator.userAgent.includes('Firefox')
+          
+          // Chrome/Edge dev mode: no update_url in manifest
+          // Firefox: has update_url even in dev, so don't use this check
+          if (!isFirefox) {
+            isDevelopment = !manifest.update_url
+          }
+        }
+      } catch (err) {
+        // If we can't determine environment, default to not logging
+        isDevelopment = false
+      }
+      
+      if (isDevelopment) {
+        console.log(`[ ${event} ] payload:`)
+        if (eventData !== undefined) {
+          console.log(JSON.stringify(eventData, null, 2))
         }
       }
-    } catch (err) {
-      // If we can't determine environment, default to not logging
-      isDevelopment = false
-    }
+    })
+
+    node.on('closed', () => {
+      LogStore.add('bifrost node disconnected', 'info')
+      console.log('bifrost node disconnected')
+    })
+
+    return node.connect().then(() => node)
+  } catch (error) {
+    // Log the initialization failure with details
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : undefined
     
-    if (isDevelopment) {
-      console.log(`[ ${event} ] payload:`)
-      if (eventData !== undefined) {
-        console.log(JSON.stringify(eventData, null, 2))
+    await LogStore.add(
+      `Failed to initialize Bifrost node: ${errorMessage}`, 
+      'error',
+      {
+        message: errorMessage,
+        stack: errorStack,
+        timestamp: new Date().toISOString()
       }
-    }
-  })
-
-  node.on('closed', () => {
-    LogStore.add('bifrost node disconnected', 'info')
-    console.log('bifrost node disconnected')
-  })
-
-  return node.connect().then(() => node)
+    )
+    
+    console.error('Failed to initialize Bifrost node:', error)
+    
+    // Rethrow to preserve current upstream behavior
+    throw error
+  }
 }

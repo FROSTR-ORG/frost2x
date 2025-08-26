@@ -15,12 +15,12 @@ frost2x is a browser extension that implements FROST (Flexible Round-Optimized S
 
 ### Testing
 - `npm run start` - Run both test node and relay for development (default)
-- `npm run start dev` - Run both test node and relay explicitly
-- `npm run start node` - Run only the test signing node
-- `npm run start relay` - Run only the test relay (port 8002)
+- `npm run start:dev` - Run both test node and relay explicitly
+- `npm run start:node` - Run only the test signing node
+- `npm run start:relay` - Run only the test relay (port 8002)
 - `npm run keygen [nsec]` - Generate FROST key shares for testing
 
-*Note: The start command accepts parameters (dev/node/relay) that are passed to test/scripts/start.ts*
+*Note: You can also use `npm run start -- dev|node|relay` to pass parameters directly*
 
 ### Testing Setup
 1. Create `test/config.json` from `config.example.json` with group credentials and shares

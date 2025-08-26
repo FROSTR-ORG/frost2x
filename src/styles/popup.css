@@ -82,7 +82,11 @@ body.popup-body { background: #0f172a; color: #fff; padding: 0; margin: 0; }
   font-family: monospace;
   font-size: 13px;
   color: #b0bccc;
-  word-break: break-all;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 .peer-status-badge {

@@ -10,10 +10,12 @@ export default function NodeSettings({ store } : Props) {
   const [ changes, setChanges ]   = useState<boolean>(false)
   const [ error, setError ]       = useState<string | null>(null)
   const [ saved, setSaved ]       = useState<boolean>(false)
+  const [ rateLimitInput, setRateLimitInput ] = useState<string>(String(store.node.rate_limit || 0))
 
   // Discard changes by resetting local state from store
   const cancel = () => {
     setSettings(store.node)
+    setRateLimitInput(String(store.node.rate_limit || 0))
     setChanges(false)
   }
 
@@ -25,9 +27,13 @@ export default function NodeSettings({ store } : Props) {
     setTimeout(() => setSaved(false), 1500)
   }
 
-  const update_rate_limit = async (rate_limit : number) => {
-    // Ensure rate_limit is finite and non-negative, default to 0
-    const safeRateLimit = Number.isFinite(rate_limit) && rate_limit >= 0 ? rate_limit : 0
+  const commitRateLimit = () => {
+    // Parse and validate the input string
+    const parsed = parseInt(rateLimitInput, 10)
+    const safeRateLimit = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0
+    
+    // Update both the string input and the actual settings
+    setRateLimitInput(String(safeRateLimit))
     setSettings({...settings, rate_limit: safeRateLimit })
     setError(null)
     setChanges(true)
@@ -35,6 +41,7 @@ export default function NodeSettings({ store } : Props) {
 
   useEffect(() => {
     setSettings(store.node)
+    setRateLimitInput(String(store.node.rate_limit || 0))
     setChanges(false)
   }, [ store.node ])
 
@@ -55,10 +62,17 @@ export default function NodeSettings({ store } : Props) {
           min={0}
           step={100}
           inputMode="numeric"
-          value={Number.isFinite(settings.rate_limit) ? settings.rate_limit : 0}
+          value={rateLimitInput}
           onChange={(e) => {
-            const n = Number(e.target.value)
-            update_rate_limit(n)
+            // Allow empty string and any input while typing
+            setRateLimitInput(e.target.value)
+          }}
+          onBlur={commitRateLimit}
+          onKeyDown={(e) => {
+            // Commit on Enter key
+            if (e.key === 'Enter') {
+              commitRateLimit()
+            }
           }}
         />
         <p className="field-description">

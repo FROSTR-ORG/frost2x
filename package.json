@@ -8,7 +8,10 @@
     "loader": "tsx --tsconfig ./test/tsconfig.json",
     "keygen": "npm run loader test/scripts/keygen.ts",
     "package": "./script/package.sh",
-    "start": "npm run loader test/scripts/start.ts"
+    "start": "npm run loader test/scripts/start.ts",
+    "start:dev": "npm run loader test/scripts/start.ts dev",
+    "start:node": "npm run loader test/scripts/start.ts node",
+    "start:relay": "npm run loader test/scripts/start.ts relay"
   },
   "dependencies": {
     "@cmdcode/buff": "^2.2.5",
