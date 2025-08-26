@@ -19,9 +19,7 @@ export async function handleNodeRequest (
     case MESSAGE_TYPE.NODE_RESET:
       try {
         ctx.node = await init_node()
-        const newStatus = ctx.node !== null ? 'running' : 'stopped'
-        console.log('Node reset complete, status:', newStatus)
-        return { status: newStatus }
+        return { status: ctx.node !== null ? 'running' : 'stopped' }
       } catch (error) {
         console.error('Failed to reset node:', error)
         return { 

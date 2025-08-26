@@ -118,136 +118,23 @@ export async function keep_alive (
 }
 
 export async function init_node () : Promise<BifrostNode | null> {
-  console.log('Initializing Bifrost node...')
-  
-  const nodeData = await NodeStore.fetch()
-  const { group, peers, relays, share } = nodeData
-  
-  console.log('Node data loaded:', {
-    hasGroup: group !== null,
-    hasPeers: peers !== null,
-    hasShare: share !== null,
-    relayCount: relays?.length || 0
-  })
-
+  const { group, peers, relays, share } = await NodeStore.fetch()
   const { node : { rate_limit } } = await SettingStore.fetch()
 
   if (group === null || peers === null || share === null) {
-    console.log('Missing required node configuration:', { group, peers, share })
     return null
   }
 
-  // Debug peers structure
-  console.log('Raw peers from store:', peers)
-  console.log('Peers is array?', Array.isArray(peers))
-  console.log('Peers length:', peers?.length)
-  if (peers && peers.length > 0) {
-    console.log('First peer structure:', peers[0])
-  }
-  
-  // BifrostNode might expect 'policies' to be in a different format
-  // Let's try passing it as-is first, then we'll modify if needed
   const opt : Partial<BifrostNodeConfig> = {
     policies  : peers ?? [],
     sign_ival : rate_limit
   }
-  
-  // Also try an alternative - maybe it expects just pubkeys or a different structure
-  console.log('Policies type check:', {
-    isPeersArray: Array.isArray(peers),
-    firstPeerType: peers?.[0] ? typeof peers[0] : 'undefined',
-    firstPeerKeys: peers?.[0] ? Object.keys(peers[0]) : []
-  })
-  
-  console.log('Full peers data:', JSON.stringify(peers, null, 2))
-  console.log('Options being passed:', JSON.stringify(opt, null, 2))
 
   const relay_urls = relays
     .filter((relay) => relay.write)
     .map((relay) => relay.url)
 
-  console.log('Creating BifrostNode with:', {
-    relayCount: relay_urls.length,
-    relayUrls: relay_urls,
-    policyCount: opt.policies?.length,
-    rateLimit: opt.sign_ival
-  })
-
-  // Log the actual data being passed (redacted for security)
-  console.log('Group package:', {
-    hasCommits: group.commits && Array.isArray(group.commits),
-    commitCount: group.commits?.length,
-    threshold: group.threshold,
-    hasGroupPk: !!group.group_pk
-  })
-
-  console.log('Share package:', {
-    idx: share.idx,
-    hasSeckey: !!share.seckey,
-    hasBinderSn: !!share.binder_sn,
-    hasHiddenSn: !!share.hidden_sn
-  })
-
-  console.log('Peer configs:', peers?.map(p => ({
-    hasPubkey: !!p.pubkey,
-    hasPolicy: !!p.policy,
-    send: p.policy?.send,
-    recv: p.policy?.recv
-  })))
-
-  // Validate the data before passing to BifrostNode
-  if (!group.group_pk || !group.threshold || !group.commits) {
-    console.error('Invalid group structure:', group)
-    throw new Error('Group package is missing required fields')
-  }
-  
-  if (!share.seckey || typeof share.idx !== 'number') {
-    console.error('Invalid share structure:', share)
-    throw new Error('Share package is missing required fields')
-  }
-
-  let node: BifrostNode
-  try {
-    // The BifrostNode constructor signature is: (group, share, relays, config?)
-    // Make sure we're passing the right types
-    console.log('Attempting to create BifrostNode...')
-    
-    // First try without any config to see if that's the issue
-    console.log('Trying without config...')
-    try {
-      node = new BifrostNode(group, share, relay_urls)
-      console.log('Success without config!')
-    } catch (e1) {
-      console.log('Failed without config:', (e1 as Error).message)
-      
-      // Now try with just sign_ival
-      console.log('Trying with just sign_ival...')
-      try {
-        node = new BifrostNode(group, share, relay_urls, { sign_ival: rate_limit })
-        console.log('Success with just sign_ival!')
-      } catch (e2) {
-        console.log('Failed with just sign_ival:', (e2 as Error).message)
-        
-        // Finally try with full config
-        console.log('Trying with full config including policies...')
-        node = new BifrostNode(group, share, relay_urls, opt)
-      }
-    }
-    console.log('BifrostNode created successfully')
-  } catch (error) {
-    console.error('Failed to create BifrostNode:', error)
-    console.error('Full error object:', error)
-    console.error('Error toString:', String(error))
-    // Log the actual values being passed
-    console.error('Constructor params:', {
-      groupType: typeof group,
-      shareType: typeof share, 
-      relayUrlsType: typeof relay_urls,
-      relayUrlsIsArray: Array.isArray(relay_urls),
-      optType: typeof opt
-    })
-    throw error
-  }
+  const node = new BifrostNode(group, share, relay_urls, opt)
 
   node.on('ready', async () => {
     await LogStore.clear()
