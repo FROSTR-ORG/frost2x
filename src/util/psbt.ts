@@ -18,6 +18,14 @@ export interface PSBTPrevouts {
   scripts : Uint8Array[]
 }
 
+type WitnessUtxo = { amount: bigint, script: Uint8Array }
+
+function isWitnessUtxo (value : unknown) : value is WitnessUtxo {
+  if (value === null || typeof value !== 'object') return false
+  const obj = value as { amount?: unknown, script?: unknown }
+  return typeof obj.amount === 'bigint' && obj.script instanceof Uint8Array
+}
+
 /**
  * Takes a base64 string or PSBT object, returns a PSBT object.
  * @param psbt : PSBT object or base64 string.
@@ -65,6 +73,7 @@ export function get_prevouts (
     const input   = pdata.getInput(i)
     const prevout = input.witnessUtxo
     if (prevout === undefined) return null
+    if (!isWitnessUtxo(prevout)) throw new Error('invalid witnessUtxo at input ' + i)
     amounts.push(prevout.amount)
     scripts.push(prevout.script)
   }
