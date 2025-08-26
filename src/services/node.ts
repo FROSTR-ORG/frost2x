@@ -117,10 +117,14 @@ export async function keep_alive (
   return (node === null) ? init_node() : node
 }
 
+// Default sign interval for request batching (milliseconds)
+const DEFAULT_SIGN_IVAL = 100
+
 export async function init_node () : Promise<BifrostNode | null> {
   try {
     const { group, peers, relays, share } = await NodeStore.fetch()
-    const { node : { rate_limit } } = await SettingStore.fetch()
+    const settings = await SettingStore.fetch()
+    const rate_limit = settings?.node?.rate_limit ?? DEFAULT_SIGN_IVAL // Default: 100ms
 
     if (group === null || peers === null || share === null) {
       return null
@@ -131,7 +135,7 @@ export async function init_node () : Promise<BifrostNode | null> {
       sign_ival : rate_limit
     }
 
-    const relay_urls = relays
+    const relay_urls = (relays ?? [])
       .filter((relay) => relay.write)
       .map((relay) => relay.url)
 
