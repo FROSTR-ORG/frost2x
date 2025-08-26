@@ -15,6 +15,7 @@ frost2x is a browser extension that implements FROST (Flexible Round-Optimized S
 - `npm run start node` - Run only the test signing node
 - `npm run start relay` - Run only the test relay (port 8002)
 - `npm run keygen [nsec]` - Generate FROST key shares for testing
+- `npx tsc --noEmit` - Type-check without building (use for finding TypeScript errors)
 
 ### Testing Setup
 Before testing the extension:
@@ -22,6 +23,7 @@ Before testing the extension:
 2. Run `npm run start dev` to start test node and relay
 3. Build extension with `npm run build`
 4. Load unpacked extension from `/dist` folder in Chrome
+5. After changes, rebuild and refresh the extension in `chrome://extensions`
 
 ## Architecture
 
@@ -40,23 +42,26 @@ The extension uses Chrome Manifest V3 with multiple entry points:
 - `browser.ts` - Cross-browser extension API wrapper
 
 ### Data Stores (`/src/stores/`)
-All stores use browser.storage.local with Zod validation:
-- `node.ts` - Bifrost node configuration and state
-- `settings.ts` - User preferences
-- `perms.ts` - Domain permission policies
-- `logs.ts` - Activity logging
+All stores use browser.storage.local with runtime validation:
+- `node.ts` - Bifrost node configuration and state (group, shares, peers, relays)
+- `settings.ts` - User preferences (nested structure: explorer, links, tx, node settings)
+- `perms.ts` - Domain permission policies for signer and wallet operations
+- `logs.ts` - Activity logging with expandable data payloads
+- `extension.ts` - Composite store combining all stores for unified access
 
 ### Message Handlers (`/src/handlers/`)
 Process incoming messages from content scripts:
 - `signer.ts` - Nostr NIP-07 operations (getPublicKey, signEvent, encrypt/decrypt)
 - `wallet.ts` - Bitcoin operations (getAccount, getBalance, signPsbt)
-- `node.ts` - Node management (connect, disconnect, status)
+- `node.ts` - Node management (connect, disconnect, status, ping, echo)
+- `link.ts` - Nostr link resolution
 
 ### Type System
 - Strict TypeScript with `noEmit: true` (esbuild handles compilation)
 - Zod schemas in `src/schema.ts` for runtime validation
 - Message types defined in `src/const.ts`
 - Path alias `@/*` maps to `src/*`
+- Store types use namespaces (e.g., `SettingStore.Type`)
 
 ## Protocol Support
 
@@ -81,11 +86,30 @@ The extension coordinates with other Bifrost nodes via WebSocket relays to perfo
 
 Group credentials and individual shares are configured in the extension options. The Bifrost library (`@frostr/bifrost`) handles the cryptographic protocol implementation.
 
+### Important Bifrost Details
+- Echo operations broadcast to ALL connected peers, not specific ones
+- The node automatically sends a self-echo on successful share addition for handoff confirmation
+- Peer status can be 'online', 'offline', or 'checking'
+- Event logs capture data payloads for debugging (expandable in console)
+
+## Common Development Patterns
+
+### Store Access
+Settings use nested objects (e.g., `settings.explorer.network`), not flat keys. When updating settings components, ensure proper structure is maintained.
+
+### Error Handling
+All async handlers should validate input parameters before processing and return consistent error structures with `result` and `error` fields.
+
+### Component Structure
+- React components in `/src/components/` use hooks for state management
+- Custom hooks in `/src/hooks/` handle browser runtime messaging
+- Settings components manage local state before persisting to stores
+
 ## Development Notes
 
 - After building, refresh the extension in Chrome to load changes
 - Test relay runs on `ws://localhost:8002` by default
 - Use `npm run keygen` to generate test shares for development
 - Permission prompts appear for new domains/operations
-- Activity logs accessible in extension popup
-- Node status shows peer connections and signing sessions
+- Console logs are expandable in Options > Console tab to view event data
+- Build output goes to `/dist` only (no `/extension` folder needed)
