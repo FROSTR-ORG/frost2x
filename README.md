@@ -40,7 +40,7 @@ This extension is available in the [Chrome Web Store](https://chromewebstore.goo
    - Click the extension icon and go to Options
    - Input your group credentials and individual share
 
-> **Note:** To test the extension, you'll need to set up a [test node and relay](#running-a-test-node--relay) first.
+> **Note:** To test the extension, you'll need to set up a [test node and relay](#running-the-test-node--relay) first.
 
 ## Generating Shares
 

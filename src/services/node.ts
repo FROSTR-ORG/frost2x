@@ -1,3 +1,4 @@
+import browser          from 'webextension-polyfill'
 import { BifrostNode }  from '@frostr/bifrost'
 import { NodeStore }    from '@/stores/node.js'
 import { SettingStore } from '@/stores/settings.js'
@@ -32,6 +33,67 @@ function safeSerialize(data: any, maxLength: number = 50000): any {
   } catch (err) {
     return '[Non-serializable data]'
   }
+}
+
+// Redact sensitive data from objects before logging
+function redactSecrets(data: any): any {
+  if (data === undefined || data === null) return data
+  
+  // Set of sensitive keys to redact (case-insensitive)
+  const sensitiveKeys = new Set([
+    'seckey', 'secret', 'share', 'shares', 'private', 'privatekey',
+    'xprv', 'xpub', 'seed', 'mnemonic', 'entropy',
+    'psbt', 'signatures', 'signature', 'witness', 'witnesses',
+    'finalscriptsig', 'finalscriptwitness', 'scriptsig',
+    'binder_sn', 'hidden_sn', 'secnonce', 'nonce',
+    'password', 'passphrase', 'pin', 'key', 'keys'
+  ])
+  
+  // WeakMap to handle circular references
+  const visited = new WeakMap()
+  
+  function redact(obj: any): any {
+    // Handle primitives
+    if (obj === null || obj === undefined) return obj
+    if (typeof obj !== 'object') return obj
+    
+    // Check for circular reference
+    if (visited.has(obj)) return visited.get(obj)
+    
+    // Handle arrays
+    if (Array.isArray(obj)) {
+      const redacted: any[] = []
+      visited.set(obj, redacted)
+      obj.forEach((item, index) => {
+        redacted[index] = redact(item)
+      })
+      return redacted
+    }
+    
+    // Handle objects
+    const redacted: any = {}
+    visited.set(obj, redacted)
+    
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const lowerKey = key.toLowerCase()
+        // Check if key contains sensitive patterns
+        const isSensitive = Array.from(sensitiveKeys).some(sensitive => 
+          lowerKey.includes(sensitive)
+        )
+        
+        if (isSensitive) {
+          redacted[key] = '[REDACTED]'
+        } else {
+          redacted[key] = redact(obj[key])
+        }
+      }
+    }
+    
+    return redacted
+  }
+  
+  return redact(data)
 }
 
 export async function keep_alive (
@@ -106,12 +168,24 @@ export async function init_node () : Promise<BifrostNode | null> {
     if (event.startsWith('/ping')) return
     if (filter.includes(event))    return
     
-    // Log events with their data payload for expandable viewing
-    const eventData = safeSerialize(data.length > 0 ? data : undefined)
+    // Redact sensitive data before logging
+    const redactedData = redactSecrets(data.length > 0 ? data : undefined)
+    // Serialize the already-redacted data
+    const eventData = safeSerialize(redactedData)
+    
+    // Log redacted events for safe debugging
     LogStore.add(`${event}`, 'info', eventData)
-    console.log(`[ ${event} ] payload:`)
-    if (eventData !== undefined) {
-      console.log(JSON.stringify(eventData, null, 2))
+    
+    // Only log to console in development (check for extension dev mode)
+    // In production builds from web store, update_url will be present in manifest
+    const manifest = browser.runtime.getManifest() as any
+    const isDevelopment = !manifest.update_url
+    
+    if (isDevelopment) {
+      console.log(`[ ${event} ] payload:`)
+      if (eventData !== undefined) {
+        console.log(JSON.stringify(eventData, null, 2))
+      }
     }
   })
 
