@@ -39,15 +39,28 @@ function safeSerialize(data: any, maxLength: number = 50000): any {
 function redactSecrets(data: any): any {
   if (data === undefined || data === null) return data
   
-  // Set of sensitive keys to redact (case-insensitive)
-  const sensitiveKeys = new Set([
+  // Exact keys to redact (case-insensitive)
+  const exactKeys = new Set([
     'seckey', 'secret', 'share', 'shares', 'private', 'privatekey',
     'xprv', 'xpub', 'seed', 'mnemonic', 'entropy',
     'psbt', 'signatures', 'signature', 'witness', 'witnesses',
     'finalscriptsig', 'finalscriptwitness', 'scriptsig',
     'binder_sn', 'hidden_sn', 'secnonce', 'nonce',
-    'password', 'passphrase', 'pin', 'key', 'keys'
+    'password', 'passphrase', 'pin'
   ])
+  
+  // Regex patterns for common secret field naming conventions
+  const secretPatterns = [
+    /^apikey$/i,
+    /^privatekey$/i,
+    /^secretkey$/i,
+    /^.*_secret$/i,
+    /^.*_private$/i,
+    /^.*_seed$/i,
+    /^.*_password$/i,
+    /^.*_passphrase$/i,
+    /^auth.*token$/i
+  ]
   
   // WeakMap to handle circular references
   const visited = new WeakMap()
@@ -77,12 +90,14 @@ function redactSecrets(data: any): any {
     for (const key in obj) {
       if (obj.hasOwnProperty(key)) {
         const lowerKey = key.toLowerCase()
-        // Check if key contains sensitive patterns
-        const isSensitive = Array.from(sensitiveKeys).some(sensitive => 
-          lowerKey.includes(sensitive)
-        )
         
-        if (isSensitive) {
+        // First check exact matches
+        const isExactMatch = exactKeys.has(lowerKey)
+        
+        // Then check regex patterns
+        const isPatternMatch = secretPatterns.some(pattern => pattern.test(key))
+        
+        if (isExactMatch || isPatternMatch) {
           redacted[key] = '[REDACTED]'
         } else {
           redacted[key] = redact(obj[key])
@@ -176,10 +191,35 @@ export async function init_node () : Promise<BifrostNode | null> {
     // Log redacted events for safe debugging
     LogStore.add(`${event}`, 'info', eventData)
     
-    // Only log to console in development (check for extension dev mode)
-    // In production builds from web store, update_url will be present in manifest
-    const manifest = browser.runtime.getManifest() as any
-    const isDevelopment = !manifest.update_url
+    // Only log to console in development
+    let isDevelopment = false
+    
+    try {
+      // First check for explicit Node.js/test environment flags
+      if (typeof process !== 'undefined' && process.env) {
+        isDevelopment = process.env.NODE_ENV === 'development' || 
+                       process.env.DEBUG === 'true' || 
+                       process.env.EXT_DEV === 'true'
+      } 
+      // Then check browser environment
+      else if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getManifest) {
+        const manifest = browser.runtime.getManifest() as any
+        
+        // Don't treat Firefox as dev by default
+        const isFirefox = typeof navigator !== 'undefined' && 
+                         navigator.userAgent && 
+                         navigator.userAgent.includes('Firefox')
+        
+        // Chrome/Edge dev mode: no update_url in manifest
+        // Firefox: has update_url even in dev, so don't use this check
+        if (!isFirefox) {
+          isDevelopment = !manifest.update_url
+        }
+      }
+    } catch (err) {
+      // If we can't determine environment, default to not logging
+      isDevelopment = false
+    }
     
     if (isDevelopment) {
       console.log(`[ ${event} ] payload:`)
