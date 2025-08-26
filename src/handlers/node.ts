@@ -17,8 +17,18 @@ export async function handleNodeRequest (
 
   switch (type) {
     case MESSAGE_TYPE.NODE_RESET:
-      ctx.node = await init_node()
-      return { status: node !== null ? 'running' : 'stopped' }
+      try {
+        ctx.node = await init_node()
+        const newStatus = ctx.node !== null ? 'running' : 'stopped'
+        console.log('Node reset complete, status:', newStatus)
+        return { status: newStatus }
+      } catch (error) {
+        console.error('Failed to reset node:', error)
+        return { 
+          status: 'stopped', 
+          error: error instanceof Error ? error.message : 'Failed to initialize node' 
+        }
+      }
     case MESSAGE_TYPE.NODE_STATUS:
       return { status: node !== null ? 'running' : 'stopped' }
     case MESSAGE_TYPE.PEER_STATUS:
