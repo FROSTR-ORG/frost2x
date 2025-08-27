@@ -98,6 +98,7 @@ async function init_extension() {
 async function handleContentScriptMessage(msg : ContentScriptMessage) {
   // Get the domain of the request.
   const domain = msg.type?.split('.').at(0)
+
   // If the request does not require permission,
   if (!is_permission_required(msg.type)) {
     switch (domain) {

@@ -4,7 +4,7 @@ import { NodeStore }           from '@/stores/node.js'
 import {
   decode_share_pkg,
   encode_share_pkg
-} from '@frostr/bifrost/lib'
+} from '@frostr/bifrost/encoder'
 
 import type { SharePackage } from '@frostr/bifrost'
 

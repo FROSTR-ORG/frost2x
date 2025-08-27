@@ -4,7 +4,7 @@ import { NodeStore }           from '@/stores/node.js'
 import {
   decode_group_pkg,
   encode_group_pkg,
-} from '@frostr/bifrost/lib'
+} from '@frostr/bifrost/encoder'
 
 import type { GroupPackage } from '@frostr/bifrost'
 

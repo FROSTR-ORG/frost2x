@@ -1,5 +1,6 @@
 {
   "name": "@frostr/frost2x",
+  "version": "0.1.0",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -7,20 +8,24 @@
     "loader": "tsx --tsconfig ./test/tsconfig.json",
     "keygen": "npm run loader test/scripts/keygen.ts",
     "package": "./script/package.sh",
-    "start": "npm run loader test/scripts/start.ts"
+    "start": "npm run loader test/scripts/start.ts",
+    "start:dev": "npm run loader test/scripts/start.ts dev",
+    "start:node": "npm run loader test/scripts/start.ts node",
+    "start:relay": "npm run loader test/scripts/start.ts relay"
   },
   "dependencies": {
     "@cmdcode/buff": "^2.2.5",
-    "@frostr/bifrost": "^0.3.1",
+    "@frostr/bifrost": "^1.0.7",
     "@noble/ciphers": "^1.2.1",
     "@scure/base": "^1.2.4",
     "@scure/btc-signer": "^1.7.0",
     "async-mutex": "^0.5.0",
     "esbuild": "^0.25.0",
     "nostr-tools": "^2.10.4",
+    "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "swr": "^2.3.3",
+    "swr": "^2.3.4",
     "use-debounce": "^10.0.4",
     "webextension-polyfill": "^0.12.0",
     "zod": "^3.24.2"

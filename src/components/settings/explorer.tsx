@@ -10,44 +10,44 @@ type Props = {
 export default function ExplorerSettings({ settings, saveSettings }: Props) {
   // Local state for this section
   const [localSettings, setLocalSettings] = useState({
-    'explorer/network': settings['explorer/network'],
-    'explorer/api_url': settings['explorer/api_url'],
-    'explorer/link_url': settings['explorer/link_url'],
-    'explorer/rate_limit': settings['explorer/rate_limit']
+    network: settings.explorer.network,
+    api_url: settings.explorer.api_url,
+    link_url: settings.explorer.link_url,
+    rate_limit: settings.explorer.rate_limit
   })
   
   // Update local state when main settings change
   useEffect(() => {
     setLocalSettings({
-      'explorer/network': settings['explorer/network'],
-      'explorer/api_url': settings['explorer/api_url'],
-      'explorer/link_url': settings['explorer/link_url'],
-      'explorer/rate_limit': settings['explorer/rate_limit']
+      network: settings.explorer.network,
+      api_url: settings.explorer.api_url,
+      link_url: settings.explorer.link_url,
+      rate_limit: settings.explorer.rate_limit
     })
   }, [settings])
   
   // Check if there are unsaved changes
   const hasChanges = () => {
     return (
-      localSettings['explorer/network'] !== settings['explorer/network'] ||
-      localSettings['explorer/api_url'] !== settings['explorer/api_url'] ||
-      localSettings['explorer/link_url'] !== settings['explorer/link_url'] ||
-      localSettings['explorer/rate_limit'] !== settings['explorer/rate_limit']
+      localSettings.network !== settings.explorer.network ||
+      localSettings.api_url !== settings.explorer.api_url ||
+      localSettings.link_url !== settings.explorer.link_url ||
+      localSettings.rate_limit !== settings.explorer.rate_limit
     )
   }
   
   // Save changes to extension store
   const handleSave = () => {
-    saveSettings(localSettings)
+    saveSettings({ explorer: localSettings })
   }
   
   // Revert unsaved changes
   const handleCancel = () => {
     setLocalSettings({
-      'explorer/network': settings['explorer/network'],
-      'explorer/api_url': settings['explorer/api_url'],
-      'explorer/link_url': settings['explorer/link_url'],
-      'explorer/rate_limit': settings['explorer/rate_limit']
+      network: settings.explorer.network,
+      api_url: settings.explorer.api_url,
+      link_url: settings.explorer.link_url,
+      rate_limit: settings.explorer.rate_limit
     })
   }
 
@@ -68,8 +68,8 @@ export default function ExplorerSettings({ settings, saveSettings }: Props) {
         <div>
           <select 
             className="form-select"
-            value={localSettings['explorer/network']}
-            onChange={e => updateField('explorer/network', e.target.value as ChainNetwork)}
+            value={localSettings.network}
+            onChange={e => updateField('network', e.target.value as ChainNetwork)}
           >
             <option value="mainnet">Mainnet</option>
             <option value="testnet">Testnet</option>
@@ -86,8 +86,8 @@ export default function ExplorerSettings({ settings, saveSettings }: Props) {
           <input 
             type="text"
             className="form-input"
-            value={localSettings['explorer/api_url']}
-            onChange={e => updateField('explorer/api_url', e.target.value)}
+            value={localSettings.api_url}
+            onChange={e => updateField('api_url', e.target.value)}
             placeholder="https://mempool.space/api"
           />
           <p className="field-description">
@@ -102,8 +102,8 @@ export default function ExplorerSettings({ settings, saveSettings }: Props) {
           <input 
             type="text"
             className="form-input"
-            value={localSettings['explorer/link_url']}
-            onChange={e => updateField('explorer/link_url', e.target.value)}
+            value={localSettings.link_url}
+            onChange={e => updateField('link_url', e.target.value)}
             placeholder="https://mempool.space"
           />
           <p className="field-description">
@@ -118,8 +118,14 @@ export default function ExplorerSettings({ settings, saveSettings }: Props) {
           <input 
             type="number"
             className="form-input"
-            value={localSettings['explorer/rate_limit']}
-            onChange={e => updateField('explorer/rate_limit', parseInt(e.target.value))}
+            min={0}
+            step={100}
+            inputMode="numeric"
+            value={Number.isFinite(localSettings.rate_limit) ? localSettings.rate_limit : 0}
+            onChange={e => {
+              const n = Number(e.target.value)
+              updateField('rate_limit', Number.isFinite(n) && n >= 0 ? n : 0)
+            }}
             placeholder="1000"
           />
           <p className="field-description">

@@ -3,8 +3,10 @@ export const MAX_LOGS      = 100
 export const PROMPT_WIDTH  = 500
 export const PROMPT_HEIGHT = 700
 
+export const PING_IVAL = 10
+
 export const DEFAULT_RELAYS = [{
-  url   : 'https://relay.primal.net',
+  url   : 'wss://relay.primal.net',
   read  : true,
   write : true
 }]
@@ -49,6 +51,9 @@ export const SYSTEM_MESSAGE_TYPE = {
   STORE_UPDATE : 'store.update',
   NODE_RESET   : 'node.reset',
   NODE_STATUS  : 'node.status',
+  PEER_STATUS  : 'node.peers',
+  PEER_PING    : 'node.ping',
+  PEER_ECHO    : 'node.echo',
   URL_REPLACE  : 'url.replace'
 } as const
 
@@ -62,6 +67,9 @@ export const PERMISSION_BYPASS : Record<string, boolean> = {
   [MESSAGE_TYPE.STORE_UPDATE] : true,
   [MESSAGE_TYPE.NODE_RESET]   : true,
   [MESSAGE_TYPE.NODE_STATUS]  : true,
+  [MESSAGE_TYPE.PEER_STATUS]  : true,
+  [MESSAGE_TYPE.PEER_PING]    : true,
+  [MESSAGE_TYPE.PEER_ECHO]    : true,
   [MESSAGE_TYPE.URL_REPLACE]  : true
 } as const
 

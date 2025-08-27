@@ -35,3 +35,126 @@ body.popup-body { background: #0f172a; color: #fff; padding: 0; margin: 0; }
 .button-warning:hover { background: #27ae60; }
 .button-primary { background: #3b82f6; color: #fff; border: none; }
 .button-primary:hover { background: #2563eb; }
+
+/* ========================================================================= */
+/* Peer Status Section Styles */
+.peer-status-container {
+  width: 100%;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 18px 18px 12px 18px;
+  margin-bottom: 24px;
+  color: #e2e8f0;
+  box-sizing: border-box;
+}
+
+.peer-table-wrapper {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.peer-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: none;
+}
+.peer-table th, .peer-table td {
+  padding: 8px 12px;
+  text-align: left;
+}
+.peer-table th {
+  background: rgba(42, 57, 89, 0.5);
+  color: #fff;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.peer-table td {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: #e2e8f0;
+  font-size: 14px;
+}
+.peer-table tr:last-child td {
+  border-bottom: none;
+}
+.pubkey-cell {
+  font-family: monospace;
+  font-size: 13px;
+  color: #b0bccc;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.peer-status-badge {
+  display: inline-block;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 3px 14px;
+  border-radius: 4px;
+  min-width: 60px;
+  text-align: center;
+  background: #222f43;
+  color: #fff;
+}
+.peer-online {
+  background: #10b981;
+  color: #fff;
+}
+.peer-offline {
+  background: #6b7280;
+  color: #fff;
+}
+.peer-checking {
+  background: #f59e0b;
+  color: #fff;
+}
+
+.peer-refresh-btn {
+  margin-top: 4px;
+  width: 90px;
+  padding: 7px 0;
+  font-size: 14px;
+  font-weight: 500;
+  background: #243356;
+  color: #e2e8f0;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  transition: background 0.2s;
+  display: block;
+}
+.peer-refresh-btn:hover {
+  background: #2d426a;
+}
+
+.peer-waiting {
+  color: #94a3b8;
+  font-size: 14px;
+  padding: 10px 0;
+}
+
+/* Echo status styles */
+.echo-status {
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(74, 144, 226, 0.2);
+  color: #4a90e2;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

@@ -10,10 +10,12 @@ export default function NodeSettings({ store } : Props) {
   const [ changes, setChanges ]   = useState<boolean>(false)
   const [ error, setError ]       = useState<string | null>(null)
   const [ saved, setSaved ]       = useState<boolean>(false)
+  const [ rateLimitInput, setRateLimitInput ] = useState<string>(String(store.node.rate_limit || 0))
 
   // Discard changes by resetting local state from store
   const cancel = () => {
     setSettings(store.node)
+    setRateLimitInput(String(store.node.rate_limit || 0))
     setChanges(false)
   }
 
@@ -25,14 +27,21 @@ export default function NodeSettings({ store } : Props) {
     setTimeout(() => setSaved(false), 1500)
   }
 
-  const update_rate_limit = async (rate_limit : number) => {
-    setSettings({...settings, rate_limit })
+  const commitRateLimit = () => {
+    // Parse and validate the input string
+    const parsed = parseInt(rateLimitInput, 10)
+    const safeRateLimit = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0
+    
+    // Update both the string input and the actual settings
+    setRateLimitInput(String(safeRateLimit))
+    setSettings({...settings, rate_limit: safeRateLimit })
     setError(null)
     setChanges(true)
   }
 
   useEffect(() => {
     setSettings(store.node)
+    setRateLimitInput(String(store.node.rate_limit || 0))
     setChanges(false)
   }, [ store.node ])
 
@@ -50,8 +59,21 @@ export default function NodeSettings({ store } : Props) {
         <input
           type="number" 
           id="signature-request-rate-limit"
-          value={settings.rate_limit}
-          onChange={(e) => update_rate_limit(parseInt(e.target.value))}
+          min={0}
+          step={100}
+          inputMode="numeric"
+          value={rateLimitInput}
+          onChange={(e) => {
+            // Allow empty string and any input while typing
+            setRateLimitInput(e.target.value)
+          }}
+          onBlur={commitRateLimit}
+          onKeyDown={(e) => {
+            // Commit on Enter key
+            if (e.key === 'Enter') {
+              commitRateLimit()
+            }
+          }}
         />
         <p className="field-description">
           Limits the rate of signature requests sent by your node. Any requests above this limit will be batched together. Useful for relays that have a rate limit.

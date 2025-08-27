@@ -1,10 +1,19 @@
 import { useEffect, useState } from 'react'
 import { NodeStore }           from '@/stores/node.js'
 
-import type { PeerPolicy } from '@frostr/bifrost'
+import type { PeerConfig } from '@frostr/bifrost'
+
+// Helper to deep clone peers array to avoid reference mutations
+function clonePeers(peers: PeerConfig[] | null): PeerConfig[] | null {
+  if (peers === null) return null
+  return peers.map(peer => ({
+    pubkey: peer.pubkey,
+    policy: { ...peer.policy }
+  }))
+}
 
 export default function ({ store } : { store : NodeStore.Type }) {
-  const [ peers, setPeers ]     = useState<PeerPolicy[] | null>(store.peers)
+  const [ peers, setPeers ]     = useState<PeerConfig[] | null>(clonePeers(store.peers))
   const [ changes, setChanges ] = useState<boolean>(false)
   const [ saved, setSaved ]     = useState<boolean>(false)
 
@@ -18,22 +27,35 @@ export default function ({ store } : { store : NodeStore.Type }) {
 
   // Discard changes by resetting local state from store
   const cancel = () => {
-    setPeers(store.peers)
+    setPeers(clonePeers(store.peers))
     setChanges(false)
   }
 
   // Update peer connectivity status locally
-  const update_peer = (idx: number, key: number, value: boolean) => {
+  const update_peer = (idx: number, key: 'send' | 'recv', value: boolean) => {
     setPeers(prev => {
-      const updated = [ ...prev ?? [] ]
-      updated[idx][key] = value
+      if (prev === null) return null
+      // Deep clone to avoid mutations
+      const updated = prev.map((peer, i) => {
+        if (i === idx) {
+          return {
+            pubkey: peer.pubkey,
+            policy: { ...peer.policy, [key]: value }
+          }
+        }
+        return {
+          pubkey: peer.pubkey,
+          policy: { ...peer.policy }
+        }
+      })
       return updated
     })
     setChanges(true)
   }
 
   useEffect(() => {
-    setPeers(store.peers)
+    setPeers(clonePeers(store.peers))
+    setChanges(false)
   }, [ store.peers ])
 
   return (
@@ -58,21 +80,21 @@ export default function ({ store } : { store : NodeStore.Type }) {
             <tbody>
               {peers.map((peer, idx) => (
                 <tr key={idx}>
-                  <td className="pubkey-cell">{peer[0]}</td>
+                  <td className="pubkey-cell">{peer.pubkey}</td>
                   <td className="checkbox-cell">
                     <input
                       type="checkbox"
                       className="peer-checkbox"
-                      checked={peer[1]}
-                      onChange={() => update_peer(idx, 1, !peer[1])}
+                      checked={peer.policy.send}
+                      onChange={() => update_peer(idx, 'send', !peer.policy.send)}
                     />
                   </td>
                   <td className="checkbox-cell">
                     <input
                       type="checkbox"
                       className="peer-checkbox"
-                      checked={peer[2]}
-                      onChange={() => update_peer(idx, 2, !peer[2])}
+                      checked={peer.policy.recv}
+                      onChange={() => update_peer(idx, 'recv', !peer.policy.recv)}
                     />
                   </td>
                 </tr>

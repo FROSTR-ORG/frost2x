@@ -5,10 +5,71 @@ import { MESSAGE_TYPE } from '@/const.js'
 import {
   useEffect,
   useState,
-  useRef
+  useRef,
+  useCallback
 } from 'react'
 
 import type { LogEntry } from '@/types/index.js'
+
+// Component for individual log entries with expandable data
+function LogEntryItem({ log, index }: { log: LogEntry, index: number }) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const hasData = log.data !== undefined && log.data !== null
+
+  const toggleExpanded = useCallback(() => {
+    if (hasData) {
+      setIsExpanded(prev => !prev)
+    }
+  }, [hasData])
+
+  const formatData = useCallback((data: any) => {
+    try {
+      return JSON.stringify(data, null, 2)
+    } catch (error) {
+      // Handle circular references or non-serializable data
+      try {
+        const dataType = typeof data
+        const isArray = Array.isArray(data)
+        const constructorName = data?.constructor?.name
+        
+        return `Unable to serialize data
+Type: ${isArray ? 'Array' : dataType}${constructorName ? ` (${constructorName})` : ''}
+Error: ${error instanceof Error ? error.message : 'Circular reference or non-serializable data'}`
+      } catch {
+        return 'Error: Unable to format data'
+      }
+    }
+  }, [])
+
+  // Only compute formatted data when expanded and has data
+  const formattedData = isExpanded && hasData ? formatData(log.data) : undefined
+
+  return (
+    <div className="console-entry-wrapper">
+      <div 
+        className={`console-entry console-${log.type} ${hasData ? 'console-entry-clickable' : ''}`}
+        onClick={toggleExpanded}
+      >
+        {hasData && (
+          <span className="console-expand-icon">
+            {isExpanded ? '▼' : '▶'}
+          </span>
+        )}
+        <span className="console-timestamp">
+          {new Date(log.timestamp).toLocaleTimeString()}
+        </span>
+        <span className="console-message">{log.message}</span>
+      </div>
+      {isExpanded && hasData && formattedData !== undefined && (
+        <div className="console-data-wrapper">
+          <pre className="console-data">
+            {formattedData}
+          </pre>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function Console() {
   // State for logs
@@ -60,12 +121,7 @@ export default function Console() {
           <div className="console-empty">No events logged yet</div>
         ) : (
           logs.map((log, idx) => (
-            <div key={idx} className={`console-entry console-${log.type}`}>
-              <span className="console-timestamp">
-                {new Date(log.timestamp).toLocaleTimeString()}
-              </span>
-              <span className="console-message">{log.message}</span>
-            </div>
+            <LogEntryItem key={idx} log={log} index={idx} />
           ))
         )}
       </div>

@@ -29,7 +29,13 @@ export interface WalletUtxo {
 }
 
 export interface WalletStore {
+  account  : any | null  // TODO: Define proper account type
   address  : string | null
+  balance  : {
+    confirmed   : number
+    unconfirmed : number
+    total       : number
+  }
   utxo_set : WalletStoreUtxo[]
 }
 

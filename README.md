@@ -19,13 +19,28 @@ The standard NIP-07 signing interface remains unchanged.
 
 ## Installation
 
-This extension available in the [Chrome Web Store](https://chromewebstore.google.com/detail/frost2x/gpbndcgoaehgeckcfmmbmaaaeljnaiof), but you can also build and install it manually as an unpacked extension:
+This extension is available in the [Chrome Web Store](https://chromewebstore.google.com/detail/frost2x/gpbndcgoaehgeckcfmmbmaaaeljnaiof), but you can also build and install it manually as an unpacked extension:
 
-1. Go to `chrome://extensions`.
-2. Enable "Developer mode" if it is not already enabled.
-3. Click on "Load unpacked" and select the `dist/` folder of this repository.
+1. Clone this repository and install dependencies:
+   ```bash
+   git clone https://github.com/frostr-org/frost2x.git
+   cd frost2x
+   npm install
+   ```
+2. Build the extension:
+   ```bash
+   npm run build
+   ```
+3. Load in Chrome:
+   - Go to `chrome://extensions`
+   - Enable "Developer mode" if it is not already enabled
+   - Click on "Load unpacked" and select the `dist/` folder
 
-In the options menu for the extension, you can input the credentials for your signing group, and the individual share that you want to use.
+4. Configure the extension:
+   - Click the extension icon and go to Options
+   - Input your group credentials and individual share
+
+> **Note:** To test the extension, you'll need to set up a [test node and relay](#running-the-test-node--relay) first.
 
 ## Generating Shares
 
@@ -41,7 +56,7 @@ Copy/paste the group credential, plus one of the shares into the `frost2x` exten
 
 > The script is located at `test/scripts/keygen.ts`, feel free to modify it.
 
-## Running a Test Node / Relay
+## Running the Test Node / Relay
 
 This repo comes with a second bifrost node for demonstration and testing, plus a basic nostr relay for ephemeral messaging.
 
@@ -72,7 +87,7 @@ To build the plugin from source, simply run the `build` script:
 npm run build
 ```
 
-This will build from the `src` folder, then place the completed files into the `extension` folder. Make sure to "refresh" the frost2x extension after each build. You can do this from the extension page in your browser.
+This will build from the `src` folder, then place the completed files into the `dist` folder. Make sure to "refresh" the frost2x extension after each build. You can do this from the extension page in your browser.
 
 ## Issues / Suggestions
 

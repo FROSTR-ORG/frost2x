@@ -2,7 +2,10 @@ import { Buff } from '@cmdcode/buff'
 
 import {
   encode_group_pkg,
-  encode_share_pkg,
+  encode_share_pkg
+} from '@frostr/bifrost/encoder'
+
+import {
   generate_dealer_pkg
 } from '@frostr/bifrost/lib'
 
