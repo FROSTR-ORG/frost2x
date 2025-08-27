@@ -159,53 +159,71 @@ export async function init_node () : Promise<BifrostNode | null> {
     // WORKAROUND: BifrostNode constructor validation is inconsistent
     // Sometimes it requires a config, sometimes it rejects any config
     // We try multiple approaches until one succeeds
-    let node: BifrostNode
+    let node: BifrostNode | undefined
     let configUsed: any = null
+    let lastError: any = null
     
     // Approach 1: Try without any config (simplest case)
     try {
       node = new BifrostNode(group, share, relay_urls)
       configUsed = 'no config'
     } catch (e1) {
+      lastError = e1
       // Approach 2: Try with empty config object
       try {
         node = new BifrostNode(group, share, relay_urls, {})
         configUsed = {}
       } catch (e2) {
+        lastError = e2
         // Approach 3: Try with policies only (no sign_ival)
         try {
           const policiesOnly = { policies: peers ?? [] }
           node = new BifrostNode(group, share, relay_urls, policiesOnly)
           configUsed = policiesOnly
         } catch (e3) {
+          lastError = e3
           // Approach 4: Try with full config (policies + sign_ival)
           // This is the most complete config, default sign_ival is 100ms
-          const fullConfig : Partial<BifrostNodeConfig> = {
-            policies  : peers ?? [],
-            sign_ival : settings?.node?.rate_limit ?? 100
+          try {
+            const fullConfig : Partial<BifrostNodeConfig> = {
+              policies  : peers ?? [],
+              sign_ival : settings?.node?.rate_limit ?? 100
+            }
+            node = new BifrostNode(group, share, relay_urls, fullConfig)
+            configUsed = fullConfig
+          } catch (e4) {
+            lastError = e4
           }
-          node = new BifrostNode(group, share, relay_urls, fullConfig)
-          configUsed = fullConfig
         }
       }
     }
+    
+    // If all attempts failed, throw with context
+    if (!node) {
+      const errorMsg = 'Failed to initialize BifrostNode after trying all configuration approaches'
+      console.error(errorMsg, { lastError, group, share, relay_urls })
+      throw new Error(`${errorMsg}: ${lastError?.message || 'Unknown error'}`)
+    }
 
-    node.on('ready', async () => {
+    // TypeScript: node is definitely defined here after the check above
+    const initializedNode = node
+
+    initializedNode.on('ready', async () => {
       await LogStore.clear()
       LogStore.add('bifrost node connected', 'success')
       console.log('bifrost node connected')
     })
 
-    node.once('ready', async () => {
+    initializedNode.once('ready', async () => {
       // Ping all peers
-      node.peers.forEach((peer) => {
-        node.req.ping(peer.pubkey)
+      initializedNode.peers.forEach((peer) => {
+        initializedNode.req.ping(peer.pubkey)
       })
       
       // Send an echo to ourselves to confirm the share handoff
       try {
         // Send echo to confirm share handoff (broadcasts to all peers including ourselves)
-        const result = await node.req.echo('echo')
+        const result = await initializedNode.req.echo('echo')
         
         if (result.ok) {
           LogStore.add('Share handoff confirmed: Echo sent successfully', 'success')
@@ -221,7 +239,7 @@ export async function init_node () : Promise<BifrostNode | null> {
       
       // Avoid logging the full node instance to prevent leaking sensitive data (e.g., key shares)
       const safeNodeInfo = {
-        peerPubkeys   : Array.isArray(node.peers) ? node.peers.map((peer) => peer.pubkey) : [],
+        peerPubkeys   : Array.isArray(initializedNode.peers) ? initializedNode.peers.map((peer) => peer.pubkey) : [],
         relayUrlCount : relay_urls.length,
         policyCount   : peers?.length ?? 0,
         rateLimit     : settings?.node?.rate_limit ?? 100,
@@ -232,7 +250,7 @@ export async function init_node () : Promise<BifrostNode | null> {
 
     const filter = [ 'ready', 'message', 'closed' ]
 
-    node.on('*', (...args : any[]) => {
+    initializedNode.on('*', (...args : any[]) => {
       const [ event, ...data ] = args
       if (event.startsWith('/ping')) return
       if (filter.includes(event))    return
@@ -283,13 +301,13 @@ export async function init_node () : Promise<BifrostNode | null> {
       }
     })
 
-    node.on('closed', () => {
+    initializedNode.on('closed', () => {
       LogStore.add('bifrost node disconnected', 'info')
       console.log('bifrost node disconnected')
     })
 
-    await node.connect()
-    return node
+    await initializedNode.connect()
+    return initializedNode
   } catch (error) {
     // Log the initialization failure with details
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
