@@ -42,24 +42,44 @@ function redactSecrets(data: any): any {
   // Exact keys to redact (case-insensitive)
   const exactKeys = new Set([
     'seckey', 'secret', 'share', 'shares', 'private', 'privatekey',
-    'xprv', 'xpub', 'seed', 'mnemonic', 'entropy',
+    'xprv', 'seed', 'mnemonic', 'entropy',
     'psbt', 'signatures', 'signature', 'witness', 'witnesses',
+    'witnessutxo', 'witnessUtxo',  // Both cases for PSBT fields
     'finalscriptsig', 'finalscriptwitness', 'scriptsig',
     'binder_sn', 'hidden_sn', 'secnonce', 'nonce',
     'password', 'passphrase', 'pin'
   ])
   
   // Regex patterns for common secret field naming conventions
+  // Using word boundaries and explicit patterns to avoid false positives
   const secretPatterns = [
+    // Token patterns (access_token, refresh_token, id_token, auth_token, etc.)
+    /^(access|refresh|id|auth|bearer|session|jwt)[-_]?token$/i,
+    /^token$/i,
+    
+    // API and client keys
+    /^api[-_]?key$/i,
     /^apikey$/i,
+    /^client[-_]?(key|secret)$/i,
+    
+    // Private/secret keys
+    /^private[-_]?key$/i,
     /^privatekey$/i,
+    /^secret[-_]?key$/i,
     /^secretkey$/i,
-    /^.*_secret$/i,
-    /^.*_private$/i,
-    /^.*_seed$/i,
-    /^.*_password$/i,
-    /^.*_passphrase$/i,
-    /^auth.*token$/i
+    
+    // Generic secrets and passwords
+    /^secret$/i,
+    /^password$/i,
+    /^passphrase$/i,
+    /^pin$/i,
+    /^seed$/i,
+    
+    // Suffix patterns (anything ending with these)
+    /^.*[-_](secret|private|password|passphrase|token|key|seed|pin)$/i,
+    
+    // Prefix patterns (anything starting with these)
+    /^(secret|private|auth|api)[-_].*$/i
   ]
   
   // WeakMap to handle circular references
@@ -122,7 +142,7 @@ export async function init_node () : Promise<BifrostNode | null> {
     const { group, peers, relays, share } = await NodeStore.fetch()
     const settings = await SettingStore.fetch()
 
-    if (group === null || peers === null || share === null) {
+    if (group == null || peers == null || share == null) {
       return null
     }
 
