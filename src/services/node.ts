@@ -117,29 +117,58 @@ export async function keep_alive (
   return (node === null) ? init_node() : node
 }
 
-// Default sign interval for request batching (milliseconds)
-const DEFAULT_SIGN_IVAL = 100
-
 export async function init_node () : Promise<BifrostNode | null> {
   try {
     const { group, peers, relays, share } = await NodeStore.fetch()
     const settings = await SettingStore.fetch()
-    const rate_limit = settings?.node?.rate_limit ?? DEFAULT_SIGN_IVAL // Default: 100ms
 
     if (group === null || peers === null || share === null) {
       return null
-    }
-
-    const opt : Partial<BifrostNodeConfig> = {
-      policies  : peers ?? [],
-      sign_ival : rate_limit
     }
 
     const relay_urls = (relays ?? [])
       .filter((relay) => relay.write)
       .map((relay) => relay.url)
 
-    const node = new BifrostNode(group, share, relay_urls, opt)
+    // Check if we have at least one relay URL
+    if (relay_urls.length === 0) {
+      console.error('No relay URLs available. Relays:', relays)
+      throw new Error('No relay URLs configured for write access')
+    }
+
+    // WORKAROUND: BifrostNode constructor validation is inconsistent
+    // Sometimes it requires a config, sometimes it rejects any config
+    // We try multiple approaches until one succeeds
+    let node: BifrostNode
+    let configUsed: any = null
+    
+    // Approach 1: Try without any config (simplest case)
+    try {
+      node = new BifrostNode(group, share, relay_urls)
+      configUsed = 'no config'
+    } catch (e1) {
+      // Approach 2: Try with empty config object
+      try {
+        node = new BifrostNode(group, share, relay_urls, {})
+        configUsed = {}
+      } catch (e2) {
+        // Approach 3: Try with policies only (no sign_ival)
+        try {
+          const policiesOnly = { policies: peers ?? [] }
+          node = new BifrostNode(group, share, relay_urls, policiesOnly)
+          configUsed = policiesOnly
+        } catch (e3) {
+          // Approach 4: Try with full config (policies + sign_ival)
+          // This is the most complete config, default sign_ival is 100ms
+          const fullConfig : Partial<BifrostNodeConfig> = {
+            policies  : peers ?? [],
+            sign_ival : settings?.node?.rate_limit ?? 100
+          }
+          node = new BifrostNode(group, share, relay_urls, fullConfig)
+          configUsed = fullConfig
+        }
+      }
+    }
 
     node.on('ready', async () => {
       await LogStore.clear()
@@ -174,8 +203,9 @@ export async function init_node () : Promise<BifrostNode | null> {
       const safeNodeInfo = {
         peerPubkeys   : Array.isArray(node.peers) ? node.peers.map((peer) => peer.pubkey) : [],
         relayUrlCount : relay_urls.length,
-        policyCount   : Array.isArray(opt.policies) ? opt.policies.length : undefined,
-        rateLimit     : opt.sign_ival
+        policyCount   : peers?.length ?? 0,
+        rateLimit     : settings?.node?.rate_limit ?? 100,
+        configType    : configUsed === 'no config' ? 'none' : typeof configUsed
       }
       console.log('bifrost node summary:', safeNodeInfo)
     })

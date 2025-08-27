@@ -96,6 +96,9 @@ Group credentials and individual shares are configured in the extension options.
 - Peer status can be 'online', 'offline', or 'checking'
 - Event logs capture data payloads for debugging (expandable in console)
 
+### Known Issues & Workarounds
+- **BifrostNode Constructor**: The library has inconsistent config validation. The init_node function in `src/services/node.ts` tries multiple config approaches sequentially until one succeeds (no config → empty object → policies only → full config)
+
 ## Security & Logging
 
 ### Critical: Sensitive Data Redaction
