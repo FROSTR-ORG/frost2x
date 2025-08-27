@@ -288,7 +288,8 @@ export async function init_node () : Promise<BifrostNode | null> {
       console.log('bifrost node disconnected')
     })
 
-    return node.connect().then(() => node)
+    await node.connect()
+    return node
   } catch (error) {
     // Log the initialization failure with details
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
