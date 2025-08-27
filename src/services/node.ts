@@ -6,6 +6,36 @@ import { LogStore }     from '@/stores/logs.js'
 
 import type { BifrostNodeConfig } from '@frostr/bifrost'
 
+// Helper to determine if we're in development environment
+function isDevEnv(): boolean {
+  try {
+    // First check for explicit Node.js/test environment flags
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env.NODE_ENV === 'development' || 
+             process.env.DEBUG === 'true' || 
+             process.env.EXT_DEV === 'true'
+    } 
+    // Then check browser environment
+    else if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getManifest) {
+      const manifest = browser.runtime.getManifest() as any
+      
+      // Don't treat Firefox as dev by default
+      const isFirefox = typeof navigator !== 'undefined' && 
+                       navigator.userAgent && 
+                       navigator.userAgent.includes('Firefox')
+      
+      // Chrome/Edge dev mode: no update_url in manifest
+      // Firefox: has update_url even in dev, so don't use this check
+      if (!isFirefox) {
+        return !manifest.update_url
+      }
+    }
+  } catch (err) {
+    // If we can't determine environment, default to not logging
+  }
+  return false
+}
+
 // Safe serialization helper to handle cyclic/large objects
 function safeSerialize(data: any, maxLength: number = 50000): any {
   if (data === undefined) return undefined
@@ -201,7 +231,23 @@ export async function init_node () : Promise<BifrostNode | null> {
     // If all attempts failed, throw with context
     if (!node) {
       const errorMsg = 'Failed to initialize BifrostNode after trying all configuration approaches'
-      console.error(errorMsg, { lastError, group, share, relay_urls })
+      
+      // Only log detailed config in development, and always redact sensitive data
+      if (isDevEnv()) {
+        const safeContext = {
+          lastError: lastError?.message || 'Unknown error',
+          groupPubkey: group?.pubkey,
+          relayUrls: relay_urls,
+          peerCount: peers?.length ?? 0,
+          // Never log share data, even in dev
+          share: '[REDACTED]'
+        }
+        console.error(errorMsg, safeContext)
+      } else {
+        // In production, only log the error message
+        console.error(errorMsg)
+      }
+      
       throw new Error(`${errorMsg}: ${lastError?.message || 'Unknown error'}`)
     }
 
@@ -264,36 +310,7 @@ export async function init_node () : Promise<BifrostNode | null> {
       LogStore.add(`${event}`, 'info', eventData)
       
       // Only log to console in development
-      let isDevelopment = false
-      
-      try {
-        // First check for explicit Node.js/test environment flags
-        if (typeof process !== 'undefined' && process.env) {
-          isDevelopment = process.env.NODE_ENV === 'development' || 
-                         process.env.DEBUG === 'true' || 
-                         process.env.EXT_DEV === 'true'
-        } 
-        // Then check browser environment
-        else if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getManifest) {
-          const manifest = browser.runtime.getManifest() as any
-          
-          // Don't treat Firefox as dev by default
-          const isFirefox = typeof navigator !== 'undefined' && 
-                           navigator.userAgent && 
-                           navigator.userAgent.includes('Firefox')
-          
-          // Chrome/Edge dev mode: no update_url in manifest
-          // Firefox: has update_url even in dev, so don't use this check
-          if (!isFirefox) {
-            isDevelopment = !manifest.update_url
-          }
-        }
-      } catch (err) {
-        // If we can't determine environment, default to not logging
-        isDevelopment = false
-      }
-      
-      if (isDevelopment) {
+      if (isDevEnv()) {
         console.log(`[ ${event} ] payload:`)
         if (eventData !== undefined) {
           console.log(JSON.stringify(eventData, null, 2))
