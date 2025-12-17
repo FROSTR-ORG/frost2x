@@ -1,9 +1,48 @@
 #!/usr/bin/env node
 
 import esbuild from 'esbuild'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
-const prod = process.argv.indexOf('--prod') !== -1
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const rootDir = path.resolve(__dirname, '..')
 
+// Parse command line arguments
+const args = process.argv.slice(2)
+const prod = args.includes('--prod')
+const browser = args.includes('--firefox') ? 'firefox' : 'chrome'
+
+console.log(`Building for ${browser}${prod ? ' (production)' : ' (development)'}...`)
+
+// Generate manifest for the target browser
+function generateManifest(targetBrowser) {
+  const manifestDir = path.join(rootDir, 'src', 'manifest')
+  const distDir = path.join(rootDir, 'dist')
+
+  // Read base manifest
+  const baseManifest = JSON.parse(
+    fs.readFileSync(path.join(manifestDir, 'base.json'), 'utf-8')
+  )
+
+  // Read browser-specific manifest
+  const browserManifest = JSON.parse(
+    fs.readFileSync(path.join(manifestDir, `${targetBrowser}.json`), 'utf-8')
+  )
+
+  // Merge manifests (browser-specific overrides base)
+  const finalManifest = { ...baseManifest, ...browserManifest }
+
+  // Write to dist
+  fs.writeFileSync(
+    path.join(distDir, 'manifest.json'),
+    JSON.stringify(finalManifest, null, 2)
+  )
+
+  console.log(`Generated manifest.json for ${targetBrowser}`)
+}
+
+// Run esbuild
 esbuild
   .build({
     bundle: true,
@@ -27,11 +66,18 @@ esbuild
       global: 'self'
     },
     loader: {
-      '.js'  : 'js',   // Ensure jsx loader for js files
-      '.jsx' : 'jsx',  // Ensure jsx loader for js files
-      '.ts'  : 'ts',   // Use the TypeScript loader for .ts files
-      '.tsx' : 'tsx',  // Use the TypeScript loader for .tsx files
-      '.css' : 'css'   // Add this line to handle CSS imports correctly
+      '.js'  : 'js',
+      '.jsx' : 'jsx',
+      '.ts'  : 'ts',
+      '.tsx' : 'tsx',
+      '.css' : 'css'
     }
   })
-  .then(() => console.log('build success.'))
+  .then(() => {
+    generateManifest(browser)
+    console.log('Build success.')
+  })
+  .catch((error) => {
+    console.error('Build failed:', error)
+    process.exit(1)
+  })

@@ -1,0 +1,23 @@
+{
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "frost2x@frostr.org",
+      "strict_min_version": "128.0"
+    }
+  },
+  "background": {
+    "service_worker": "background.build.js",
+    "type": "module"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "nostr-provider.build.js"
+      ],
+      "matches": [
+        "https://*/*",
+        "http://*/*"
+      ]
+    }
+  ]
+}
