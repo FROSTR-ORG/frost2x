@@ -1,13 +1,21 @@
 {
   "name": "@frostr/frost2x",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
   "type": "module",
   "scripts": {
     "build": "./script/build.js",
+    "build:chrome": "./script/build.js",
+    "build:firefox": "./script/build.js --firefox",
+    "build:prod": "./script/build.js --prod",
+    "build:firefox:prod": "./script/build.js --firefox --prod",
     "loader": "tsx --tsconfig ./test/tsconfig.json",
     "keygen": "npm run loader test/scripts/keygen.ts",
     "package": "./script/package.sh",
+    "package:chrome": "./script/package.sh chrome",
+    "package:firefox": "./script/package.sh firefox",
+    "firefox:run": "npm run build:firefox && web-ext run -s dist",
+    "firefox:lint": "web-ext lint -s dist",
     "start": "npm run loader test/scripts/start.ts",
     "start:dev": "npm run loader test/scripts/start.ts dev",
     "start:node": "npm run loader test/scripts/start.ts node",
@@ -40,6 +48,7 @@
     "express": "^4.21.2",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
+    "web-ext": "^9.1.0",
     "ws": "^8.18.0"
   }
 }

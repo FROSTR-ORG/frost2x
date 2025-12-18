@@ -4,12 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-frost2x is a browser extension that implements FROST (Flexible Round-Optimized Schnorr Threshold) signatures for Nostr and Bitcoin. It's a TypeScript fork of nos2x that enables distributed signing where multiple parties collaborate without revealing individual private keys.
+frost2x is a browser extension that implements FROST (Flexible Round-Optimized Schnorr Threshold) signatures for Nostr. It's a TypeScript fork of nos2x that enables distributed signing where multiple parties collaborate without revealing individual private keys.
 
 ## Key Commands
 
 ### Build & Development
 - `npm run build` - Build the extension (outputs to `/dist`)
+- `npm run build -- --prod` - Production build without sourcemaps
 - `npm run package` - Create distributable extension package (.zip and .crx in `/build`)
 - `npx tsc --noEmit` - Type-check without building (use for finding TypeScript errors)
 
@@ -32,12 +33,13 @@ frost2x is a browser extension that implements FROST (Flexible Round-Optimized S
 ## Architecture
 
 ### Extension Structure (Manifest V3)
-The extension uses multiple entry points, all built with esbuild:
+The extension uses multiple entry points, all built with esbuild (`script/build.js`):
 - `background.ts` - Service worker handling all signing operations and node coordination
 - `content-script.ts` - Injects providers into web pages
 - `popup.tsx` - Quick access interface (React)
 - `options.tsx` - Settings and configuration page (React)
 - `prompt.tsx` - Permission request dialogs (React)
+- `providers/nostr-provider.ts` - Injected `window.nostr` API for web pages
 
 ### Core Libraries (`/src/lib/`)
 - `crypto.ts`, `cipher.ts` - Cryptographic utilities for encryption/decryption
@@ -56,9 +58,9 @@ All stores use browser.storage.local with runtime validation via custom `create_
 ### Message Handlers (`/src/handlers/`)
 Process incoming messages from content scripts:
 - `signer.ts` - Nostr NIP-07 operations (getPublicKey, signEvent, encrypt/decrypt)
-- `wallet.ts` - Bitcoin operations (getAccount, getBalance, signPsbt)
 - `node.ts` - Node management (connect, disconnect, status, ping, echo)
-- `link.ts` - Nostr link resolution
+- `wallet.ts` - Bitcoin operations (currently disabled in background.ts)
+- `link.ts` - Nostr link resolution (currently disabled in background.ts)
 
 ### Type System
 - Strict TypeScript with `noEmit: true` (esbuild handles compilation)
@@ -70,14 +72,10 @@ Process incoming messages from content scripts:
 ## Protocol Support
 
 ### Nostr (NIP-07)
-- `window.nostr.getPublicKey()` - Returns FROST public key
-- `window.nostr.signEvent(event)` - Signs using threshold signatures
-- `window.nostr.encrypt/decrypt()` - NIP-04 encryption
-
-### Bitcoin
-- `window.bitcoin.getAccount()` - Get wallet account info
-- `window.bitcoin.getBalance()` - Check balance
-- `window.bitcoin.signPsbt()` - Sign Bitcoin transactions
+- `window.nostr.getPublicKey()` - Returns FROST group public key (without `02` prefix)
+- `window.nostr.signEvent(event)` - Signs using threshold signatures via `node.req.queue()`
+- `window.nostr.nip04.encrypt/decrypt()` - NIP-04 encryption using ECDH shared secret
+- `window.nostr.nip44.encrypt/decrypt()` - NIP-44 encryption using ECDH shared secret
 
 ## FROST Integration
 
@@ -97,7 +95,8 @@ Group credentials and individual shares are configured in the extension options.
 - Event logs capture data payloads for debugging (expandable in console)
 
 ### Known Issues & Workarounds
-- **BifrostNode Constructor**: The library has inconsistent config validation. The init_node function in `src/services/node.ts` tries multiple config approaches sequentially until one succeeds (no config → empty object → policies only → full config)
+- **BifrostNode Constructor**: The library has inconsistent config validation. The `init_node` function in `src/services/node.ts` tries multiple config approaches sequentially until one succeeds (no config → empty object → policies only → full config)
+- **Firefox Extension Detection**: The `isDevEnv()` helper in `src/services/node.ts` has special handling for Firefox since it includes `update_url` in manifests even for unpacked extensions
 
 ## Security & Logging
 
@@ -183,4 +182,18 @@ All async handlers should validate input parameters before processing and return
 - Permission prompts appear for new domains/operations
 - Console logs are expandable in Options > Console tab to view event data
 - Build output goes to `/dist` only
-- All builds use esbuild with sourcemaps in development mode
+- All builds use esbuild with inline sourcemaps in development mode
+
+### Message Flow
+1. Web page calls `window.nostr.*` method (from injected provider)
+2. Provider sends message to content script via `window.postMessage`
+3. Content script forwards to background via `browser.runtime.sendMessage`
+4. Background checks permissions (may show prompt popup)
+5. If allowed, handler processes request using BifrostNode
+6. Response flows back through the same chain
+
+### Global State
+The background service worker maintains a `GlobalState` object with:
+- `mutex` - Prevents concurrent permission prompts
+- `prompt` - Current pending prompt resolver
+- `node` - BifrostNode instance (lazily initialized via `keep_alive`)

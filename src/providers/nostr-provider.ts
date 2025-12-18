@@ -96,7 +96,10 @@ window.nostr = {
   }
 }
 
+const allowedOrigin = window.location.origin
+
 window.addEventListener('message', message => {
+  if (message.origin !== allowedOrigin) return
   if (
     !message.data ||
     message.data.response === null ||

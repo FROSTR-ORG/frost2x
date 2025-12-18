@@ -1,0 +1,62 @@
+name: Release Firefox Add-on
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Publish channel on AMO
+        type: choice
+        default: listed
+        options:
+          - listed
+          - unlisted
+
+jobs:
+  build-and-sign:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Firefox bundle
+        run: npm run build:firefox:prod
+
+      - name: Sign and upload to AMO
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          WEB_EXT_ID: ${{ secrets.AMO_EXTENSION_ID }}
+        run: |
+          if [ -z "$WEB_EXT_API_KEY" ] || [ -z "$WEB_EXT_API_SECRET" ]; then
+            echo "AMO credentials are required. Set secrets AMO_JWT_ISSUER and AMO_JWT_SECRET."
+            exit 1
+          fi
+
+          id_arg=""
+          if [ -n "$WEB_EXT_ID" ]; then
+            id_arg="--id $WEB_EXT_ID"
+          fi
+
+          npx web-ext sign \
+            --source-dir dist \
+            --artifacts-dir web-ext-artifacts \
+            --channel "${{ inputs.channel }}" \
+            $id_arg
+
+      - name: Upload signed XPI
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-signed-xpi
+          path: web-ext-artifacts/*.xpi

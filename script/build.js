@@ -1,9 +1,70 @@
 #!/usr/bin/env node
 
 import esbuild from 'esbuild'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
-const prod = process.argv.indexOf('--prod') !== -1
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const rootDir = path.resolve(__dirname, '..')
 
+// Parse command line arguments
+const args = process.argv.slice(2)
+const prod = args.includes('--prod')
+const browser = args.includes('--firefox') ? 'firefox' : 'chrome'
+
+console.log(`Building for ${browser}${prod ? ' (production)' : ' (development)'}...`)
+
+function readManifestFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    console.error(`Manifest generation failed: required file missing at ${filePath}`)
+    process.exit(1)
+  }
+
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8')
+    return JSON.parse(content)
+  } catch (error) {
+    console.error(
+      `Manifest generation failed reading or parsing ${filePath}: ${error?.message || error}`
+    )
+    process.exit(1)
+  }
+}
+
+function writeManifestFile(filePath, manifest) {
+  try {
+    const serialized = JSON.stringify(manifest, null, 2)
+    fs.writeFileSync(filePath, serialized)
+  } catch (error) {
+    console.error(
+      `Manifest generation failed writing ${filePath}: ${error?.message || error}`
+    )
+    process.exit(1)
+  }
+}
+
+// Generate manifest for the target browser
+function generateManifest(targetBrowser) {
+  const manifestDir = path.join(rootDir, 'src', 'manifest')
+  const distDir = path.join(rootDir, 'dist')
+  const baseManifestPath = path.join(manifestDir, 'base.json')
+  const browserManifestPath = path.join(manifestDir, `${targetBrowser}.json`)
+  const outputManifestPath = path.join(distDir, 'manifest.json')
+
+  const baseManifest = readManifestFile(baseManifestPath)
+  const browserManifest = readManifestFile(browserManifestPath)
+
+  // Merge manifests (browser-specific overrides base)
+  const finalManifest = { ...baseManifest, ...browserManifest }
+
+  // Write to dist
+  writeManifestFile(outputManifestPath, finalManifest)
+
+  console.log(`Generated manifest.json for ${targetBrowser}`)
+}
+
+// Run esbuild
 esbuild
   .build({
     bundle: true,
@@ -27,11 +88,18 @@ esbuild
       global: 'self'
     },
     loader: {
-      '.js'  : 'js',   // Ensure jsx loader for js files
-      '.jsx' : 'jsx',  // Ensure jsx loader for js files
-      '.ts'  : 'ts',   // Use the TypeScript loader for .ts files
-      '.tsx' : 'tsx',  // Use the TypeScript loader for .tsx files
-      '.css' : 'css'   // Add this line to handle CSS imports correctly
+      '.js'  : 'js',
+      '.jsx' : 'jsx',
+      '.ts'  : 'ts',
+      '.tsx' : 'tsx',
+      '.css' : 'css'
     }
   })
-  .then(() => console.log('build success.'))
+  .then(() => {
+    generateManifest(browser)
+    console.log('Build success.')
+  })
+  .catch((error) => {
+    console.error('Build failed:', error)
+    process.exit(1)
+  })

@@ -22,20 +22,12 @@
         "https://*/*",
         "http://*/*"
       ],
-      "js": [
-        "content-script.build.js"
-      ],
+      "js": ["content-script.build.js"],
       "all_frames": true
     }
   ],
-  "permissions": [
-    "storage",
-    "activeTab",
-    "windows"
-  ],
-  "optional_permissions": [
-    "notifications"
-  ],
+  "permissions": ["storage", "activeTab", "windows"],
+  "optional_permissions": ["notifications"],
   "web_accessible_resources": [
     {
       "resources": [
@@ -43,18 +35,11 @@
       ],
       "matches": [
         "https://*/*",
-        "http://*/*"
+        "http://localhost:*/*",
+        "http://0.0.0.0:*/*",
+        "http://127.0.0.1:*/*",
+        "http://*.localhost/*"
       ]
     }
-  ],
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "frost2x@frostr.org",
-      "strict_min_version": "140.0"
-    }
-  },
-  "background": {
-    "service_worker": "background.build.js",
-    "type": "module"
-  }
+  ]
 }

@@ -42,6 +42,12 @@ This extension is available in the [Chrome Web Store](https://chromewebstore.goo
 
 > **Note:** To test the extension, you'll need to set up a [test node and relay](#running-the-test-node--relay) first.
 
+### Firefox (manual install)
+
+- Build the Firefox bundle: `npm run build:firefox`
+- Open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select the `dist/` folder
+- Requires Firefox **140.0+** (manifest `strict_min_version`)
+
 ## Generating Shares
 
 To generate a set of shares for your nsec, you can use the `keygen` script:
