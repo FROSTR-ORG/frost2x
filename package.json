@@ -1,6 +1,6 @@
 {
   "name": "@frostr/frost2x",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -48,7 +48,7 @@
     "express": "^4.21.2",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
-    "web-ext": "^8.3.0",
+    "web-ext": "^9.1.0",
     "ws": "^8.18.0"
   }
 }

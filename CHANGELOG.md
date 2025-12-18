@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file. Uses [Keep 
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-01-XX
+
+### Changed
+- Raised Firefox manifest `strict_min_version` to 140.0.
+
 ## [0.1.1] - 2025-03-26
 
 ### Added
