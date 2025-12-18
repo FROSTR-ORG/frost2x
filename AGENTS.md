@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 - `src/` holds the extension code: `background.ts` (lifecycle/permissions), `content-script.ts`, UI surfaces (`popup.tsx`, `prompt.tsx`, `options.tsx`), and feature modules under `components/`, `services/`, `stores/`, `providers/`, `hooks/`, and `styles/`.
-- `manifest/` contains browser-targeted manifest assets; `dist/` is the compiled output created by the build scripts (do not edit by hand).
+- `src/manifest/` contains browser-targeted manifest assets; `dist/` is the compiled output created by the build scripts (do not edit by hand).
 - `script/` has the esbuild-based bundler (`build.js`) and packaging helper (`package.sh`).
 - `test/` supplies a local Bifrost signing node and relay (`test/src/*`) plus scripts (`test/scripts/*`) and `config.example.json` for local credentials.
 - Path alias `@/*` resolves to `src/*` (see `tsconfig.json`); prefer it over long relative paths.
@@ -33,4 +33,4 @@
 
 ## Security & Configuration Tips
 - Never commit secrets (nsec shares, group credentials, API keys). Populate `test/config.json` locally from `config.example.json` and ensure it stays untracked.
-- When sharing logs or repro steps, redact signer IDs and relay URLs unless they are public test values.***
+- When sharing logs or repro steps, redact signer IDs and relay URLs unless they are public test values.

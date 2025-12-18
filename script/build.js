@@ -15,29 +15,51 @@ const browser = args.includes('--firefox') ? 'firefox' : 'chrome'
 
 console.log(`Building for ${browser}${prod ? ' (production)' : ' (development)'}...`)
 
+function readManifestFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    console.error(`Manifest generation failed: required file missing at ${filePath}`)
+    process.exit(1)
+  }
+
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8')
+    return JSON.parse(content)
+  } catch (error) {
+    console.error(
+      `Manifest generation failed reading or parsing ${filePath}: ${error?.message || error}`
+    )
+    process.exit(1)
+  }
+}
+
+function writeManifestFile(filePath, manifest) {
+  try {
+    const serialized = JSON.stringify(manifest, null, 2)
+    fs.writeFileSync(filePath, serialized)
+  } catch (error) {
+    console.error(
+      `Manifest generation failed writing ${filePath}: ${error?.message || error}`
+    )
+    process.exit(1)
+  }
+}
+
 // Generate manifest for the target browser
 function generateManifest(targetBrowser) {
   const manifestDir = path.join(rootDir, 'src', 'manifest')
   const distDir = path.join(rootDir, 'dist')
+  const baseManifestPath = path.join(manifestDir, 'base.json')
+  const browserManifestPath = path.join(manifestDir, `${targetBrowser}.json`)
+  const outputManifestPath = path.join(distDir, 'manifest.json')
 
-  // Read base manifest
-  const baseManifest = JSON.parse(
-    fs.readFileSync(path.join(manifestDir, 'base.json'), 'utf-8')
-  )
-
-  // Read browser-specific manifest
-  const browserManifest = JSON.parse(
-    fs.readFileSync(path.join(manifestDir, `${targetBrowser}.json`), 'utf-8')
-  )
+  const baseManifest = readManifestFile(baseManifestPath)
+  const browserManifest = readManifestFile(browserManifestPath)
 
   // Merge manifests (browser-specific overrides base)
   const finalManifest = { ...baseManifest, ...browserManifest }
 
   // Write to dist
-  fs.writeFileSync(
-    path.join(distDir, 'manifest.json'),
-    JSON.stringify(finalManifest, null, 2)
-  )
+  writeManifestFile(outputManifestPath, finalManifest)
 
   console.log(`Generated manifest.json for ${targetBrowser}`)
 }

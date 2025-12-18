@@ -43,11 +43,8 @@ if [ "$BROWSER" = "firefox" ]; then
 
     echo "Creating Firefox XPI file..."
 
-    # Create xpi (which is just a zip with .xpi extension)
-    # Using -j to not include directory structure, packaging contents of dist
-    cd "$DIST_DIR" && zip -r "../$OUTPUT_FILE" ./* && cd ..
-
-    if [ $? -eq 0 ]; then
+    # Create xpi (zip with .xpi extension); run in subshell to avoid cwd leaks
+    if ( cd "$DIST_DIR" && zip -r "../$OUTPUT_FILE" ./* ); then
         echo "XPI file created successfully: $OUTPUT_FILE"
     else
         echo "Error creating XPI file"
@@ -77,9 +74,9 @@ else
 
     # Create zip file
     echo "Creating ZIP file..."
-    zip -r "$OUTPUT_DIR/$EXTENSION_NAME-$VERSION.zip" "$DIST_DIR"/*
-    if [ $? -eq 0 ]; then
-        echo "ZIP file created successfully: $OUTPUT_DIR/$EXTENSION_NAME-$VERSION.zip"
+    OUTPUT_FILE="$OUTPUT_DIR/$EXTENSION_NAME-$VERSION.zip"
+    if ( cd "$DIST_DIR" && zip -r "../$OUTPUT_FILE" ./* ); then
+        echo "ZIP file created successfully: $OUTPUT_FILE"
     else
         echo "Error creating ZIP file"
         exit 1
